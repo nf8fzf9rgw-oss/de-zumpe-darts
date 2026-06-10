@@ -2,6 +2,8 @@
 
 import BottomNav from "@/components/BottomNav";
 import Header from "@/components/Header";
+import PrintCompetition from "@/components/PrintCompetition";
+import PrintPreviewModal from "@/components/PrintPreviewModal";
 import Sidebar from "@/components/Sidebar";
 import { SpeelavondProvider } from "@/context/SpeelavondContext";
 
@@ -16,9 +18,11 @@ export default function AppShell({
         <Sidebar />
         <div className="min-h-screen pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:ml-64 lg:pb-0">
           <Header />
-          <main className="p-4 md:p-6 lg:p-8">{children}</main>
+          <main className="no-print p-4 md:p-6 lg:p-8">{children}</main>
         </div>
         <BottomNav />
+        <PrintCompetition />
+        <PrintPreviewModal />
       </div>
     </SpeelavondProvider>
   );

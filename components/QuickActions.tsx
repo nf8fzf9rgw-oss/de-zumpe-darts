@@ -13,27 +13,29 @@ export default function QuickActions({
     genereerCompetitieAvond,
     opslaan,
     nieuweAvond,
-    printSchema,
+    openPrintPreview,
+    borden,
   } = useSpeelavond();
 
   const knoppen = [
     {
       label: "Genereer Competitie",
       onClick: genereerCompetitieAvond,
-      className:
-        "bg-green-700 hover:bg-green-600 text-white",
+      className: "bg-green-700 hover:bg-green-600 text-white",
     },
     {
       label: "Opslaan",
       onClick: opslaan,
-      className:
-        "bg-orange-700 hover:bg-orange-600 text-white",
+      className: "bg-orange-700 hover:bg-orange-600 text-white",
     },
     {
-      label: "Print Speelschema",
-      onClick: printSchema,
+      label: "Print Preview",
+      onClick: openPrintPreview,
+      disabled: borden.length === 0,
       className:
-        "bg-blue-700 hover:bg-blue-600 text-white",
+        borden.length === 0
+          ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+          : "bg-blue-700 hover:bg-blue-600 text-white",
     },
     {
       label: "Nieuwe Speelavond",
@@ -51,7 +53,8 @@ export default function QuickActions({
             key={knop.label}
             type="button"
             onClick={knop.onClick}
-            className={`rounded-xl px-4 py-2.5 text-sm font-bold shadow-lg transition ${knop.className}`}
+            disabled={"disabled" in knop && knop.disabled}
+            className={`min-h-11 rounded-xl px-4 py-2.5 text-sm font-bold shadow-lg transition ${knop.className}`}
           >
             {knop.label}
           </button>
@@ -67,7 +70,8 @@ export default function QuickActions({
           key={knop.label}
           type="button"
           onClick={knop.onClick}
-          className={`w-full rounded-xl px-4 py-3 text-left text-sm font-bold shadow-lg transition lg:px-5 lg:py-3.5 lg:text-base ${knop.className}`}
+          disabled={"disabled" in knop && knop.disabled}
+          className={`min-h-11 w-full rounded-xl px-4 py-3 text-left text-sm font-bold shadow-lg transition lg:px-5 lg:py-3.5 lg:text-base ${knop.className}`}
         >
           {knop.label}
         </button>

@@ -1,3 +1,4 @@
+import StatisticsCharts from "@/components/StatisticsCharts";
 import StatisticsPanel from "@/components/StatisticsPanel";
 
 export default function StatistiekenPage() {
@@ -8,11 +9,12 @@ export default function StatistiekenPage() {
           Statistieken
         </h2>
         <p className="mt-2 text-sm text-zinc-400 lg:text-base">
-          Uitgebreid cluboverzicht. Klaar voor toekomstige database-koppeling.
+          Cluboverzicht, prestaties en trends over alle speelavonden.
         </p>
       </div>
 
       <StatisticsPanel />
+      <StatisticsCharts />
     </div>
   );
 }

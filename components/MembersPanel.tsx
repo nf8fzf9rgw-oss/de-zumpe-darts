@@ -76,7 +76,7 @@ export default function MembersPanel({
               key={lid}
               type="button"
               onClick={() => toggleLid(lid)}
-              className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-left transition ${
+              className={`flex min-h-11 w-full items-center justify-between rounded-xl px-4 py-3 text-left transition active:scale-[0.98] ${
                 isAanwezig
                   ? "bg-red-700 text-white shadow-lg shadow-red-900/30"
                   : "bg-zinc-900 text-zinc-200 hover:bg-zinc-800"

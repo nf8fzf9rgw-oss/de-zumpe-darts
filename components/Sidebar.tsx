@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { isActiveRoute, NAV_ITEMS } from "@/lib/navigation";
+import {
+  DESKTOP_NAV_EXTRA,
+  isActiveRoute,
+  NAV_ITEMS,
+} from "@/lib/navigation";
+
+const ALLE_ITEMS = [...NAV_ITEMS, ...DESKTOP_NAV_EXTRA];
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -10,8 +16,9 @@ export default function Sidebar() {
   return (
     <aside className="no-print fixed left-0 top-0 z-40 hidden h-screen w-64 flex-col border-r border-zinc-800 bg-zinc-950 lg:flex">
       <div className="border-b border-zinc-800 p-6">
-        <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full border-2 border-red-600 bg-black text-2xl shadow-lg shadow-red-900/30">
+        <div className="relative mb-3 flex h-14 w-14 items-center justify-center rounded-full border-2 border-red-600 bg-black text-2xl shadow-lg shadow-red-900/30">
           🎯
+          <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-red-600 ring-2 ring-zinc-950" />
         </div>
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-red-500">
           De Zumpe
@@ -21,8 +28,8 @@ export default function Sidebar() {
         </h1>
       </div>
 
-      <nav className="flex-1 space-y-1 p-4">
-        {NAV_ITEMS.map((item) => {
+      <nav className="flex-1 space-y-1 overflow-y-auto p-4">
+        {ALLE_ITEMS.map((item) => {
           const isActive = isActiveRoute(pathname, item.href);
 
           return (

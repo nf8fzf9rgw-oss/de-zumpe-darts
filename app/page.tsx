@@ -1,6 +1,7 @@
 import CompetitionColumn from "@/components/CompetitionColumn";
 import DashboardCards from "@/components/DashboardCards";
 import DashboardStatisticsPanel from "@/components/DashboardStatisticsPanel";
+import DashboardWidgets from "@/components/DashboardWidgets";
 import GuestsPanel from "@/components/GuestsPanel";
 import MembersPanel from "@/components/MembersPanel";
 import QuickActions from "@/components/QuickActions";
@@ -21,6 +22,8 @@ export default function HomePage() {
         <DashboardCards />
       </section>
 
+      <DashboardWidgets />
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-12 lg:gap-6 xl:gap-8">
         <div className="md:col-span-1 lg:col-span-3">
           <MembersPanel variant="desktop" />
@@ -38,7 +41,7 @@ export default function HomePage() {
       </div>
 
       <div className="lg:hidden">
-        <QuickActions />
+        <QuickActions layout="horizontal" />
       </div>
     </div>
   );

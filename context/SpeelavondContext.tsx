@@ -8,48 +8,90 @@ import {
   useMemo,
   useState,
 } from "react";
-import { berekenDashboardStats, genereerCompetitie } from "@/lib/competition";
-import { CLUB_LEDEN } from "@/lib/leden";
+import {
+  berekenDashboardStats,
+  genereerCompetitie,
+  normaliseerBorden,
+  updateWedstrijdInBord,
+} from "@/lib/competition";
+import {
+  hernoemLid,
+  laadLeden,
+  verwijderLid,
+  voegLidToe,
+} from "@/lib/leden";
 import { createLocalSpeelavondRepository } from "@/lib/services/speelavond.service";
+import { berekenStand } from "@/lib/standings";
+import {
+  berekenGrafieken,
+  berekenStatistieken,
+  haalHuidigSeizoen,
+  haalKomendeVrijdag,
+} from "@/lib/statistics";
 import {
   formatDatum,
+  formatDatumAlleen,
   laadHistorie,
   laadSpeelavond,
   maakHuidigeDatum,
   maakLegeSpeelavond,
   slaSpeelavondOp,
   verwijderSpeelavond,
+  verwijderUitHistorie,
   voegToeAanHistorie,
 } from "@/lib/storage";
-import { berekenStatistieken } from "@/lib/statistics";
 import type {
   Bord,
   DashboardStatistieken,
   Speelavond,
   SpeelavondStatistieken,
+  SpelerStand,
+  StatistiekGrafieken,
 } from "@/types/competition";
 
 interface SpeelavondContextValue {
-  leden: readonly string[];
+  leden: string[];
   aanwezigen: string[];
   gasten: string[];
   gastNaam: string;
   borden: Bord[];
+  historie: Speelavond[];
   laatsteOpslag: string;
   laatsteOpslagLabel: string;
+  speelDatumLabel: string;
   dashboardStats: DashboardStatistieken;
   statistieken: SpeelavondStatistieken;
+  grafieken: StatistiekGrafieken;
+  stand: SpelerStand[];
+  huidigSeizoen: string;
+  komendeSpeelavond: string;
   isGeladen: boolean;
+  printPreviewOpen: boolean;
   setGastNaam: (naam: string) => void;
   toggleLid: (naam: string) => void;
   selecteerAlleLeden: () => void;
   deselecteerAlleLeden: () => void;
   voegGastToe: () => void;
   verwijderGast: (naam: string) => void;
+  voegLidToe: (naam: string) => void;
+  hernoemLid: (oudeNaam: string, nieuweNaam: string) => void;
+  verwijderLid: (naam: string) => void;
   genereerCompetitieAvond: () => void;
+  updateWedstrijd: (
+    bordNaam: string,
+    wedstrijdId: string,
+    updates: { gespeeld?: boolean; score1?: number; score2?: number }
+  ) => void;
   opslaan: () => void;
   nieuweAvond: () => void;
+  openPrintPreview: () => void;
+  sluitPrintPreview: () => void;
   printSchema: () => void;
+  exportPdf: () => void;
+  laadAvondUitHistorie: (datum: string) => void;
+  verwijderAvondUitHistorie: (datum: string) => void;
+  printAvondUitHistorie: (datum: string) => void;
+  avondVoorPrint: Speelavond;
 }
 
 const SpeelavondContext = createContext<SpeelavondContextValue | null>(null);
@@ -66,7 +108,7 @@ function syncState(avond: Speelavond) {
   return {
     aanwezigen: avond.aanwezigen,
     gasten: avond.gasten,
-    borden: avond.borden,
+    borden: normaliseerBorden(avond.borden),
     laatsteOpslag: avond.datum,
   };
 }
@@ -76,6 +118,7 @@ export function SpeelavondProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const [leden, setLeden] = useState<string[]>([]);
   const [aanwezigen, setAanwezigen] = useState<string[]>([]);
   const [gasten, setGasten] = useState<string[]>([]);
   const [gastNaam, setGastNaam] = useState("");
@@ -83,20 +126,28 @@ export function SpeelavondProvider({
   const [laatsteOpslag, setLaatsteOpslag] = useState("");
   const [isGeladen, setIsGeladen] = useState(false);
   const [historie, setHistorie] = useState<Speelavond[]>([]);
+  const [printPreviewOpen, setPrintPreviewOpen] = useState(false);
+  const [printAvond, setPrintAvond] = useState<Speelavond | null>(null);
 
   useEffect(() => {
     const opgeslagen = laadSpeelavond();
+    /* eslint-disable react-hooks/set-state-in-effect -- localStorage hydratie na client mount */
+    setLeden(laadLeden());
     if (opgeslagen) {
       const state = syncState(opgeslagen);
-      /* eslint-disable react-hooks/set-state-in-effect -- localStorage hydratie na client mount */
       setAanwezigen(state.aanwezigen);
       setGasten(state.gasten);
       setBorden(state.borden);
       setLaatsteOpslag(state.laatsteOpslag);
-      /* eslint-enable react-hooks/set-state-in-effect */
     }
-    setHistorie(laadHistorie());
+    setHistorie(
+      laadHistorie().map((avond) => ({
+        ...avond,
+        borden: normaliseerBorden(avond.borden),
+      }))
+    );
     setIsGeladen(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   const persist = useCallback(
@@ -128,10 +179,10 @@ export function SpeelavondProvider({
   );
 
   const selecteerAlleLeden = useCallback(() => {
-    const alle = [...CLUB_LEDEN];
+    const alle = [...leden];
     setAanwezigen(alle);
     persist({ aanwezigen: alle });
-  }, [persist]);
+  }, [leden, persist]);
 
   const deselecteerAlleLeden = useCallback(() => {
     setAanwezigen([]);
@@ -161,6 +212,40 @@ export function SpeelavondProvider({
     [persist]
   );
 
+  const handleVoegLidToe = useCallback(
+    (naam: string) => {
+      const nieuw = voegLidToe(naam, leden);
+      setLeden(nieuw);
+    },
+    [leden]
+  );
+
+  const handleHernoemLid = useCallback(
+    (oudeNaam: string, nieuweNaam: string) => {
+      const nieuw = hernoemLid(oudeNaam, nieuweNaam, leden);
+      setLeden(nieuw);
+      setAanwezigen((h) => {
+        const bijgewerkt = h.map((n) => (n === oudeNaam ? nieuweNaam.trim() : n));
+        persist({ aanwezigen: bijgewerkt });
+        return bijgewerkt;
+      });
+    },
+    [leden, persist]
+  );
+
+  const handleVerwijderLid = useCallback(
+    (naam: string) => {
+      const nieuw = verwijderLid(naam, leden);
+      setLeden(nieuw);
+      setAanwezigen((h) => {
+        const bijgewerkt = h.filter((n) => n !== naam);
+        persist({ aanwezigen: bijgewerkt });
+        return bijgewerkt;
+      });
+    },
+    [leden, persist]
+  );
+
   const genereerCompetitieAvond = useCallback(() => {
     const spelers = [...aanwezigen, ...gasten];
 
@@ -184,8 +269,27 @@ export function SpeelavondProvider({
     persist({ borden: nieuweBorden });
   }, [aanwezigen, gasten, persist]);
 
+  const updateWedstrijd = useCallback(
+    (
+      bordNaam: string,
+      wedstrijdId: string,
+      updates: { gespeeld?: boolean; score1?: number; score2?: number }
+    ) => {
+      setBorden((huidig) => {
+        const nieuw = huidig.map((bord) =>
+          bord.naam === bordNaam
+            ? updateWedstrijdInBord(bord, wedstrijdId, updates)
+            : bord
+        );
+        persist({ borden: nieuw });
+        return nieuw;
+      });
+    },
+    [persist]
+  );
+
   const opslaan = useCallback(() => {
-    const datum = maakHuidigeDatum();
+    const datum = laatsteOpslag || maakHuidigeDatum();
     const avond: Speelavond = {
       datum,
       aanwezigen,
@@ -196,9 +300,14 @@ export function SpeelavondProvider({
     setLaatsteOpslag(datum);
     slaSpeelavondOp(avond);
     void repository.addToHistorie(avond);
-    setHistorie(laadHistorie());
+    setHistorie(
+      laadHistorie().map((a) => ({
+        ...a,
+        borden: normaliseerBorden(a.borden),
+      }))
+    );
     alert("Speelavond opgeslagen!");
-  }, [aanwezigen, borden, gasten]);
+  }, [aanwezigen, borden, gasten, laatsteOpslag]);
 
   const nieuweAvond = useCallback(() => {
     if (
@@ -216,7 +325,12 @@ export function SpeelavondProvider({
       };
       if (borden.length > 0) {
         void repository.addToHistorie(huidig);
-        setHistorie(laadHistorie());
+        setHistorie(
+          laadHistorie().map((a) => ({
+            ...a,
+            borden: normaliseerBorden(a.borden),
+          }))
+        );
       }
     }
 
@@ -229,8 +343,76 @@ export function SpeelavondProvider({
     verwijderSpeelavond();
   }, [aanwezigen, borden, gasten, laatsteOpslag]);
 
+  const huidigeAvondVoorPrint = useMemo(
+    (): Speelavond => ({
+      datum: laatsteOpslag || maakHuidigeDatum(),
+      aanwezigen,
+      gasten,
+      borden,
+    }),
+    [aanwezigen, borden, gasten, laatsteOpslag]
+  );
+
   const printSchema = useCallback(() => {
-    window.print();
+    setPrintPreviewOpen(false);
+    requestAnimationFrame(() => {
+      window.print();
+      setPrintAvond(null);
+    });
+  }, []);
+
+  const exportPdf = useCallback(() => {
+    setPrintPreviewOpen(false);
+    requestAnimationFrame(() => {
+      window.print();
+      setPrintAvond(null);
+    });
+  }, []);
+
+  const openPrintPreview = useCallback(() => {
+    setPrintAvond(null);
+    setPrintPreviewOpen(true);
+  }, []);
+
+  const sluitPrintPreview = useCallback(() => {
+    setPrintPreviewOpen(false);
+    setPrintAvond(null);
+  }, []);
+
+  const laadAvondUitHistorie = useCallback((datum: string) => {
+    const avond = laadHistorie().find((a) => a.datum === datum);
+    if (!avond) return;
+
+    const state = syncState(avond);
+    setAanwezigen(state.aanwezigen);
+    setGasten(state.gasten);
+    setBorden(state.borden);
+    setLaatsteOpslag(state.laatsteOpslag);
+    slaSpeelavondOp(avond);
+  }, []);
+
+  const verwijderAvondUitHistorie = useCallback((datum: string) => {
+    if (!confirm("Weet je zeker dat je deze speelavond wilt verwijderen?")) {
+      return;
+    }
+    verwijderUitHistorie(datum);
+    setHistorie(
+      laadHistorie().map((a) => ({
+        ...a,
+        borden: normaliseerBorden(a.borden),
+      }))
+    );
+  }, []);
+
+  const printAvondUitHistorie = useCallback((datum: string) => {
+    const avond = laadHistorie().find((a) => a.datum === datum);
+    if (!avond) return;
+    setPrintAvond({
+      ...avond,
+      borden: normaliseerBorden(avond.borden),
+    });
+    setPrintPreviewOpen(false);
+    requestAnimationFrame(() => window.print());
   }, []);
 
   const dashboardStats = useMemo(
@@ -243,47 +425,93 @@ export function SpeelavondProvider({
     [historie]
   );
 
+  const grafieken = useMemo(
+    () => berekenGrafieken(historie),
+    [historie]
+  );
+
+  const stand = useMemo(
+    () => berekenStand(historie, borden),
+    [historie, borden]
+  );
+
+  const avondVoorPrint = printAvond ?? huidigeAvondVoorPrint;
+
   const value = useMemo<SpeelavondContextValue>(
     () => ({
-      leden: CLUB_LEDEN,
+      leden,
       aanwezigen,
       gasten,
       gastNaam,
       borden,
+      historie,
       laatsteOpslag,
       laatsteOpslagLabel: formatDatum(laatsteOpslag),
+      speelDatumLabel: formatDatumAlleen(laatsteOpslag),
       dashboardStats,
       statistieken,
+      grafieken,
+      stand,
+      huidigSeizoen: haalHuidigSeizoen(),
+      komendeSpeelavond: haalKomendeVrijdag(),
       isGeladen,
+      printPreviewOpen,
       setGastNaam,
       toggleLid,
       selecteerAlleLeden,
       deselecteerAlleLeden,
       voegGastToe,
       verwijderGast,
+      voegLidToe: handleVoegLidToe,
+      hernoemLid: handleHernoemLid,
+      verwijderLid: handleVerwijderLid,
       genereerCompetitieAvond,
+      updateWedstrijd,
       opslaan,
       nieuweAvond,
+      openPrintPreview,
+      sluitPrintPreview,
       printSchema,
+      exportPdf,
+      laadAvondUitHistorie,
+      verwijderAvondUitHistorie,
+      printAvondUitHistorie,
+      avondVoorPrint,
     }),
     [
+      leden,
       aanwezigen,
       borden,
       dashboardStats,
       gastNaam,
       gasten,
+      grafieken,
+      historie,
       isGeladen,
       laatsteOpslag,
+      printPreviewOpen,
+      stand,
       statistieken,
       deselecteerAlleLeden,
+      exportPdf,
       genereerCompetitieAvond,
+      handleHernoemLid,
+      handleVerwijderLid,
+      handleVoegLidToe,
+      laadAvondUitHistorie,
       nieuweAvond,
+      openPrintPreview,
       opslaan,
+      printAvondUitHistorie,
       printSchema,
       selecteerAlleLeden,
+      sluitPrintPreview,
       toggleLid,
+      updateWedstrijd,
+      verwijderAvondUitHistorie,
       verwijderGast,
       voegGastToe,
+      avondVoorPrint,
     ]
   );
 

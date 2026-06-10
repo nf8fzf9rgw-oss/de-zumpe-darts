@@ -16,6 +16,33 @@ export function formatDatum(datum: string): string {
   });
 }
 
+export function formatDatumKort(datum: string): string {
+  if (!datum) return "-";
+  const parsed = new Date(datum);
+  if (Number.isNaN(parsed.getTime())) return datum;
+  return parsed.toLocaleDateString("nl-NL", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+}
+
+export function formatDatumAlleen(datum: string): string {
+  if (!datum) return new Date().toLocaleDateString("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  const parsed = new Date(datum);
+  if (Number.isNaN(parsed.getTime())) return datum;
+  return parsed.toLocaleDateString("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 export function maakHuidigeDatum(): string {
   return new Date().toISOString();
 }
@@ -63,10 +90,19 @@ export function slaHistorieOp(historie: Speelavond[]): void {
 
 export function voegToeAanHistorie(avond: Speelavond): void {
   const historie = laadHistorie();
-  const bestaat = historie.some((item) => item.datum === avond.datum);
-  if (!bestaat) {
+  const index = historie.findIndex((item) => item.datum === avond.datum);
+  if (index >= 0) {
+    const bijgewerkt = [...historie];
+    bijgewerkt[index] = avond;
+    slaHistorieOp(bijgewerkt);
+  } else {
     slaHistorieOp([...historie, avond]);
   }
+}
+
+export function verwijderUitHistorie(datum: string): void {
+  const historie = laadHistorie().filter((item) => item.datum !== datum);
+  slaHistorieOp(historie);
 }
 
 export function maakLegeSpeelavond(): Speelavond {

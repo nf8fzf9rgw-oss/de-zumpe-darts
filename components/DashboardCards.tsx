@@ -23,13 +23,13 @@ const kaarten = [
   },
   {
     key: "aantalBorden",
-    label: "Aantal borden",
+    label: "Actieve borden",
     icon: "📋",
     kleur: "from-zinc-800 to-zinc-950",
   },
   {
     key: "totaalWedstrijden",
-    label: "Totaal wedstrijden",
+    label: "Wedstrijden vandaag",
     icon: "🏆",
     kleur: "from-red-900 to-zinc-950",
   },
@@ -43,8 +43,12 @@ export default function DashboardCards() {
       {kaarten.map((kaart) => (
         <div
           key={kaart.key}
-          className={`group rounded-xl border border-zinc-800 bg-gradient-to-br ${kaart.kleur} p-3 shadow-xl transition-all md:rounded-2xl md:p-4 lg:p-5 lg:hover:-translate-y-1 lg:hover:border-red-700/50 lg:hover:shadow-2xl lg:hover:shadow-red-900/20`}
+          className={`group relative overflow-hidden rounded-xl border border-zinc-800 bg-gradient-to-br ${kaart.kleur} p-3 shadow-xl transition-all md:rounded-2xl md:p-4 lg:p-5 lg:hover:-translate-y-1 lg:hover:border-red-700/50 lg:hover:shadow-2xl lg:hover:shadow-red-900/20`}
         >
+          <div
+            className="pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full border border-red-800/20 opacity-30"
+            aria-hidden
+          />
           <div className="mb-2 flex items-center justify-between md:mb-3 lg:mb-4">
             <span className="text-lg md:text-xl lg:text-2xl">{kaart.icon}</span>
             <span className="hidden h-2 w-2 rounded-full bg-red-500 opacity-70 group-hover:opacity-100 lg:block" />
