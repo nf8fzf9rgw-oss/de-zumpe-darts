@@ -1,0 +1,77 @@
+"use client";
+
+import { useSpeelavond } from "@/context/SpeelavondContext";
+
+interface QuickActionsProps {
+  layout?: "vertical" | "horizontal";
+}
+
+export default function QuickActions({
+  layout = "vertical",
+}: QuickActionsProps) {
+  const {
+    genereerCompetitieAvond,
+    opslaan,
+    nieuweAvond,
+    printSchema,
+  } = useSpeelavond();
+
+  const knoppen = [
+    {
+      label: "Genereer Competitie",
+      onClick: genereerCompetitieAvond,
+      className:
+        "bg-green-700 hover:bg-green-600 text-white",
+    },
+    {
+      label: "Opslaan",
+      onClick: opslaan,
+      className:
+        "bg-orange-700 hover:bg-orange-600 text-white",
+    },
+    {
+      label: "Print Speelschema",
+      onClick: printSchema,
+      className:
+        "bg-blue-700 hover:bg-blue-600 text-white",
+    },
+    {
+      label: "Nieuwe Speelavond",
+      onClick: nieuweAvond,
+      className:
+        "border border-red-800 bg-red-950 text-red-300 hover:bg-red-900",
+    },
+  ] as const;
+
+  if (layout === "horizontal") {
+    return (
+      <div className="no-print flex flex-wrap gap-2">
+        {knoppen.map((knop) => (
+          <button
+            key={knop.label}
+            type="button"
+            onClick={knop.onClick}
+            className={`rounded-xl px-4 py-2.5 text-sm font-bold shadow-lg transition ${knop.className}`}
+          >
+            {knop.label}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <aside className="no-print space-y-2 lg:space-y-3">
+      {knoppen.map((knop) => (
+        <button
+          key={knop.label}
+          type="button"
+          onClick={knop.onClick}
+          className={`w-full rounded-xl px-4 py-3 text-left text-sm font-bold shadow-lg transition lg:px-5 lg:py-3.5 lg:text-base ${knop.className}`}
+        >
+          {knop.label}
+        </button>
+      ))}
+    </aside>
+  );
+}
