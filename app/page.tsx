@@ -6,7 +6,7 @@ import MembersPanel from "@/components/MembersPanel";
 import QuickActions from "@/components/QuickActions";
 import SpeelavondPanel from "@/components/SpeelavondPanel";
 
-export default function DashboardPage() {
+export default function HomePage() {
   return (
     <div className="space-y-4 md:space-y-6 lg:space-y-8">
       <section>
@@ -21,7 +21,6 @@ export default function DashboardPage() {
         <DashboardCards />
       </section>
 
-      {/* Desktop: 3 kolommen | Tablet: 2 kolommen | Mobiel: 1 kolom */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-12 lg:gap-6 xl:gap-8">
         <div className="md:col-span-1 lg:col-span-3">
           <MembersPanel variant="desktop" />
