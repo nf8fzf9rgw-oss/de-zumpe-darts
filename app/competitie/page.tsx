@@ -8,8 +8,8 @@ export default function CompetitiePage() {
         <div>
           <h2 className="text-xl font-bold text-white lg:text-3xl">Competitie</h2>
           <p className="mt-2 text-sm text-zinc-400 lg:text-base">
-            Volledig overzicht van alle borden en wedstrijden voor
-            wedstrijdleiding.
+            Bekijk alle borden en voer uitslagen in. Bestuur gebruikt Quick Actions
+            voor genereren en printen.
           </p>
         </div>
         <div className="hidden lg:block lg:min-w-[280px]">

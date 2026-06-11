@@ -1,5 +1,6 @@
 "use client";
 
+import ProtectedAction from "@/components/ProtectedAction";
 import { telAvondStats } from "@/lib/standings";
 import { formatDatum } from "@/lib/storage";
 import { useSpeelavond } from "@/context/SpeelavondContext";
@@ -57,13 +58,15 @@ export default function SpeelavondenList() {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => laadAvondUitHistorie(avond.datum)}
-                  className="min-h-11 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600"
-                >
-                  Heropenen
-                </button>
+                <ProtectedAction>
+                  <button
+                    type="button"
+                    onClick={() => laadAvondUitHistorie(avond.datum)}
+                    className="min-h-11 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600"
+                  >
+                    Heropenen
+                  </button>
+                </ProtectedAction>
                 <button
                   type="button"
                   onClick={() => printAvondUitHistorie(avond.datum)}
@@ -71,13 +74,15 @@ export default function SpeelavondenList() {
                 >
                   Printen
                 </button>
-                <button
-                  type="button"
-                  onClick={() => verwijderAvondUitHistorie(avond.datum)}
-                  className="min-h-11 rounded-xl border border-red-900 bg-red-950 px-4 py-2.5 text-sm font-semibold text-red-300"
-                >
-                  Verwijderen
-                </button>
+                <ProtectedAction>
+                  <button
+                    type="button"
+                    onClick={() => verwijderAvondUitHistorie(avond.datum)}
+                    className="min-h-11 rounded-xl border border-red-900 bg-red-950 px-4 py-2.5 text-sm font-semibold text-red-300"
+                  >
+                    Verwijderen
+                  </button>
+                </ProtectedAction>
               </div>
             </div>
           </article>

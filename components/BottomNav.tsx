@@ -18,12 +18,12 @@ export default function BottomNav() {
               key={item.href}
               href={item.href}
               aria-current={isActive ? "page" : undefined}
-              className={`flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-2 text-center transition active:scale-95 ${
+              className={`flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-2 text-center transition active:scale-95 ${
                 isActive ? "text-red-500" : "text-zinc-500"
               }`}
             >
               <span className="text-xl">{item.icon}</span>
-              <span className="truncate text-[10px] font-semibold">
+              <span className="truncate text-[9px] font-semibold sm:text-[10px]">
                 {item.shortLabel}
               </span>
             </Link>

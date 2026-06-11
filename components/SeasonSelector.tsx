@@ -1,10 +1,22 @@
 "use client";
 
 import { BESCHIKBARE_SEIZOENEN } from "@/lib/seasons";
+import { useAuth } from "@/context/AuthContext";
 import { useSpeelavond } from "@/context/SpeelavondContext";
 
 export default function SeasonSelector() {
-  const { actiefSeizoen, setActiefSeizoen } = useSpeelavond();
+  const { actiefSeizoen, setActiefSeizoen, actiefSeizoenLabel } =
+    useSpeelavond();
+  const { isBestuur } = useAuth();
+
+  if (!isBestuur) {
+    return (
+      <p className="text-sm text-zinc-400">
+        Seizoen:{" "}
+        <span className="font-semibold text-white">{actiefSeizoenLabel}</span>
+      </p>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2">

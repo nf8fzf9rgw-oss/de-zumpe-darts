@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import BestuurLoginModal from "@/components/BestuurLoginModal";
+import ProtectedAction from "@/components/ProtectedAction";
 import SeasonSelector from "@/components/SeasonSelector";
 import WhatsAppShare from "@/components/WhatsAppShare";
+import { useAuth } from "@/context/AuthContext";
 import { useSpeelavond } from "@/context/SpeelavondContext";
 import { toast } from "@/lib/ui-feedback";
 import {
@@ -22,6 +25,8 @@ export default function InstellingenPage() {
     borden,
     actiefSeizoenLabel,
   } = useSpeelavond();
+  const { isBestuur, logoutBestuur } = useAuth();
+  const [loginOpen, setLoginOpen] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
 
   const handleExportBackup = () => {
@@ -60,11 +65,47 @@ export default function InstellingenPage() {
         <div>
           <h2 className="text-2xl font-bold text-white">Meer</h2>
           <p className="mt-2 text-sm text-zinc-400">
-            Instellingen, export en navigatie.
+            Instellingen, navigatie en account.
           </p>
         </div>
         <SeasonSelector />
       </div>
+
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 lg:p-6">
+        <h3 className="text-lg font-bold text-white">Account</h3>
+        <p className="mt-1 text-sm text-zinc-400">
+          {isBestuur
+            ? "Je bent ingelogd als bestuur met volledige beheertoegang."
+            : "Log in als bestuur voor wedstrijdleiding en beheer."}
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {isBestuur ? (
+            <>
+              <Link
+                href="/beheer"
+                className="min-h-11 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600"
+              >
+                Naar beheer dashboard
+              </Link>
+              <button
+                type="button"
+                onClick={logoutBestuur}
+                className="min-h-11 rounded-xl border border-zinc-700 px-4 py-2.5 text-sm font-semibold text-zinc-300 hover:bg-zinc-900"
+              >
+                Bestuur Uitloggen
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setLoginOpen(true)}
+              className="min-h-11 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-600"
+            >
+              Bestuur Login
+            </button>
+          )}
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
         <Link
@@ -99,6 +140,22 @@ export default function InstellingenPage() {
           <p className="mt-2 font-bold text-white">Hall of Fame</p>
           <p className="text-sm text-zinc-400">Records</p>
         </Link>
+        <Link
+          href="/competitie"
+          className="min-h-[88px] rounded-2xl border border-zinc-800 bg-zinc-950 p-5 transition hover:border-red-800"
+        >
+          <span className="text-2xl">🎯</span>
+          <p className="mt-2 font-bold text-white">Competitie</p>
+          <p className="text-sm text-zinc-400">Alle borden</p>
+        </Link>
+        <Link
+          href="/mijn-poule"
+          className="min-h-[88px] rounded-2xl border border-zinc-800 bg-zinc-950 p-5 transition hover:border-red-800"
+        >
+          <span className="text-2xl">📋</span>
+          <p className="mt-2 font-bold text-white">Mijn Poule</p>
+          <p className="text-sm text-zinc-400">Jouw wedstrijden</p>
+        </Link>
       </div>
 
       <WhatsAppShare />
@@ -117,71 +174,77 @@ export default function InstellingenPage() {
             Seizoen:{" "}
             <span className="font-semibold text-white">{actiefSeizoenLabel}</span>
           </p>
-          <div className="mt-6 space-y-3">
-            <button
-              type="button"
-              onClick={handleExportBackup}
-              className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
-            >
-              Export JSON backup
-            </button>
-            <input
-              ref={importRef}
-              type="file"
-              accept="application/json,.json"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleImportBackup(file);
-                e.target.value = "";
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => importRef.current?.click()}
-              className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
-            >
-              Import JSON backup
-            </button>
-          </div>
+          <ProtectedAction>
+            <div className="mt-6 space-y-3">
+              <button
+                type="button"
+                onClick={handleExportBackup}
+                className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
+              >
+                Export JSON backup
+              </button>
+              <input
+                ref={importRef}
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImportBackup(file);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => importRef.current?.click()}
+                className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
+              >
+                Import JSON backup
+              </button>
+            </div>
+          </ProtectedAction>
         </section>
 
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
-          <h3 className="text-lg font-bold text-white">Acties</h3>
-          <div className="mt-4 space-y-3">
-            <button
-              type="button"
-              onClick={opslaan}
-              className="min-h-11 w-full rounded-xl bg-orange-700 px-4 py-3 font-semibold text-white hover:bg-orange-600"
-            >
-              Speelavond opslaan
-            </button>
-            <button
-              type="button"
-              onClick={openPrintPreview}
-              disabled={borden.length === 0}
-              className="min-h-11 w-full rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
-            >
-              Print preview
-            </button>
-            <button
-              type="button"
-              onClick={printSchema}
-              disabled={borden.length === 0}
-              className="min-h-11 w-full rounded-xl bg-zinc-700 px-4 py-3 font-semibold text-white hover:bg-zinc-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
-            >
-              Printen / PDF
-            </button>
-            <button
-              type="button"
-              onClick={nieuweAvond}
-              className="min-h-11 w-full rounded-xl border border-red-800 bg-red-950 px-4 py-3 font-semibold text-red-300 hover:bg-red-900"
-            >
-              Nieuwe speelavond
-            </button>
-          </div>
-        </section>
+        <ProtectedAction>
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
+            <h3 className="text-lg font-bold text-white">Beheer acties</h3>
+            <div className="mt-4 space-y-3">
+              <button
+                type="button"
+                onClick={opslaan}
+                className="min-h-11 w-full rounded-xl bg-orange-700 px-4 py-3 font-semibold text-white hover:bg-orange-600"
+              >
+                Speelavond opslaan
+              </button>
+              <button
+                type="button"
+                onClick={openPrintPreview}
+                disabled={borden.length === 0}
+                className="min-h-11 w-full rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
+              >
+                Print preview
+              </button>
+              <button
+                type="button"
+                onClick={printSchema}
+                disabled={borden.length === 0}
+                className="min-h-11 w-full rounded-xl bg-zinc-700 px-4 py-3 font-semibold text-white hover:bg-zinc-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
+              >
+                Printen / PDF
+              </button>
+              <button
+                type="button"
+                onClick={nieuweAvond}
+                className="min-h-11 w-full rounded-xl border border-red-800 bg-red-950 px-4 py-3 font-semibold text-red-300 hover:bg-red-900"
+              >
+                Nieuwe speelavond
+              </button>
+            </div>
+          </section>
+        </ProtectedAction>
       </div>
+
+      <BestuurLoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </div>
   );
 }

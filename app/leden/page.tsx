@@ -1,6 +1,7 @@
 import GuestsPanel from "@/components/GuestsPanel";
 import MembersPanel from "@/components/MembersPanel";
 import PlayerProfilePanel from "@/components/PlayerProfilePanel";
+import ProtectedAction from "@/components/ProtectedAction";
 
 export default function LedenPage() {
   return (
@@ -10,16 +11,18 @@ export default function LedenPage() {
           Leden & Gasten
         </h2>
         <p className="mt-2 text-sm text-zinc-400 lg:text-base">
-          Beheer leden, gastspelers en spelerprofielen voor de vrijdagavond.
+          Bekijk spelerprofielen en beheer leden (bestuur).
         </p>
       </div>
 
       <PlayerProfilePanel />
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:gap-8">
-        <MembersPanel variant="desktop" />
-        <GuestsPanel />
-      </div>
+      <ProtectedAction>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:gap-8">
+          <MembersPanel variant="desktop" />
+          <GuestsPanel />
+        </div>
+      </ProtectedAction>
     </div>
   );
 }

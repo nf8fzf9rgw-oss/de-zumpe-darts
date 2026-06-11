@@ -1,9 +1,21 @@
 "use client";
 
+import type { SpelerStand } from "@/types/competition";
 import { useSpeelavond } from "@/context/SpeelavondContext";
 
-export default function StandingsTable() {
-  const { stand, actiefSeizoenLabel } = useSpeelavond();
+interface StandingsTableProps {
+  stand?: SpelerStand[];
+  compact?: boolean;
+  highlightNaam?: string;
+}
+
+export default function StandingsTable({
+  stand: standProp,
+  compact = false,
+  highlightNaam,
+}: StandingsTableProps) {
+  const { stand: contextStand, actiefSeizoenLabel } = useSpeelavond();
+  const stand = standProp ?? contextStand;
 
   if (stand.length === 0) {
     return (
@@ -19,27 +31,37 @@ export default function StandingsTable() {
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950 shadow-xl">
-      <table className="w-full min-w-[720px] text-left text-sm">
+      <table
+        className={`w-full text-left text-sm ${
+          compact ? "min-w-0" : "min-w-[720px]"
+        }`}
+      >
         <thead>
           <tr className="border-b border-zinc-800 bg-zinc-900/80">
-            <th className="px-4 py-4 font-bold text-red-500">#</th>
-            <th className="px-4 py-4 font-bold text-white">Speler</th>
-            <th className="px-4 py-4 font-bold text-white">Punten</th>
-            <th className="px-4 py-4 font-bold text-white">Winst</th>
-            <th className="px-4 py-4 font-bold text-white">180&apos;s</th>
-            <th className="px-4 py-4 font-bold text-white">HF</th>
-            <th className="px-4 py-4 font-bold text-white">%</th>
+            <th className="px-3 py-3 font-bold text-red-500 lg:px-4 lg:py-4">#</th>
+            <th className="px-3 py-3 font-bold text-white lg:px-4 lg:py-4">Speler</th>
+            <th className="px-3 py-3 font-bold text-white lg:px-4 lg:py-4">Punten</th>
+            <th className="px-3 py-3 font-bold text-white lg:px-4 lg:py-4">Winst</th>
+            {!compact && (
+              <>
+                <th className="px-4 py-4 font-bold text-white">180&apos;s</th>
+                <th className="px-4 py-4 font-bold text-white">HF</th>
+                <th className="px-4 py-4 font-bold text-white">%</th>
+              </>
+            )}
           </tr>
         </thead>
         <tbody>
           {stand.map((rij) => (
             <tr
               key={rij.naam}
-              className="border-b border-zinc-800/60 transition hover:bg-zinc-900/50"
+              className={`border-b border-zinc-800/60 transition hover:bg-zinc-900/50 ${
+                highlightNaam === rij.naam ? "bg-red-950/30" : ""
+              }`}
             >
-              <td className="px-4 py-3">
+              <td className="px-3 py-2 lg:px-4 lg:py-3">
                 <span
-                  className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
+                  className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold lg:h-8 lg:w-8 lg:text-sm ${
                     rij.positie <= 3
                       ? "bg-red-700 text-white"
                       : "bg-zinc-800 text-zinc-300"
@@ -48,14 +70,27 @@ export default function StandingsTable() {
                   {rij.positie}
                 </span>
               </td>
-              <td className="px-4 py-3 font-semibold text-white">{rij.naam}</td>
-              <td className="px-4 py-3 font-bold text-red-400">{rij.punten}</td>
-              <td className="px-4 py-3 text-green-400">{rij.gewonnen}</td>
-              <td className="px-4 py-3 text-amber-400">{rij.aantal180s}x</td>
-              <td className="px-4 py-3 text-zinc-300">
-                {rij.hoogsteFinish > 0 ? rij.hoogsteFinish : "—"}
+              <td className="px-3 py-2 font-semibold text-white lg:px-4 lg:py-3">
+                {rij.naam}
+                {highlightNaam === rij.naam && (
+                  <span className="ml-1 text-xs text-red-400">(jij)</span>
+                )}
               </td>
-              <td className="px-4 py-3 text-zinc-400">{rij.percentage}%</td>
+              <td className="px-3 py-2 font-bold text-red-400 lg:px-4 lg:py-3">
+                {rij.punten}
+              </td>
+              <td className="px-3 py-2 text-green-400 lg:px-4 lg:py-3">
+                {rij.gewonnen}
+              </td>
+              {!compact && (
+                <>
+                  <td className="px-4 py-3 text-amber-400">{rij.aantal180s}x</td>
+                  <td className="px-4 py-3 text-zinc-300">
+                    {rij.hoogsteFinish > 0 ? rij.hoogsteFinish : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-zinc-400">{rij.percentage}%</td>
+                </>
+              )}
             </tr>
           ))}
         </tbody>

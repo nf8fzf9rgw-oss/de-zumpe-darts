@@ -8,6 +8,7 @@ import PrintPreviewModal from "@/components/PrintPreviewModal";
 import Sidebar from "@/components/Sidebar";
 import { ConfirmProvider } from "@/components/ui/ConfirmModal";
 import { ToastProvider } from "@/components/ui/Toast";
+import { AuthProvider } from "@/context/AuthContext";
 import { SpeelavondProvider } from "@/context/SpeelavondContext";
 
 function ShellContent({ children }: { children: React.ReactNode }) {
@@ -40,9 +41,11 @@ export default function AppShell({
   return (
     <ToastProvider>
       <ConfirmProvider>
-        <SpeelavondProvider>
-          <ShellContent>{children}</ShellContent>
-        </SpeelavondProvider>
+        <AuthProvider>
+          <SpeelavondProvider>
+            <ShellContent>{children}</ShellContent>
+          </SpeelavondProvider>
+        </AuthProvider>
       </ConfirmProvider>
     </ToastProvider>
   );

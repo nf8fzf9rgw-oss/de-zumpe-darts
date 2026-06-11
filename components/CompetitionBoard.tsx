@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import MatchResultEntry from "@/components/MatchResultEntry";
+import MobileScoreEntry from "@/components/player/MobileScoreEntry";
 import { useSpeelavond } from "@/context/SpeelavondContext";
-import type { Bord, BordStatus } from "@/types/competition";
+import type { Bord, BordStatus, Wedstrijd } from "@/types/competition";
 
 interface CompetitionBoardProps {
   bord: Bord;
@@ -16,14 +18,61 @@ const STATUS_LABELS: Record<BordStatus, { label: string; kleur: string }> = {
   voltooid: { label: "Voltooid", kleur: "bg-green-700" },
 };
 
+function useIsMobile(breakpoint = 1024) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const query = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const update = () => setIsMobile(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, [breakpoint]);
+
+  return isMobile;
+}
+
 export default function CompetitionBoard({
   bord,
   compact = false,
   toonUitslagen = true,
 }: CompetitionBoardProps) {
   const { updateWedstrijd } = useSpeelavond();
+  const isMobile = useIsMobile();
+  const [openWedstrijd, setOpenWedstrijd] = useState<Wedstrijd | null>(null);
   const status = STATUS_LABELS[bord.status];
   const gespeeld = bord.wedstrijden.filter((w) => w.gespeeld).length;
+
+  const renderWedstrijd = (wedstrijd: Wedstrijd) => {
+    if (isMobile && toonUitslagen) {
+      return (
+        <button
+          key={wedstrijd.id}
+          type="button"
+          onClick={() => setOpenWedstrijd(wedstrijd)}
+          className="w-full text-left"
+        >
+          <MatchResultEntry
+            wedstrijd={wedstrijd}
+            compact={compact}
+            onUpdate={() => {}}
+            readOnly
+          />
+        </button>
+      );
+    }
+
+    return (
+      <MatchResultEntry
+        key={wedstrijd.id}
+        wedstrijd={wedstrijd}
+        compact={compact}
+        onUpdate={(updates) =>
+          updateWedstrijd(bord.naam, wedstrijd.id, updates)
+        }
+      />
+    );
+  };
 
   return (
     <article className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950 shadow-xl lg:rounded-2xl">
@@ -86,16 +135,7 @@ export default function CompetitionBoard({
           </h4>
           {toonUitslagen ? (
             <div className="space-y-2">
-              {bord.wedstrijden.map((wedstrijd) => (
-                <MatchResultEntry
-                  key={wedstrijd.id}
-                  wedstrijd={wedstrijd}
-                  compact={compact}
-                  onUpdate={(updates) =>
-                    updateWedstrijd(bord.naam, wedstrijd.id, updates)
-                  }
-                />
-              ))}
+              {bord.wedstrijden.map((wedstrijd) => renderWedstrijd(wedstrijd))}
             </div>
           ) : (
             <ul className="space-y-1.5 lg:space-y-2">
@@ -111,6 +151,18 @@ export default function CompetitionBoard({
           )}
         </div>
       </div>
+
+      {openWedstrijd && (
+        <MobileScoreEntry
+          bordNaam={bord.naam}
+          wedstrijd={openWedstrijd}
+          onClose={() => setOpenWedstrijd(null)}
+          onSave={(updates) => {
+            updateWedstrijd(bord.naam, openWedstrijd.id, updates);
+            setOpenWedstrijd(null);
+          }}
+        />
+      )}
     </article>
   );
 }

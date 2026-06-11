@@ -1,12 +1,13 @@
 "use client";
 
+import ProtectedAction from "@/components/ProtectedAction";
 import { useSpeelavond } from "@/context/SpeelavondContext";
 
 interface QuickActionsProps {
   layout?: "vertical" | "horizontal";
 }
 
-export default function QuickActions({
+function QuickActionsButtons({
   layout = "vertical",
 }: QuickActionsProps) {
   const {
@@ -77,5 +78,13 @@ export default function QuickActions({
         </button>
       ))}
     </aside>
+  );
+}
+
+export default function QuickActions(props: QuickActionsProps) {
+  return (
+    <ProtectedAction>
+      <QuickActionsButtons {...props} />
+    </ProtectedAction>
   );
 }

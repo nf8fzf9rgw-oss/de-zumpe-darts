@@ -9,12 +9,14 @@ interface MatchResultEntryProps {
   wedstrijd: Wedstrijd;
   onUpdate: (updates: WedstrijdUpdate) => void;
   compact?: boolean;
+  readOnly?: boolean;
 }
 
 export default function MatchResultEntry({
   wedstrijd,
   onUpdate,
   compact = false,
+  readOnly = false,
 }: MatchResultEntryProps) {
   const handleScore = (veld: "score1" | "score2", waarde: string) => {
     const nummer = Math.max(0, Math.min(9, parseInt(waarde, 10) || 0));
@@ -57,7 +59,8 @@ export default function MatchResultEntry({
             type="checkbox"
             checked={wedstrijd.gespeeld}
             onChange={(e) => onUpdate({ gespeeld: e.target.checked })}
-            className="h-5 w-5 rounded border-zinc-600 accent-red-600"
+            disabled={readOnly}
+            className="h-5 w-5 rounded border-zinc-600 accent-red-600 disabled:opacity-60"
           />
           Gespeeld
         </label>
@@ -74,7 +77,8 @@ export default function MatchResultEntry({
             max={9}
             value={wedstrijd.score1}
             onChange={(e) => handleScore("score1", e.target.value)}
-            className="h-11 w-14 rounded-lg border border-zinc-700 bg-black px-2 text-center text-lg font-bold text-white focus:border-red-600 focus:outline-none"
+            readOnly={readOnly}
+            className="h-11 w-14 rounded-lg border border-zinc-700 bg-black px-2 text-center text-lg font-bold text-white focus:border-red-600 focus:outline-none read-only:opacity-80"
             aria-label={`Score ${wedstrijd.speler1}`}
           />
         </div>
@@ -86,7 +90,8 @@ export default function MatchResultEntry({
             max={9}
             value={wedstrijd.score2}
             onChange={(e) => handleScore("score2", e.target.value)}
-            className="h-11 w-14 rounded-lg border border-zinc-700 bg-black px-2 text-center text-lg font-bold text-white focus:border-red-600 focus:outline-none"
+            readOnly={readOnly}
+            className="h-11 w-14 rounded-lg border border-zinc-700 bg-black px-2 text-center text-lg font-bold text-white focus:border-red-600 focus:outline-none read-only:opacity-80"
             aria-label={`Score ${wedstrijd.speler2}`}
           />
           <span className="max-w-[100px] truncate text-xs text-zinc-400 sm:text-sm">

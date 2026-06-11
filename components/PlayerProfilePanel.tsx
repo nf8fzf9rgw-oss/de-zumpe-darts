@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import ProtectedAction from "@/components/ProtectedAction";
 import { berekenSpelerProfiel } from "@/lib/standings";
 import { confirmDialog, toast } from "@/lib/ui-feedback";
 import { useSpeelavond } from "@/context/SpeelavondContext";
@@ -50,30 +51,34 @@ export default function PlayerProfilePanel() {
         />
 
         <div className="mt-4 flex gap-2">
-          <input
-            value={nieuweNaam}
-            onChange={(e) => setNieuweNaam(e.target.value)}
-            placeholder="Nieuwe speler..."
-            className="flex-1 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-white"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && nieuweNaam.trim()) {
-                voegLidToe(nieuweNaam);
-                setNieuweNaam("");
-              }
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => {
-              if (nieuweNaam.trim()) {
-                voegLidToe(nieuweNaam);
-                setNieuweNaam("");
-              }
-            }}
-            className="min-h-11 rounded-xl bg-red-700 px-4 py-3 font-semibold text-white"
-          >
-            +
-          </button>
+          <ProtectedAction>
+            <>
+              <input
+                value={nieuweNaam}
+                onChange={(e) => setNieuweNaam(e.target.value)}
+                placeholder="Nieuwe speler..."
+                className="flex-1 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-white"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && nieuweNaam.trim()) {
+                    voegLidToe(nieuweNaam);
+                    setNieuweNaam("");
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (nieuweNaam.trim()) {
+                    voegLidToe(nieuweNaam);
+                    setNieuweNaam("");
+                  }
+                }}
+                className="min-h-11 rounded-xl bg-red-700 px-4 py-3 font-semibold text-white"
+              >
+                +
+              </button>
+            </>
+          </ProtectedAction>
         </div>
 
         <div className="mt-4 max-h-[400px] space-y-2 overflow-y-auto">
@@ -115,58 +120,62 @@ export default function PlayerProfilePanel() {
                   Positie #{profiel.positie || "—"} · {profiel.punten} punten
                 </p>
               </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBewerkModus(true);
-                    setNieuweNaam(geselecteerd);
-                  }}
-                  className="rounded-lg border border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-300"
-                >
-                  Bewerken
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const bevestigd = await confirmDialog({
-                      title: "Speler verwijderen",
-                      message: `Weet je zeker dat je ${geselecteerd} wilt verwijderen?`,
-                      confirmLabel: "Verwijderen",
-                      destructive: true,
-                    });
-                    if (!bevestigd) return;
-                    verwijderLid(geselecteerd);
-                    setGeselecteerd(null);
-                    toast("Speler verwijderd.", "success");
-                  }}
-                  className="rounded-lg border border-red-900 px-3 py-2 text-xs font-semibold text-red-400"
-                >
-                  Verwijderen
-                </button>
-              </div>
+              <ProtectedAction>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBewerkModus(true);
+                      setNieuweNaam(geselecteerd);
+                    }}
+                    className="rounded-lg border border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-300"
+                  >
+                    Bewerken
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const bevestigd = await confirmDialog({
+                        title: "Speler verwijderen",
+                        message: `Weet je zeker dat je ${geselecteerd} wilt verwijderen?`,
+                        confirmLabel: "Verwijderen",
+                        destructive: true,
+                      });
+                      if (!bevestigd) return;
+                      verwijderLid(geselecteerd);
+                      setGeselecteerd(null);
+                      toast("Speler verwijderd.", "success");
+                    }}
+                    className="rounded-lg border border-red-900 px-3 py-2 text-xs font-semibold text-red-400"
+                  >
+                    Verwijderen
+                  </button>
+                </div>
+              </ProtectedAction>
             </div>
 
-            {bewerkModus && (
-              <div className="mt-4 flex gap-2">
-                <input
-                  value={nieuweNaam}
-                  onChange={(e) => setNieuweNaam(e.target.value)}
-                  className="flex-1 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2 text-white"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    hernoemLid(geselecteerd, nieuweNaam);
-                    setGeselecteerd(nieuweNaam.trim());
-                    setBewerkModus(false);
-                  }}
-                  className="rounded-xl bg-red-700 px-4 py-2 font-semibold text-white"
-                >
-                  Opslaan
-                </button>
-              </div>
-            )}
+            <ProtectedAction>
+              {bewerkModus && (
+                <div className="mt-4 flex gap-2">
+                  <input
+                    value={nieuweNaam}
+                    onChange={(e) => setNieuweNaam(e.target.value)}
+                    className="flex-1 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2 text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      hernoemLid(geselecteerd, nieuweNaam);
+                      setGeselecteerd(nieuweNaam.trim());
+                      setBewerkModus(false);
+                    }}
+                    className="rounded-xl bg-red-700 px-4 py-2 font-semibold text-white"
+                  >
+                    Opslaan
+                  </button>
+                </div>
+              )}
+            </ProtectedAction>
 
             {profiel.badges.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
