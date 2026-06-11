@@ -1,13 +1,100 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// Prisma schema — voorbereid op database-migratie
+// Huidige app gebruikt localStorage als fallback via speelavond.service.ts
 
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Seizoen {
+  id           String       @id
+  label        String
+  startDatum   DateTime?
+  eindDatum    DateTime?
+  speelavonden Speelavond[]
+  createdAt    DateTime     @default(now())
+}
+
+model Speler {
+  id        String   @id @default(cuid())
+  naam      String   @unique
+  actief    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  stats     SpelerStatistieken?
+  avonden   SpeelavondAanwezigheid[]
+}
+
+model Speelavond {
+  id                String   @id @default(cuid())
+  datum             DateTime
+  seizoenId         String
+  seizoen           Seizoen  @relation(fields: [seizoenId], references: [id])
+  spelerVanDeAvond  String?
+  aanmeldToken      String?
+  borden            Bord[]
+  aanwezigen        SpeelavondAanwezigheid[]
+  createdAt         DateTime @default(now())
+}
+
+model SpeelavondAanwezigheid {
+  id           String     @id @default(cuid())
+  speelavondId String
+  spelerId     String
+  isGast       Boolean    @default(false)
+  speelavond   Speelavond @relation(fields: [speelavondId], references: [id])
+  speler       Speler     @relation(fields: [spelerId], references: [id])
+
+  @@unique([speelavondId, spelerId])
+}
+
+model Bord {
+  id           String     @id @default(cuid())
+  naam         String
+  speelavondId String
+  speelavond   Speelavond @relation(fields: [speelavondId], references: [id])
+  wedstrijden  Wedstrijd[]
+  status       String     @default("wachtend")
+}
+
+model Wedstrijd {
+  id                    String  @id @default(cuid())
+  bordId                String
+  bord                  Bord    @relation(fields: [bordId], references: [id])
+  speler1               String
+  speler2               String
+  gespeeld              Boolean @default(false)
+  score1                Int     @default(0)
+  score2                Int     @default(0)
+  winnaar               String?
+  aantal180Speler1      Int     @default(0)
+  aantal180Speler2      Int     @default(0)
+  hoogsteFinishSpeler1  Int?
+  hoogsteFinishSpeler2  Int?
+}
+
+model SpelerStatistieken {
+  id              String @id @default(cuid())
+  spelerId        String @unique
+  speler          Speler @relation(fields: [spelerId], references: [id])
+  competitiepunten Int   @default(0)
+  bonuspunten     Int    @default(0)
+  gewonnen        Int    @default(0)
+  verloren        Int    @default(0)
+  aantal180s      Int    @default(0)
+  hoogsteFinish   Int    @default(0)
+  aanwezigheid    Int    @default(0)
+  avondTitels     Int    @default(0)
+}
+
+model ClubRecord {
+  id        String   @id @default(cuid())
+  type      String   @unique
+  spelerNaam String
+  waarde    Float
+  seizoenId String?
+  bijgewerkt DateTime @updatedAt
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { formatWedstrijd } from "@/lib/competition";
+import { seizoenLabel } from "@/lib/seasons";
 import { formatDatumAlleen } from "@/lib/storage";
 import { useSpeelavond } from "@/context/SpeelavondContext";
 import type { Speelavond } from "@/types/competition";
@@ -16,11 +17,10 @@ export default function PrintCompetition({
 }: PrintCompetitionProps) {
   const { avondVoorPrint } = useSpeelavond();
   const avond = avondProp ?? avondVoorPrint;
-  const { borden, aanwezigen, gasten, datum } = avond;
+  const { borden, datum, seizoen } = avond;
 
   if (borden.length === 0) return null;
 
-  const totaalSpelers = aanwezigen.length + gasten.length;
   const datumLabel = formatDatumAlleen(datum);
   const isPreview = variant === "preview";
 
@@ -34,10 +34,10 @@ export default function PrintCompetition({
     >
       <header className="print-header">
         <p className="print-club-sub">Dart Vereniging De Zumpe</p>
-        <h1 className="print-title">Vrijdagavond Competitie</h1>
+        <h1 className="print-title">Speelavond</h1>
         <div className="print-meta">
           <span>Datum: {datumLabel}</span>
-          <span>Aantal spelers: {totaalSpelers}</span>
+          <span>{seizoenLabel(seizoen)}</span>
         </div>
       </header>
 
@@ -61,10 +61,7 @@ export default function PrintCompetition({
             <h3 className="print-section-title">Wedstrijden</h3>
             <ul className="print-wedstrijden-lijst">
               {bord.wedstrijden.map((wedstrijd) => (
-                <li
-                  key={wedstrijd.id}
-                  className="print-wedstrijd-item"
-                >
+                <li key={wedstrijd.id} className="print-wedstrijd-item">
                   <span className="print-checkbox" aria-hidden>
                     ☐
                   </span>
@@ -77,7 +74,7 @@ export default function PrintCompetition({
       ))}
 
       <footer className="print-footer">
-        <p>Dart Vereniging De Zumpe — Vrijdagavond Competitie</p>
+        <p>Dart Vereniging De Zumpe — {seizoenLabel(seizoen)}</p>
       </footer>
     </div>
   );

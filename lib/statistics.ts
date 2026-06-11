@@ -21,6 +21,8 @@ export function berekenStatistieken(
     hoogsteWinstpercentageWaarde: 0,
     meesteWedstrijden: "-",
     meesteWedstrijdenAantal: 0,
+    meeste180s: "-",
+    meeste180sAantal: 0,
   };
 
   if (historie.length === 0) return leeg;
@@ -30,10 +32,8 @@ export function berekenStatistieken(
   let totaalBorden = 0;
 
   historie.forEach((avond) => {
-    const spelers = avond.aanwezigen.length + avond.gasten.length;
-    totaalSpelers += spelers;
+    totaalSpelers += avond.aanwezigen.length + avond.gasten.length;
     totaalBorden += avond.borden.length;
-
     avond.aanwezigen.forEach((lid) => {
       aanwezigheid.set(lid, (aanwezigheid.get(lid) ?? 0) + 1);
     });
@@ -41,7 +41,6 @@ export function berekenStatistieken(
 
   let meestAanwezig = "-";
   let meestAanwezigAantal = 0;
-
   aanwezigheid.forEach((aantal, lid) => {
     if (aantal > meestAanwezigAantal) {
       meestAanwezig = lid;
@@ -50,7 +49,6 @@ export function berekenStatistieken(
   });
 
   const stand = berekenStand(historie);
-
   const meesteOverwinningen = stand[0];
   const meesteWedstrijden = [...stand].sort(
     (a, b) => b.gewonnen + b.verloren - (a.gewonnen + a.verloren)
@@ -58,6 +56,7 @@ export function berekenStatistieken(
   const hoogsteWinst = [...stand]
     .filter((s) => s.gewonnen + s.verloren >= 3)
     .sort((a, b) => b.percentage - a.percentage)[0];
+  const meeste180 = [...stand].sort((a, b) => b.aantal180s - a.aantal180s)[0];
 
   return {
     totaalAvonden: historie.length,
@@ -68,10 +67,13 @@ export function berekenStatistieken(
     meesteOverwinningen: meesteOverwinningen?.naam ?? "-",
     meesteOverwinningenAantal: meesteOverwinningen?.gewonnen ?? 0,
     hoogsteWinstpercentage: hoogsteWinst?.naam ?? stand[0]?.naam ?? "-",
-    hoogsteWinstpercentageWaarde: hoogsteWinst?.percentage ?? stand[0]?.percentage ?? 0,
+    hoogsteWinstpercentageWaarde:
+      hoogsteWinst?.percentage ?? stand[0]?.percentage ?? 0,
     meesteWedstrijden: meesteWedstrijden?.naam ?? "-",
     meesteWedstrijdenAantal:
       (meesteWedstrijden?.gewonnen ?? 0) + (meesteWedstrijden?.verloren ?? 0),
+    meeste180s: meeste180?.naam ?? "-",
+    meeste180sAantal: meeste180?.aantal180s ?? 0,
   };
 }
 
@@ -92,10 +94,8 @@ export function berekenGrafieken(historie: Speelavond[]): StatistiekGrafieken {
 
   const uniekeSpelersPerAvond: number[] = [];
   const totaalUniek = new Set<string>();
-
   gesorteerd.forEach((avond) => {
-    const spelers = [...avond.aanwezigen, ...avond.gasten];
-    spelers.forEach((s) => totaalUniek.add(s));
+    [...avond.aanwezigen, ...avond.gasten].forEach((s) => totaalUniek.add(s));
     uniekeSpelersPerAvond.push(totaalUniek.size);
   });
 
@@ -105,16 +105,6 @@ export function berekenGrafieken(historie: Speelavond[]): StatistiekGrafieken {
   }));
 
   return { opkomstPerAvond, spelersOntwikkeling, wedstrijdenPerAvond };
-}
-
-export function haalHuidigSeizoen(): string {
-  const nu = new Date();
-  const jaar = nu.getFullYear();
-  const maand = nu.getMonth();
-  if (maand >= 8) {
-    return `${jaar}-${jaar + 1}`;
-  }
-  return `${jaar - 1}-${jaar}`;
 }
 
 export function haalKomendeVrijdag(): string {

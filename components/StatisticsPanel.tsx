@@ -9,6 +9,7 @@ const statKaarten = [
   { key: "meesteOverwinningen", label: "Meeste overwinningen", icon: "🏆" },
   { key: "hoogsteWinstpercentage", label: "Hoogste winstpercentage", icon: "📈" },
   { key: "meesteWedstrijden", label: "Meeste gespeelde wedstrijden", icon: "🎯" },
+  { key: "meeste180s", label: "Meeste 180's", icon: "🔥" },
   { key: "gemiddeldBorden", label: "Gemiddeld aantal borden", icon: "📋" },
 ] as const;
 
@@ -32,11 +33,14 @@ export default function StatisticsPanel() {
         if (kaart.key === "meesteWedstrijden" && statistieken.meesteWedstrijdenAantal > 0) {
           waarde = `${statistieken.meesteWedstrijden} (${statistieken.meesteWedstrijdenAantal})`;
         }
+        if (kaart.key === "meeste180s" && statistieken.meeste180sAantal > 0) {
+          waarde = `${statistieken.meeste180s} (${statistieken.meeste180sAantal}x)`;
+        }
 
         return (
           <div
             key={kaart.key}
-            className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 shadow-xl transition md:rounded-2xl md:p-6 lg:hover:border-red-800"
+            className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 shadow-xl md:rounded-2xl md:p-6 lg:hover:border-red-800"
           >
             <div className="mb-4 text-3xl">{kaart.icon}</div>
             <p className="text-2xl font-bold text-white md:text-3xl">{waarde}</p>

@@ -6,35 +6,56 @@ import { useSpeelavond } from "@/context/SpeelavondContext";
 
 export default function DashboardWidgets() {
   const {
-    historie,
+    seizoenHistorie,
     statistieken,
-    huidigSeizoen,
+    actiefSeizoenLabel,
     komendeSpeelavond,
     dashboardStats,
-    aanwezigen,
-    gasten,
+    spelerVanDeAvond,
+    clubRecords,
   } = useSpeelavond();
 
-  const laatsteAvond = [...historie].sort(
+  const laatsteAvond = [...seizoenHistorie].sort(
     (a, b) => new Date(b.datum).getTime() - new Date(a.datum).getTime()
   )[0];
 
   const widgets = [
     {
+      titel: "Leden",
+      waarde: dashboardStats.totaalLeden,
+      sub: `${dashboardStats.totaalSpelers} actief vanavond`,
+      icon: "👥",
+      href: "/leden",
+    },
+    {
+      titel: "Gem. opkomst",
+      waarde: statistieken.gemiddeldSpelers,
+      sub: `${statistieken.totaalAvonden} avonden`,
+      icon: "📊",
+      href: "/statistieken",
+    },
+    {
+      titel: "Speler van de avond",
+      waarde: spelerVanDeAvond ?? "Nog niet bepaald",
+      sub: laatsteAvond?.spelerVanDeAvond
+        ? `Vorige: ${laatsteAvond.spelerVanDeAvond}`
+        : "Registreer uitslagen",
+      icon: "⭐",
+      href: "/competitie",
+    },
+    {
       titel: "Laatste speelavond",
-      waarde: laatsteAvond ? formatDatum(laatsteAvond.datum) : "Nog geen historie",
-      sub: laatsteAvond
-        ? `${laatsteAvond.aanwezigen.length + laatsteAvond.gasten.length} spelers`
-        : "Sla de eerste avond op",
+      waarde: laatsteAvond ? formatDatum(laatsteAvond.datum) : "Geen historie",
+      sub: actiefSeizoenLabel,
       icon: "📅",
       href: "/speelavonden",
     },
     {
-      titel: "Huidig seizoen",
-      waarde: huidigSeizoen,
-      sub: `${statistieken.totaalAvonden} avonden gespeeld`,
-      icon: "🏅",
-      href: "/stand",
+      titel: "Clubrecord 180",
+      waarde: clubRecords.meeste180s.naam,
+      sub: clubRecords.meeste180s.label,
+      icon: "🎯",
+      href: "/hall-of-fame",
     },
     {
       titel: "Meest aanwezig",
@@ -43,39 +64,39 @@ export default function DashboardWidgets() {
         statistieken.meestAanwezigAantal > 0
           ? `${statistieken.meestAanwezigAantal}x aanwezig`
           : "Nog geen data",
-      icon: "⭐",
+      icon: "🏅",
       href: "/statistieken",
     },
     {
-      titel: "Komende speelavond",
+      titel: "Komende avond",
       waarde: komendeSpeelavond,
-      sub: `Vandaag: ${dashboardStats.totaalSpelers} spelers (${aanwezigen.length} leden + ${gasten.length} gasten)`,
-      icon: "🎯",
-      href: "/competitie",
+      sub: `${dashboardStats.aantalBorden} borden actief`,
+      icon: "🗓",
+      href: "/",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
       {widgets.map((widget) => (
         <Link
           key={widget.titel}
           href={widget.href}
-          className="group rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-xl transition hover:border-red-800/50 hover:bg-zinc-900/80 lg:p-5"
+          className="group rounded-2xl border border-zinc-800 bg-zinc-950 p-3 shadow-xl transition hover:border-red-800/50 lg:p-4"
         >
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-2xl">{widget.icon}</span>
-            <span className="text-xs text-zinc-600 group-hover:text-red-500">
-              →
-            </span>
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xl">{widget.icon}</span>
+            <span className="text-xs text-zinc-600 group-hover:text-red-500">→</span>
           </div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 lg:text-xs">
             {widget.titel}
           </p>
-          <p className="mt-1 truncate text-base font-bold text-white lg:text-lg">
+          <p className="mt-1 truncate text-sm font-bold text-white lg:text-base">
             {widget.waarde}
           </p>
-          <p className="mt-1 text-xs text-zinc-400">{widget.sub}</p>
+          <p className="mt-0.5 truncate text-[10px] text-zinc-400 lg:text-xs">
+            {widget.sub}
+          </p>
         </Link>
       ))}
     </div>

@@ -8,7 +8,13 @@ export const NAV_ITEMS = [
     mobile: true,
   },
   { href: "/leden", label: "Leden", shortLabel: "Leden", icon: "👥", mobile: true },
-  { href: "/stand", label: "Stand", shortLabel: "Stand", icon: "📊", mobile: true },
+  {
+    href: "/stand",
+    label: "Ranglijst",
+    shortLabel: "Ranglijst",
+    icon: "📊",
+    mobile: true,
+  },
   {
     href: "/instellingen",
     label: "Instellingen",
@@ -21,6 +27,7 @@ export const NAV_ITEMS = [
 export const DESKTOP_NAV_EXTRA = [
   { href: "/speelavonden", label: "Speelavonden", icon: "📅" },
   { href: "/statistieken", label: "Statistieken", icon: "📈" },
+  { href: "/hall-of-fame", label: "Hall of Fame", icon: "🏆" },
 ] as const;
 
 export const MOBILE_NAV_ITEMS = NAV_ITEMS.filter((item) => item.mobile);

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import SeasonSelector from "@/components/SeasonSelector";
+import WhatsAppShare from "@/components/WhatsAppShare";
 import { useSpeelavond } from "@/context/SpeelavondContext";
 
 export default function InstellingenPage() {
@@ -11,26 +13,29 @@ export default function InstellingenPage() {
     openPrintPreview,
     exportPdf,
     borden,
-    huidigSeizoen,
+    actiefSeizoenLabel,
   } = useSpeelavond();
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-bold text-white">Meer</h2>
-        <p className="mt-2 text-sm text-zinc-400">
-          Instellingen, export en navigatie naar overige onderdelen.
-        </p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-white">Meer</h2>
+          <p className="mt-2 text-sm text-zinc-400">
+            Instellingen, export en navigatie.
+          </p>
+        </div>
+        <SeasonSelector />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
         <Link
           href="/speelavonden"
           className="min-h-[88px] rounded-2xl border border-zinc-800 bg-zinc-950 p-5 transition hover:border-red-800"
         >
           <span className="text-2xl">📅</span>
           <p className="mt-2 font-bold text-white">Speelavonden</p>
-          <p className="text-sm text-zinc-400">Historie bekijken</p>
+          <p className="text-sm text-zinc-400">Historie</p>
         </Link>
         <Link
           href="/statistieken"
@@ -38,17 +43,27 @@ export default function InstellingenPage() {
         >
           <span className="text-2xl">📈</span>
           <p className="mt-2 font-bold text-white">Statistieken</p>
-          <p className="text-sm text-zinc-400">Grafieken & trends</p>
+          <p className="text-sm text-zinc-400">Grafieken</p>
         </Link>
         <Link
           href="/stand"
           className="min-h-[88px] rounded-2xl border border-zinc-800 bg-zinc-950 p-5 transition hover:border-red-800"
         >
           <span className="text-2xl">🏆</span>
-          <p className="mt-2 font-bold text-white">Stand</p>
-          <p className="text-sm text-zinc-400">Ranglijst</p>
+          <p className="mt-2 font-bold text-white">Ranglijst</p>
+          <p className="text-sm text-zinc-400">Stand</p>
+        </Link>
+        <Link
+          href="/hall-of-fame"
+          className="min-h-[88px] rounded-2xl border border-zinc-800 bg-zinc-950 p-5 transition hover:border-red-800"
+        >
+          <span className="text-2xl">🥇</span>
+          <p className="mt-2 font-bold text-white">Hall of Fame</p>
+          <p className="text-sm text-zinc-400">Records</p>
         </Link>
       </div>
+
+      <WhatsAppShare />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
@@ -58,13 +73,11 @@ export default function InstellingenPage() {
           </p>
           <p className="mt-4 text-sm text-zinc-300">
             Laatste opslag:{" "}
-            <span className="font-semibold text-white">
-              {laatsteOpslagLabel}
-            </span>
+            <span className="font-semibold text-white">{laatsteOpslagLabel}</span>
           </p>
           <p className="mt-2 text-sm text-zinc-300">
             Seizoen:{" "}
-            <span className="font-semibold text-white">{huidigSeizoen}</span>
+            <span className="font-semibold text-white">{actiefSeizoenLabel}</span>
           </p>
         </section>
 

@@ -6,13 +6,14 @@ import { useSpeelavond } from "@/context/SpeelavondContext";
 
 export default function SpeelavondenList() {
   const {
-    historie,
+    seizoenHistorie,
     laadAvondUitHistorie,
     verwijderAvondUitHistorie,
     printAvondUitHistorie,
+    actiefSeizoenLabel,
   } = useSpeelavond();
 
-  const gesorteerd = [...historie].sort(
+  const gesorteerd = [...seizoenHistorie].sort(
     (a, b) => new Date(b.datum).getTime() - new Date(a.datum).getTime()
   );
 
@@ -20,9 +21,9 @@ export default function SpeelavondenList() {
     return (
       <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-950 px-6 py-16 text-center">
         <p className="text-4xl">📅</p>
-        <p className="mt-4 text-lg font-semibold text-white">Geen speelavonden opgeslagen</p>
+        <p className="mt-4 text-lg font-semibold text-white">Geen speelavonden</p>
         <p className="mt-2 text-sm text-zinc-400">
-          Sla een speelavond op om historie op te bouwen.
+          Nog geen opgeslagen avonden voor {actiefSeizoenLabel}.
         </p>
       </div>
     );
@@ -35,7 +36,7 @@ export default function SpeelavondenList() {
         return (
           <article
             key={avond.datum}
-            className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-xl transition hover:border-red-800/40 md:p-6"
+            className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-xl md:p-6"
           >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
@@ -48,6 +49,11 @@ export default function SpeelavondenList() {
                   <span>🎯 {stats.aantalBorden} borden</span>
                   <span>🏆 {stats.aantalWedstrijden} wedstrijden</span>
                 </div>
+                {stats.spelerVanDeAvond && (
+                  <p className="mt-2 text-sm font-semibold text-amber-400">
+                    ⭐ Speler van de avond: {stats.spelerVanDeAvond}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -56,7 +62,7 @@ export default function SpeelavondenList() {
                   onClick={() => laadAvondUitHistorie(avond.datum)}
                   className="min-h-11 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600"
                 >
-                  Opnieuw openen
+                  Heropenen
                 </button>
                 <button
                   type="button"
@@ -68,7 +74,7 @@ export default function SpeelavondenList() {
                 <button
                   type="button"
                   onClick={() => verwijderAvondUitHistorie(avond.datum)}
-                  className="min-h-11 rounded-xl border border-red-900 bg-red-950 px-4 py-2.5 text-sm font-semibold text-red-300 hover:bg-red-900"
+                  className="min-h-11 rounded-xl border border-red-900 bg-red-950 px-4 py-2.5 text-sm font-semibold text-red-300"
                 >
                   Verwijderen
                 </button>
