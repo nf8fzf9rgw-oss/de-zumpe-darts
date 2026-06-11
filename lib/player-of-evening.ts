@@ -1,7 +1,5 @@
-import { bereken180Bonus, berekenFinishBonus } from "@/lib/scoring";
+import { bereken180Bonus, berekenFinishBonus, PUNTEN_PER_WINST } from "@/lib/scoring";
 import type { Bord, SpelerVanDeAvondScore, Wedstrijd } from "@/types/competition";
-
-const PUNTEN_PER_WINST = 3;
 
 function verwerkWedstrijdAvond(
   scores: Map<string, SpelerVanDeAvondScore>,

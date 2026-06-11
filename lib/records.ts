@@ -1,34 +1,47 @@
 import { berekenStand } from "@/lib/standings";
 import type { Bord, ClubRecords, Speelavond, Wedstrijd } from "@/types/competition";
 
-function verzamelWedstrijden(
+function berekenWinstreeksen(
   historie: Speelavond[],
   huidigeBorden: Bord[]
-): Wedstrijd[] {
-  const lijst: Wedstrijd[] = [];
-  historie.forEach((avond) => {
-    avond.borden.forEach((bord) => lijst.push(...bord.wedstrijden));
-  });
-  huidigeBorden.forEach((bord) => lijst.push(...bord.wedstrijden));
-  return lijst;
-}
-
-function berekenWinstreeksen(wedstrijden: Wedstrijd[]): Map<string, number> {
+): Map<string, number> {
   const streaks = new Map<string, number>();
   const huidig = new Map<string, number>();
 
-  wedstrijden
-    .filter((w) => w.gespeeld && w.winnaar)
-    .forEach((w) => {
-      const winnaar = w.winnaar!;
-      const verliezer =
-        winnaar === w.speler1 ? w.speler2 : w.speler1;
+  const avonden = [...historie].sort(
+    (a, b) => new Date(a.datum).getTime() - new Date(b.datum).getTime()
+  );
 
-      huidig.set(winnaar, (huidig.get(winnaar) ?? 0) + 1);
-      huidig.set(verliezer, 0);
+  avonden.forEach((avond) => {
+    const wedstrijden = avond.borden.flatMap((b) => b.wedstrijden);
+    wedstrijden
+      .filter((w) => w.gespeeld && w.winnaar)
+      .forEach((w) => {
+        const winnaar = w.winnaar!;
+        const verliezer = winnaar === w.speler1 ? w.speler2 : w.speler1;
+        huidig.set(winnaar, (huidig.get(winnaar) ?? 0) + 1);
+        huidig.set(verliezer, 0);
+        streaks.set(
+          winnaar,
+          Math.max(streaks.get(winnaar) ?? 0, huidig.get(winnaar)!)
+        );
+      });
+  });
 
-      streaks.set(winnaar, Math.max(streaks.get(winnaar) ?? 0, huidig.get(winnaar)!));
-    });
+  huidigeBorden.forEach((bord) => {
+    bord.wedstrijden
+      .filter((w) => w.gespeeld && w.winnaar)
+      .forEach((w) => {
+        const winnaar = w.winnaar!;
+        const verliezer = winnaar === w.speler1 ? w.speler2 : w.speler1;
+        huidig.set(winnaar, (huidig.get(winnaar) ?? 0) + 1);
+        huidig.set(verliezer, 0);
+        streaks.set(
+          winnaar,
+          Math.max(streaks.get(winnaar) ?? 0, huidig.get(winnaar)!)
+        );
+      });
+  });
 
   return streaks;
 }
@@ -38,7 +51,6 @@ export function berekenClubRecords(
   huidigeBorden: Bord[] = []
 ): ClubRecords {
   const stand = berekenStand(historie, huidigeBorden);
-  const wedstrijden = verzamelWedstrijden(historie, huidigeBorden);
 
   let meeste180s = { naam: "-", waarde: 0, label: "0x 180" };
   let hoogsteFinish = { naam: "-", waarde: 0, label: "HF 0" };
@@ -65,7 +77,7 @@ export function berekenClubRecords(
     .filter((s) => s.gewonnen + s.verloren >= 3)
     .sort((a, b) => b.percentage - a.percentage)[0];
 
-  const streaks = berekenWinstreeksen(wedstrijden);
+  const streaks = berekenWinstreeksen(historie, huidigeBorden);
   let langsteStreak = { naam: "-", waarde: 0, label: "0 wedstrijden" };
   streaks.forEach((streak, naam) => {
     if (streak > langsteStreak.waarde) {

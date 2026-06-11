@@ -11,11 +11,21 @@ import {
 import {
   berekenDashboardStats,
   genereerCompetitie,
+  heeftTeVeelBorden,
+  hernoemSpelerInBorden,
+  MAX_BORDEN_PER_AVOND,
   MAX_SPELERS_PER_AVOND,
+  normaliseerBord,
   normaliseerSpeelavond,
   updateWedstrijdInBord,
+  verplaatsSpeler,
   type WedstrijdUpdate,
 } from "@/lib/competition";
+import { logAuditActie } from "@/lib/audit-log";
+import { broadcastReload, initRealtimeSync } from "@/lib/realtime";
+import { hernoemSpelerInData } from "@/lib/storage";
+import { useUndoStack } from "@/context/useUndoStack";
+import { usePrintState } from "@/context/usePrintState";
 import {
   hernoemLid,
   laadLeden,
@@ -39,6 +49,7 @@ import {
 } from "@/lib/statistics";
 import { confirmDialog, toast } from "@/lib/ui-feedback";
 import {
+  consumeBordenMigratieWaarschuwing,
   formatDatum,
   formatDatumAlleen,
   genereerAanmeldToken,
@@ -115,6 +126,12 @@ interface SpeelavondContextValue {
   verwijderAvondUitHistorie: (datum: string) => void;
   printAvondUitHistorie: (datum: string) => void;
   avondVoorPrint: Speelavond;
+  canUndo: boolean;
+  undoLaatsteActie: () => void;
+  verplaatsSpeler: (speler: string, vanBord: string, naarBord: string) => void;
+  notities: string;
+  setNotities: (notities: string) => void;
+  genereerCompetitieOpnieuw: (seed?: number) => void;
 }
 
 const SpeelavondContext = createContext<SpeelavondContextValue | null>(null);
@@ -136,6 +153,7 @@ function syncState(avond: Speelavond) {
     laatsteOpslag: genormaliseerd.datum,
     seizoen: genormaliseerd.seizoen,
     aanmeldToken: genormaliseerd.aanmeldToken,
+    notities: genormaliseerd.notities ?? "",
   };
 }
 
@@ -147,6 +165,7 @@ function bouwAvond(
     gasten: string[];
     borden: Bord[];
     aanmeldToken: string | null;
+    notities?: string;
   }
 ): Speelavond {
   const spelerVanDeAvond = berekenSpelerVanDeAvond(state.borden);
@@ -158,6 +177,7 @@ function bouwAvond(
     borden: state.borden,
     spelerVanDeAvond,
     aanmeldToken: state.aanmeldToken,
+    notities: state.notities,
   });
 }
 
@@ -176,9 +196,33 @@ export function SpeelavondProvider({
   const [aanmeldToken, setAanmeldToken] = useState<string | null>(null);
   const [isGeladen, setIsGeladen] = useState(false);
   const [historie, setHistorie] = useState<Speelavond[]>([]);
-  const [printPreviewOpen, setPrintPreviewOpen] = useState(false);
-  const [printAvond, setPrintAvond] = useState<Speelavond | null>(null);
+  const [notities, setNotitiesState] = useState("");
   const [aanmeldBaseUrl, setAanmeldBaseUrl] = useState("");
+  const { push: pushUndo, undo: popUndo, canUndo } = useUndoStack();
+  const {
+    printPreviewOpen,
+    printAvond,
+    setPrintAvond,
+    openPrintPreview,
+    sluitPrintPreview,
+    printSchema,
+    exportPdf,
+  } = usePrintState();
+
+  const reloadFromStorage = useCallback(() => {
+    const avond = laadSpeelavond();
+    if (avond) {
+      const state = syncState(avond);
+      setAanwezigen(state.aanwezigen);
+      setGasten(state.gasten);
+      setBorden(state.borden);
+      setLaatsteOpslag(state.laatsteOpslag);
+      setAanmeldToken(state.aanmeldToken);
+      setNotitiesState(state.notities);
+      if (state.seizoen) setActiefSeizoenState(state.seizoen);
+    }
+    setHistorie(laadHistorie());
+  }, []);
 
   useEffect(() => {
     const opgeslagen = laadSpeelavond();
@@ -194,27 +238,29 @@ export function SpeelavondProvider({
       setLaatsteOpslag(state.laatsteOpslag);
       setAanmeldToken(state.aanmeldToken);
       if (state.seizoen) setActiefSeizoenState(state.seizoen);
+      setNotitiesState(state.notities);
     }
     setHistorie(laadHistorie());
     setAanmeldBaseUrl(window.location.origin);
     setIsGeladen(true);
+    if (consumeBordenMigratieWaarschuwing()) {
+      toast(
+        `Oude competitie gevonden — genereer opnieuw (max ${MAX_BORDEN_PER_AVOND} borden)`,
+        "info"
+      );
+    }
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   useEffect(() => {
-    const syncVanStorage = () => {
-      const avond = laadSpeelavond();
-      if (!avond) return;
-      setAanwezigen(avond.aanwezigen);
-      setGasten(avond.gasten);
-    };
-    window.addEventListener("storage", syncVanStorage);
+    return initRealtimeSync(reloadFromStorage);
+  }, [reloadFromStorage]);
+
+  useEffect(() => {
+    const syncVanStorage = reloadFromStorage;
     window.addEventListener("focus", syncVanStorage);
-    return () => {
-      window.removeEventListener("storage", syncVanStorage);
-      window.removeEventListener("focus", syncVanStorage);
-    };
-  }, []);
+    return () => window.removeEventListener("focus", syncVanStorage);
+  }, [reloadFromStorage]);
 
   const persist = useCallback(
     (updates: Partial<Speelavond>) => {
@@ -225,6 +271,7 @@ export function SpeelavondProvider({
         gasten,
         borden,
         aanmeldToken,
+        notities,
         ...updates,
       });
       slaSpeelavondOp(huidig);
@@ -238,8 +285,18 @@ export function SpeelavondProvider({
       }
       return huidig;
     },
-    [aanwezigen, actiefSeizoen, aanmeldToken, borden, gasten, laatsteOpslag]
+    [aanwezigen, actiefSeizoen, aanmeldToken, borden, gasten, laatsteOpslag, notities]
   );
+
+  useEffect(() => {
+    if (!isGeladen || !heeftTeVeelBorden(borden)) return;
+    setBorden([]);
+    persist({ borden: [] });
+    toast(
+      `Competitie gewist — maximaal ${MAX_BORDEN_PER_AVOND} borden. Genereer opnieuw.`,
+      "info"
+    );
+  }, [isGeladen, borden, persist]);
 
   const setActiefSeizoen = useCallback((seizoenId: string) => {
     setActiefSeizoenState(seizoenId);
@@ -303,6 +360,15 @@ export function SpeelavondProvider({
         persist({ aanwezigen: bijgewerkt });
         return bijgewerkt;
       });
+      setGasten((g) => g.map((n) => (n === oudeNaam ? nieuweNaam.trim() : n)));
+      setBorden((b) => {
+        const bijgewerkt = hernoemSpelerInBorden(b, oudeNaam, nieuweNaam.trim());
+        persist({ borden: bijgewerkt });
+        return bijgewerkt;
+      });
+      hernoemSpelerInData(oudeNaam, nieuweNaam.trim());
+      logAuditActie("Lid hernoemd", `${oudeNaam} → ${nieuweNaam.trim()}`);
+      broadcastReload();
     },
     [leden, persist]
   );
@@ -319,37 +385,115 @@ export function SpeelavondProvider({
     [leden, persist]
   );
 
-  const genereerCompetitieAvond = useCallback(() => {
-    const spelers = [...aanwezigen, ...gasten];
-    if (spelers.length < 3) {
-      toast("Minimaal 3 spelers nodig voor een competitie.", "error");
-      return;
+  const genereerCompetitieOpnieuw = useCallback(
+    (seed?: number) => {
+      const spelers = [...aanwezigen, ...gasten];
+      if (spelers.length < 3) {
+        toast("Minimaal 3 spelers nodig voor een competitie.", "error");
+        return;
+      }
+      if (spelers.length > MAX_SPELERS_PER_AVOND) {
+        toast(`Maximaal ${MAX_SPELERS_PER_AVOND} spelers per speelavond.`, "error");
+        return;
+      }
+      const seizoenHistorie = filterOpSeizoen(laadHistorie(), actiefSeizoen);
+      const nieuweBorden = genereerCompetitie(spelers, seizoenHistorie, seed);
+      if (!nieuweBorden) {
+        toast("Kon geen geldige bordverdeling maken voor dit aantal spelers.", "error");
+        return;
+      }
+      if (borden.length > 0) {
+        pushUndo({ type: "borden", borden });
+      }
+      setBorden(nieuweBorden);
+      persist({ borden: nieuweBorden });
+      logAuditActie("Competitie gegenereerd", `${spelers.length} spelers, ${nieuweBorden.length} borden`);
+      toast("Competitie gegenereerd!", "success");
+    },
+    [aanwezigen, actiefSeizoen, borden, gasten, persist, pushUndo]
+  );
+
+  const genereerCompetitieAvond = useCallback(async () => {
+    if (borden.length > 0) {
+      const bevestigd = await confirmDialog({
+        title: "Competitie opnieuw genereren?",
+        message:
+          "Bestaande borden en uitslagen worden overschreven. Je kunt dit ongedaan maken.",
+        confirmLabel: "Opnieuw genereren",
+        destructive: true,
+      });
+      if (!bevestigd) return;
     }
-    if (spelers.length > MAX_SPELERS_PER_AVOND) {
-      toast(`Maximaal ${MAX_SPELERS_PER_AVOND} spelers per speelavond.`, "error");
-      return;
-    }
-    const seizoenHistorie = filterOpSeizoen(laadHistorie(), actiefSeizoen);
-    const nieuweBorden = genereerCompetitie(spelers, seizoenHistorie);
-    if (!nieuweBorden) {
-      toast("Kon geen geldige bordverdeling maken voor dit aantal spelers.", "error");
-      return;
-    }
-    setBorden(nieuweBorden);
-    persist({ borden: nieuweBorden });
-  }, [aanwezigen, actiefSeizoen, gasten, persist]);
+    genereerCompetitieOpnieuw();
+  }, [borden.length, genereerCompetitieOpnieuw]);
 
   const updateWedstrijd = useCallback(
     (bordNaam: string, wedstrijdId: string, updates: WedstrijdUpdate) => {
       setBorden((huidig) => {
-        const nieuw = huidig.map((bord) =>
-          bord.naam === bordNaam
-            ? updateWedstrijdInBord(bord, wedstrijdId, updates)
-            : bord
+        const bord = huidig.find((b) => b.naam === bordNaam);
+        if (bord) {
+          pushUndo({
+            type: "wedstrijd",
+            bordNaam,
+            wedstrijdId,
+            snapshot: normaliseerBord(bord),
+          });
+        }
+        const nieuw = huidig.map((b) =>
+          b.naam === bordNaam
+            ? updateWedstrijdInBord(b, wedstrijdId, updates)
+            : b
+        );
+        persist({ borden: nieuw });
+        broadcastReload();
+        return nieuw;
+      });
+    },
+    [persist, pushUndo]
+  );
+
+  const undoLaatsteActie = useCallback(() => {
+    const actie = popUndo();
+    if (!actie) return;
+    if (actie.type === "borden") {
+      setBorden(actie.borden);
+      persist({ borden: actie.borden });
+      toast("Competitie hersteld.", "info");
+    } else {
+      setBorden((huidig) => {
+        const nieuw = huidig.map((b) =>
+          b.naam === actie.bordNaam ? actie.snapshot : b
         );
         persist({ borden: nieuw });
         return nieuw;
       });
+      toast("Uitslag hersteld.", "info");
+    }
+    broadcastReload();
+  }, [persist, popUndo]);
+
+  const handleVerplaatsSpeler = useCallback(
+    (speler: string, vanBord: string, naarBord: string) => {
+      setBorden((huidig) => {
+        const nieuw = verplaatsSpeler(huidig, speler, vanBord, naarBord);
+        if (!nieuw) {
+          toast("Speler verplaatsen mislukt (bord vol of te klein).", "error");
+          return huidig;
+        }
+        pushUndo({ type: "borden", borden: huidig });
+        persist({ borden: nieuw });
+        logAuditActie("Speler verplaatst", `${speler}: ${vanBord} → ${naarBord}`);
+        toast(`${speler} verplaatst naar ${naarBord}.`, "success");
+        return nieuw;
+      });
+    },
+    [persist, pushUndo]
+  );
+
+  const setNotities = useCallback(
+    (tekst: string) => {
+      setNotitiesState(tekst);
+      persist({ notities: tekst });
     },
     [persist]
   );
@@ -369,6 +513,8 @@ export function SpeelavondProvider({
     void repository.addToHistorie(avond);
     setHistorie(laadHistorie());
     toast("Speelavond opgeslagen!", "success");
+    logAuditActie("Speelavond opgeslagen", formatDatum(datum));
+    broadcastReload();
   }, [aanwezigen, actiefSeizoen, aanmeldToken, borden, gasten, laatsteOpslag]);
 
   const nieuweAvond = useCallback(async () => {
@@ -416,42 +562,23 @@ export function SpeelavondProvider({
     verwijderAanmeldSessie();
   }, [persist]);
 
-  const printSchema = useCallback(() => {
-    setPrintPreviewOpen(false);
-    requestAnimationFrame(() => {
-      window.print();
-      setPrintAvond(null);
-    });
-  }, []);
-
-  const exportPdf = useCallback(() => {
-    setPrintPreviewOpen(false);
-    requestAnimationFrame(() => {
-      window.print();
-      setPrintAvond(null);
-    });
-  }, []);
-
-  const openPrintPreview = useCallback(() => {
-    setPrintAvond(null);
-    setPrintPreviewOpen(true);
-  }, []);
-
-  const sluitPrintPreview = useCallback(() => {
-    setPrintPreviewOpen(false);
-    setPrintAvond(null);
-  }, []);
-
   const laadAvondUitHistorie = useCallback((datum: string) => {
-    const avond = laadHistorie().find((a) => a.datum === datum);
-    if (!avond) return;
-    const state = syncState(avond);
+    const raw = laadHistorie().find((a) => a.datum === datum);
+    if (!raw) return;
+    const genormaliseerd = normaliseerSpeelavond(raw);
+    const state = syncState(genormaliseerd);
     setAanwezigen(state.aanwezigen);
     setGasten(state.gasten);
     setBorden(state.borden);
     setLaatsteOpslag(state.laatsteOpslag);
     setAanmeldToken(state.aanmeldToken);
-    slaSpeelavondOp(avond);
+    slaSpeelavondOp(genormaliseerd);
+    if (heeftTeVeelBorden(raw.borden)) {
+      toast(
+        `Oude avond had te veel borden — genereer opnieuw (max ${MAX_BORDEN_PER_AVOND})`,
+        "info"
+      );
+    }
   }, []);
 
   const verwijderAvondUitHistorie = useCallback(async (datum: string) => {
@@ -471,9 +598,9 @@ export function SpeelavondProvider({
     const avond = laadHistorie().find((a) => a.datum === datum);
     if (!avond) return;
     setPrintAvond(normaliseerSpeelavond(avond));
-    setPrintPreviewOpen(false);
+    sluitPrintPreview();
     requestAnimationFrame(() => window.print());
-  }, []);
+  }, [setPrintAvond, sluitPrintPreview]);
 
   const seizoenHistorie = useMemo(
     () => filterOpSeizoen(historie, actiefSeizoen),
@@ -519,8 +646,9 @@ export function SpeelavondProvider({
         gasten,
         borden,
         aanmeldToken,
+        notities,
       }),
-    [aanwezigen, actiefSeizoen, aanmeldToken, borden, gasten, laatsteOpslag]
+    [aanwezigen, actiefSeizoen, aanmeldToken, borden, gasten, laatsteOpslag, notities]
   );
 
   const avondVoorPrint = printAvond ?? huidigeAvondVoorPrint;
@@ -577,6 +705,12 @@ export function SpeelavondProvider({
       verwijderAvondUitHistorie,
       printAvondUitHistorie,
       avondVoorPrint,
+      canUndo,
+      undoLaatsteActie,
+      verplaatsSpeler: handleVerplaatsSpeler,
+      notities,
+      setNotities,
+      genereerCompetitieOpnieuw,
     }),
     [
       leden,
@@ -586,14 +720,18 @@ export function SpeelavondProvider({
       aanmeldUrl,
       avondVoorPrint,
       borden,
+      canUndo,
       clubRecords,
       dashboardStats,
       gastNaam,
       gasten,
+      genereerCompetitieOpnieuw,
       grafieken,
+      handleVerplaatsSpeler,
       historie,
       isGeladen,
       laatsteOpslag,
+      notities,
       printPreviewOpen,
       seizoenHistorie,
       spelerVanDeAvond,
@@ -613,10 +751,12 @@ export function SpeelavondProvider({
       printSchema,
       selecteerAlleLeden,
       setActiefSeizoen,
+      setNotities,
       sluitPrintPreview,
       startAanmelden,
       stopAanmelden,
       toggleLid,
+      undoLaatsteActie,
       updateWedstrijd,
       verwijderAvondUitHistorie,
       verwijderGast,

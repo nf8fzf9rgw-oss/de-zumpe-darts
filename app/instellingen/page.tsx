@@ -13,6 +13,11 @@ import {
   exportDataBackup,
   importDataBackup,
 } from "@/lib/storage";
+import {
+  downloadCsv,
+  exportStandCsv,
+  exportHistorieCsv,
+} from "@/lib/export/csv";
 import type { ZumpeDataBackup } from "@/types/competition";
 
 export default function InstellingenPage() {
@@ -24,6 +29,8 @@ export default function InstellingenPage() {
     printSchema,
     borden,
     actiefSeizoenLabel,
+    stand,
+    historie,
   } = useSpeelavond();
   const { isBestuur, logoutBestuur } = useAuth();
   const [loginOpen, setLoginOpen] = useState(false);
@@ -200,6 +207,30 @@ export default function InstellingenPage() {
                 className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
               >
                 Import JSON backup
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  downloadCsv(
+                    exportStandCsv(stand, actiefSeizoenLabel),
+                    `stand-${actiefSeizoenLabel}.csv`
+                  )
+                }
+                className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
+              >
+                Export stand (CSV)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  downloadCsv(
+                    exportHistorieCsv(historie),
+                    "speelavonden.csv"
+                  )
+                }
+                className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
+              >
+                Export historie (CSV)
               </button>
             </div>
           </ProtectedAction>

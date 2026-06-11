@@ -8,6 +8,7 @@ export interface Wedstrijd {
   score1: number;
   score2: number;
   winnaar: string | null;
+  gelijkspel?: boolean;
   aantal180Speler1: number;
   aantal180Speler2: number;
   hoogsteFinishSpeler1: number | null;
@@ -31,7 +32,16 @@ export interface Speelavond {
   borden: Bord[];
   spelerVanDeAvond: string | null;
   aanmeldToken: string | null;
+  notities?: string;
   versie?: number;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  actie: string;
+  details: string;
+  door?: string;
 }
 
 export interface ZumpeDataBackup {
@@ -46,6 +56,8 @@ export interface ZumpeDataBackup {
 export interface Seizoen {
   id: string;
   label: string;
+  startMaand?: number;
+  startJaar?: number;
 }
 
 export interface SpeelavondStatistieken {

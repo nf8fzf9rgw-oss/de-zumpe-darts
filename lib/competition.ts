@@ -6,13 +6,14 @@ import type {
   Wedstrijd,
 } from "@/types/competition";
 
-const MIN_SPELERS_PER_BORD = 3;
-const MAX_SPELERS_PER_BORD = 5;
-const MAX_BORDEN = 8;
+export const MIN_SPELERS_PER_BORD = 3;
+export const MAX_SPELERS_PER_BORD = 7;
+const MAX_BORDEN = 5;
 const MIN_SPELERS = 3;
-const MAX_SPELERS = 40;
+const MAX_SPELERS = MAX_BORDEN * MAX_SPELERS_PER_BORD;
 
 export const MAX_SPELERS_PER_AVOND = MAX_SPELERS;
+export const MAX_BORDEN_PER_AVOND = MAX_BORDEN;
 
 export function maakWedstrijdId(speler1: string, speler2: string): string {
   return `${speler1}__${speler2}`;
@@ -41,6 +42,99 @@ function variantie(verdeling: number[]): number {
     (totaal, waarde) => totaal + (waarde - gemiddelde) ** 2,
     0
   );
+}
+
+function roundRobinWedstrijden(grootte: number): number {
+  return (grootte * (grootte - 1)) / 2;
+}
+
+function afstandTotIdealeGrootte(verdeling: number[]): number {
+  return verdeling.reduce(
+    (totaal, grootte) => totaal + Math.abs(grootte - 4),
+    0
+  );
+}
+
+function uniformBonus(aantalSpelers: number, verdeling: number[]): number {
+  const isUniform = verdeling.every((g) => g === verdeling[0]);
+  if (!isUniform) return 0;
+
+  const grootte = verdeling[0];
+  const aantalBorden = verdeling.length;
+
+  if (
+    grootte === 4 &&
+    aantalSpelers % 4 === 0 &&
+    aantalBorden === aantalSpelers / 4 &&
+    aantalBorden <= MAX_BORDEN
+  ) {
+    return -200;
+  }
+
+  if (
+    grootte === 5 &&
+    aantalSpelers % 5 === 0 &&
+    aantalBorden === aantalSpelers / 5 &&
+    aantalBorden <= MAX_BORDEN &&
+    aantalBorden >= 3 &&
+    !(aantalSpelers % 4 === 0 && aantalSpelers / 4 <= MAX_BORDEN)
+  ) {
+    return -200;
+  }
+
+  if (
+    grootte === 3 &&
+    aantalSpelers % 3 === 0 &&
+    aantalBorden === aantalSpelers / 3 &&
+    aantalBorden <= MAX_BORDEN &&
+    !(
+      aantalSpelers % 4 === 0 &&
+      aantalSpelers / 4 <= MAX_BORDEN &&
+      aantalSpelers / 4 <= aantalBorden
+    )
+  ) {
+    return -150;
+  }
+
+  return 0;
+}
+
+/** Lagere score = betere verdeling (uniform rond 4 spelers, weinig wachttijd). */
+function scoreVerdeling(aantalSpelers: number, verdeling: number[]): number {
+  let score = 0;
+
+  for (const grootte of verdeling) {
+    if (grootte === 7) score += 1000;
+    else if (grootte === 6) score += 100;
+    else if (grootte === 5) score += 10;
+    else if (grootte === 3) score += 15;
+  }
+
+  score += variantie(verdeling) * 100;
+  score += afstandTotIdealeGrootte(verdeling) * 20;
+  score += uniformBonus(aantalSpelers, verdeling);
+
+  if (verdeling.length === 2 && verdeling.every((g) => g === 5)) {
+    score += 50;
+  }
+
+  const aantalDrie = verdeling.filter((g) => g === 3).length;
+  const aantalVier = verdeling.filter((g) => g === 4).length;
+  if (aantalDrie === 1 && aantalVier >= 3) {
+    score += 80;
+  }
+
+  const totaalWedstrijden = verdeling.reduce(
+    (totaal, grootte) => totaal + roundRobinWedstrijden(grootte),
+    0
+  );
+  const maxWedstrijdenPerBord = Math.max(
+    ...verdeling.map((grootte) => roundRobinWedstrijden(grootte))
+  );
+  score += totaalWedstrijden;
+  score += maxWedstrijdenPerBord * 5;
+
+  return score;
 }
 
 export function berekenBordVerdeling(aantalSpelers: number): number[] | null {
@@ -93,12 +187,12 @@ export function berekenBordVerdeling(aantalSpelers: number): number[] | null {
   if (mogelijkheden.length === 0) return null;
 
   mogelijkheden.sort((a, b) => {
-    const verschilVariantie = variantie(a) - variantie(b);
-    if (verschilVariantie !== 0) return verschilVariantie;
+    const verschilScore = scoreVerdeling(aantalSpelers, a) - scoreVerdeling(aantalSpelers, b);
+    if (verschilScore !== 0) return verschilScore;
     return b.length - a.length;
   });
 
-  return mogelijkheden[0];
+  return [...mogelijkheden[0]].sort((a, b) => b - a);
 }
 
 export function genereerRoundRobin(spelers: string[]): Wedstrijd[] {
@@ -155,16 +249,19 @@ function groepKosten(spelers: string[], freq: Map<string, number>): number {
 function verdeelSpelersSlim(
   spelers: string[],
   verdeling: number[],
-  freq: Map<string, number>
+  freq: Map<string, number>,
+  seed?: number
 ): string[][] {
   const gesorteerd = [...spelers].sort((a, b) => a.localeCompare(b, "nl"));
   let besteGroepen: string[][] = [];
   let laagsteKosten = Infinity;
 
+  const rng = seed !== undefined ? seededRandom(seed) : Math.random;
+
   for (let poging = 0; poging < 40; poging += 1) {
     const kopie = [...gesorteerd];
     for (let i = kopie.length - 1; i > 0; i -= 1) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = Math.floor(rng() * (i + 1));
       [kopie[i], kopie[j]] = [kopie[j], kopie[i]];
     }
 
@@ -190,15 +287,24 @@ function verdeelSpelersSlim(
   return besteGroepen;
 }
 
+function seededRandom(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s = (s * 1664525 + 1013904223) % 4294967296;
+    return s / 4294967296;
+  };
+}
+
 export function genereerCompetitie(
   spelers: string[],
-  historie: Speelavond[] = []
+  historie: Speelavond[] = [],
+  seed?: number
 ): Bord[] | null {
   const verdeling = berekenBordVerdeling(spelers.length);
   if (!verdeling) return null;
 
   const freq = bouwTegenstanderFrequentie(historie);
-  const groepen = verdeelSpelersSlim(spelers, verdeling, freq);
+  const groepen = verdeelSpelersSlim(spelers, verdeling, freq, seed);
 
   return groepen.map((groep, index) => ({
     naam: `Bord ${index + 1}`,
@@ -233,10 +339,10 @@ export function bepaalWinnaar(
   speler2: string,
   score1: number,
   score2: number
-): string | null {
-  if (score1 > score2) return speler1;
-  if (score2 > score1) return speler2;
-  return null;
+): { winnaar: string | null; gelijkspel: boolean } {
+  if (score1 > score2) return { winnaar: speler1, gelijkspel: false };
+  if (score2 > score1) return { winnaar: speler2, gelijkspel: false };
+  return { winnaar: null, gelijkspel: true };
 }
 
 export type WedstrijdUpdate = Partial<
@@ -263,6 +369,9 @@ export function updateWedstrijdInBord(
     const score1 = updates.score1 ?? wedstrijd.score1;
     const score2 = updates.score2 ?? wedstrijd.score2;
     const gespeeld = updates.gespeeld ?? wedstrijd.gespeeld;
+    const uitslag = gespeeld
+      ? bepaalWinnaar(wedstrijd.speler1, wedstrijd.speler2, score1, score2)
+      : { winnaar: null, gelijkspel: false };
 
     return {
       ...wedstrijd,
@@ -270,9 +379,8 @@ export function updateWedstrijdInBord(
       score1,
       score2,
       gespeeld,
-      winnaar: gespeeld
-        ? bepaalWinnaar(wedstrijd.speler1, wedstrijd.speler2, score1, score2)
-        : null,
+      winnaar: uitslag.winnaar,
+      gelijkspel: uitslag.gelijkspel,
     };
   });
 
@@ -291,6 +399,7 @@ export function normaliseerBord(bord: Bord): Bord {
       score1: basis.score1 ?? 0,
       score2: basis.score2 ?? 0,
       winnaar: basis.winnaar ?? null,
+      gelijkspel: basis.gelijkspel ?? false,
       aantal180Speler1: basis.aantal180Speler1 ?? 0,
       aantal180Speler2: basis.aantal180Speler2 ?? 0,
       hoogsteFinishSpeler1: basis.hoogsteFinishSpeler1 ?? null,
@@ -308,14 +417,22 @@ export function normaliseerBorden(borden: Bord[]): Bord[] {
   return borden.map(normaliseerBord);
 }
 
+export function heeftTeVeelBorden(borden: Bord[] | undefined): boolean {
+  return (borden?.length ?? 0) > MAX_BORDEN_PER_AVOND;
+}
+
 export function normaliseerSpeelavond(avond: Speelavond): Speelavond {
+  const teVeelBorden = heeftTeVeelBorden(avond.borden);
+  const borden = teVeelBorden ? [] : normaliseerBorden(avond.borden ?? []);
+
   return {
     ...avond,
     seizoen: avond.seizoen ?? String(new Date(avond.datum || Date.now()).getFullYear()),
-    spelerVanDeAvond: avond.spelerVanDeAvond ?? null,
+    spelerVanDeAvond: teVeelBorden ? null : (avond.spelerVanDeAvond ?? null),
     aanmeldToken: avond.aanmeldToken ?? null,
     versie: avond.versie ?? 1,
-    borden: normaliseerBorden(avond.borden),
+    notities: avond.notities ?? "",
+    borden,
   };
 }
 
@@ -334,5 +451,81 @@ export function berekenDashboardStats(
     wedstrijdenVandaag: telWedstrijden(borden),
     gespeeldeWedstrijden: telGespeeldeWedstrijden(borden),
     totaalLeden,
+  };
+}
+
+/** Hernoem speler in alle borden (huidige avond). */
+export function hernoemSpelerInBorden(
+  borden: Bord[],
+  oudeNaam: string,
+  nieuweNaam: string
+): Bord[] {
+  return borden.map((bord) => ({
+    ...bord,
+    spelers: bord.spelers.map((s) => (s === oudeNaam ? nieuweNaam : s)),
+    wedstrijden: bord.wedstrijden.map((w) => ({
+      ...w,
+      speler1: w.speler1 === oudeNaam ? nieuweNaam : w.speler1,
+      speler2: w.speler2 === oudeNaam ? nieuweNaam : w.speler2,
+      id: maakWedstrijdId(
+        w.speler1 === oudeNaam ? nieuweNaam : w.speler1,
+        w.speler2 === oudeNaam ? nieuweNaam : w.speler2
+      ),
+      winnaar: w.winnaar === oudeNaam ? nieuweNaam : w.winnaar,
+    })),
+  }));
+}
+
+/** Verplaats speler van bord A naar bord B en herbereken round-robin. */
+export function verplaatsSpeler(
+  borden: Bord[],
+  speler: string,
+  vanBord: string,
+  naarBord: string
+): Bord[] | null {
+  if (vanBord === naarBord) return borden;
+
+  const van = borden.find((b) => b.naam === vanBord);
+  const naar = borden.find((b) => b.naam === naarBord);
+  if (!van || !naar) return null;
+  if (!van.spelers.includes(speler)) return null;
+  if (naar.spelers.length >= MAX_SPELERS_PER_BORD) return null;
+  if (van.spelers.length <= MIN_SPELERS_PER_BORD) return null;
+
+  return borden.map((bord) => {
+    if (bord.naam === vanBord) {
+      const spelers = bord.spelers.filter((s) => s !== speler);
+      const bijgewerkt = {
+        ...bord,
+        spelers,
+        wedstrijden: genereerRoundRobin(spelers),
+      };
+      return { ...bijgewerkt, status: berekenBordStatus(bijgewerkt) };
+    }
+    if (bord.naam === naarBord) {
+      const spelers = [...bord.spelers, speler];
+      const bijgewerkt = {
+        ...bord,
+        spelers,
+        wedstrijden: genereerRoundRobin(spelers),
+      };
+      return { ...bijgewerkt, status: berekenBordStatus(bijgewerkt) };
+    }
+    return bord;
+  });
+}
+
+export function resetWedstrijd(wedstrijd: Wedstrijd): Wedstrijd {
+  return {
+    ...wedstrijd,
+    gespeeld: false,
+    score1: 0,
+    score2: 0,
+    winnaar: null,
+    gelijkspel: false,
+    aantal180Speler1: 0,
+    aantal180Speler2: 0,
+    hoogsteFinishSpeler1: null,
+    hoogsteFinishSpeler2: null,
   };
 }

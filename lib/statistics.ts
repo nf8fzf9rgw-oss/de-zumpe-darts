@@ -34,7 +34,7 @@ export function berekenStatistieken(
   historie.forEach((avond) => {
     totaalSpelers += avond.aanwezigen.length + avond.gasten.length;
     totaalBorden += avond.borden.length;
-    avond.aanwezigen.forEach((lid) => {
+    [...avond.aanwezigen, ...avond.gasten].forEach((lid) => {
       aanwezigheid.set(lid, (aanwezigheid.get(lid) ?? 0) + 1);
     });
   });

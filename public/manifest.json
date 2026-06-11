@@ -1,0 +1,25 @@
+{
+  "name": "De Zumpe Darts",
+  "short_name": "De Zumpe",
+  "description": "Vrijdagavond dartscompetitie — Dart Vereniging De Zumpe",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#b91c1c",
+  "orientation": "portrait-primary",
+  "lang": "nl",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -163,6 +163,11 @@ export default function MatchResultEntry({
         </div>
       </div>
 
+      {wedstrijd.gespeeld && wedstrijd.gelijkspel && (
+        <p className="mt-2 text-xs font-semibold text-amber-400">
+          Gelijkspel — geen winnaar
+        </p>
+      )}
       {wedstrijd.gespeeld && wedstrijd.winnaar && (
         <p className="mt-2 text-xs font-semibold text-green-400">
           Winnaar: {wedstrijd.winnaar}

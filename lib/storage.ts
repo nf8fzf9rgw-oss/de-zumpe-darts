@@ -1,4 +1,8 @@
-import { normaliseerSpeelavond } from "@/lib/competition";
+import {
+  heeftTeVeelBorden,
+  hernoemSpelerInBorden,
+  normaliseerSpeelavond,
+} from "@/lib/competition";
 import { laadLeden, slaLedenOp } from "@/lib/leden";
 import {
   haalHuidigSeizoenId,
@@ -16,6 +20,20 @@ import {
 const SPEELAVOND_KEY = "deZumpeSpeelavond";
 const HISTORIE_KEY = "deZumpeHistorie";
 const AANMELD_KEY = "deZumpeAanmeld";
+const BORDEN_MIGRATIE_KEY = "deZumpeBordenMigratie";
+
+export function consumeBordenMigratieWaarschuwing(): boolean {
+  if (typeof window === "undefined") return false;
+  if (sessionStorage.getItem(BORDEN_MIGRATIE_KEY) !== "1") return false;
+  sessionStorage.removeItem(BORDEN_MIGRATIE_KEY);
+  return true;
+}
+
+function markeerBordenMigratie(): void {
+  if (typeof window !== "undefined") {
+    sessionStorage.setItem(BORDEN_MIGRATIE_KEY, "1");
+  }
+}
 
 export function formatDatum(datum: string): string {
   if (!datum) return "Nog niet opgeslagen";
@@ -71,7 +89,14 @@ export function laadSpeelavond(): Speelavond | null {
   const opgeslagen = localStorage.getItem(SPEELAVOND_KEY);
   if (!opgeslagen) return null;
   try {
-    return normaliseerSpeelavond(JSON.parse(opgeslagen) as Speelavond);
+    const raw = JSON.parse(opgeslagen) as Speelavond;
+    const hadTeVeelBorden = heeftTeVeelBorden(raw.borden);
+    const avond = normaliseerSpeelavond(raw);
+    if (hadTeVeelBorden) {
+      markeerBordenMigratie();
+      localStorage.setItem(SPEELAVOND_KEY, JSON.stringify(avond));
+    }
+    return avond;
   } catch {
     localStorage.removeItem(SPEELAVOND_KEY);
     return null;
@@ -92,7 +117,13 @@ export function laadHistorie(): Speelavond[] {
   if (!opgeslagen) return [];
   try {
     const data = JSON.parse(opgeslagen) as Speelavond[];
-    return Array.isArray(data) ? data.map(normaliseerSpeelavond) : [];
+    if (!Array.isArray(data)) return [];
+    const hadTeVeelBorden = data.some((avond) => heeftTeVeelBorden(avond.borden));
+    const historie = data.map(normaliseerSpeelavond);
+    if (hadTeVeelBorden) {
+      slaHistorieOp(historie);
+    }
+    return historie;
   } catch {
     localStorage.removeItem(HISTORIE_KEY);
     return [];
@@ -121,6 +152,35 @@ export function voegToeAanHistorie(avond: Speelavond): void {
 
 export function verwijderUitHistorie(datum: string): void {
   slaHistorieOp(laadHistorie().filter((item) => item.datum !== datum));
+}
+
+export function hernoemSpelerInData(
+  oudeNaam: string,
+  nieuweNaam: string
+): void {
+  const mapNaam = (n: string) => (n === oudeNaam ? nieuweNaam : n);
+
+  const historie = laadHistorie().map((avond) =>
+    normaliseerSpeelavond({
+      ...avond,
+      aanwezigen: avond.aanwezigen.map(mapNaam),
+      gasten: avond.gasten.map(mapNaam),
+      borden: hernoemSpelerInBorden(avond.borden, oudeNaam, nieuweNaam),
+    })
+  );
+  slaHistorieOp(historie);
+
+  const huidig = laadSpeelavond();
+  if (huidig) {
+    slaSpeelavondOp(
+      normaliseerSpeelavond({
+        ...huidig,
+        aanwezigen: huidig.aanwezigen.map(mapNaam),
+        gasten: huidig.gasten.map(mapNaam),
+        borden: hernoemSpelerInBorden(huidig.borden, oudeNaam, nieuweNaam),
+      })
+    );
+  }
 }
 
 export function maakLegeSpeelavond(seizoen?: string): Speelavond {

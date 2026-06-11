@@ -16,6 +16,8 @@ function QuickActionsButtons({
     nieuweAvond,
     openPrintPreview,
     borden,
+    canUndo,
+    undoLaatsteActie,
   } = useSpeelavond();
 
   const knoppen = [
@@ -24,6 +26,15 @@ function QuickActionsButtons({
       onClick: genereerCompetitieAvond,
       className: "bg-green-700 hover:bg-green-600 text-white",
     },
+    ...(canUndo
+      ? [
+          {
+            label: "Ongedaan maken",
+            onClick: undoLaatsteActie,
+            className: "bg-zinc-700 hover:bg-zinc-600 text-white",
+          },
+        ]
+      : []),
     {
       label: "Opslaan",
       onClick: opslaan,
@@ -44,7 +55,12 @@ function QuickActionsButtons({
       className:
         "border border-red-800 bg-red-950 text-red-300 hover:bg-red-900",
     },
-  ] as const;
+  ] as Array<{
+    label: string;
+    onClick: () => void;
+    className: string;
+    disabled?: boolean;
+  }>;
 
   if (layout === "horizontal") {
     return (

@@ -29,8 +29,57 @@ export default function StandingsTable({
     );
   }
 
+  if (compact) {
+    return (
+      <div className="space-y-2">
+        {stand.map((rij) => (
+          <div
+            key={rij.naam}
+            className={`flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 ${
+              highlightNaam === rij.naam ? "border-red-700 bg-red-950/20" : ""
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-700 text-xs font-bold text-white">
+                {rij.positie}
+              </span>
+              <span className="text-sm font-semibold text-white">{rij.naam}</span>
+            </div>
+            <span className="font-bold text-red-400">{rij.punten} pt</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950 shadow-xl">
+    <>
+      <div className="space-y-2 lg:hidden">
+        {stand.map((rij) => (
+          <div
+            key={rij.naam}
+            className={`rounded-xl border border-zinc-800 bg-zinc-900 p-3 ${
+              highlightNaam === rij.naam ? "border-red-700" : ""
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-700 text-sm font-bold text-white">
+                  {rij.positie}
+                </span>
+                <span className="font-semibold text-white">{rij.naam}</span>
+              </div>
+              <span className="text-lg font-bold text-red-400">{rij.punten}</span>
+            </div>
+            <div className="mt-2 flex gap-4 text-xs text-zinc-400">
+              <span>{rij.gewonnen}W</span>
+              <span>{rij.aantal180s}x180</span>
+              <span>{rij.percentage}%</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950 shadow-xl lg:block">
       <table
         className={`w-full text-left text-sm ${
           compact ? "min-w-0" : "min-w-[720px]"
@@ -95,6 +144,7 @@ export default function StandingsTable({
           ))}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }

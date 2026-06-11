@@ -1,3 +1,6 @@
+/** Competitiepunten per gewonnen wedstrijd */
+export const PUNTEN_PER_WINST = 3;
+
 /** Bonuspunten voor finishes (100–170) */
 export function berekenFinishBonus(finish: number): number {
   if (finish <= 0) return 0;

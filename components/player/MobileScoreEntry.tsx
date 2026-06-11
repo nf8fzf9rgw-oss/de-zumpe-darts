@@ -6,6 +6,7 @@ import { isGeldigeFinish } from "@/lib/scoring";
 import type { Wedstrijd } from "@/types/competition";
 import type { WedstrijdUpdate } from "@/lib/competition";
 import { toast } from "@/lib/ui-feedback";
+import Numpad from "@/components/ui/Numpad";
 
 interface MobileScoreEntryProps {
   bordNaam: string;
@@ -52,10 +53,6 @@ export default function MobileScoreEntry({
   };
 
   const handleOpslaan = () => {
-    if (gespeeld && score1 === score2) {
-      toast("Scores mogen niet gelijk zijn bij een gespeelde wedstrijd.", "error");
-      return;
-    }
     onSave({
       score1,
       score2,
@@ -65,8 +62,12 @@ export default function MobileScoreEntry({
       hoogsteFinishSpeler2,
       gespeeld,
     });
+    if (navigator.vibrate) navigator.vibrate(30);
     toast("Uitslag opgeslagen!", "success");
   };
+
+  const [activeScore, setActiveScore] = useState<"score1" | "score2" | null>(null);
+  const [useNumpad, setUseNumpad] = useState(true);
 
   const voornaam1 = wedstrijd.speler1.split(" ")[0];
   const voornaam2 = wedstrijd.speler2.split(" ")[0];
@@ -92,38 +93,96 @@ export default function MobileScoreEntry({
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
+          <div className="mb-3 flex justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setUseNumpad(true)}
+              className={`rounded-lg px-3 py-1 text-xs font-semibold ${useNumpad ? "bg-red-700 text-white" : "bg-zinc-800 text-zinc-400"}`}
+            >
+              Numpad
+            </button>
+            <button
+              type="button"
+              onClick={() => setUseNumpad(false)}
+              className={`rounded-lg px-3 py-1 text-xs font-semibold ${!useNumpad ? "bg-red-700 text-white" : "bg-zinc-800 text-zinc-400"}`}
+            >
+              Toetsenbord
+            </button>
+          </div>
+
+          {useNumpad && activeScore ? (
+            <div className="space-y-4">
+              <Numpad
+                label={activeScore === "score1" ? voornaam1 : voornaam2}
+                value={activeScore === "score1" ? score1 : score2}
+                onChange={(v) =>
+                  activeScore === "score1" ? setScore1(v) : setScore2(v)
+                }
+              />
+              <button
+                type="button"
+                onClick={() => setActiveScore(null)}
+                className="min-h-11 w-full rounded-xl border border-zinc-700 text-sm text-zinc-300"
+              >
+                Terug naar overzicht
+              </button>
+            </div>
+          ) : (
           <div className="flex items-center justify-center gap-4 py-4">
             <div className="flex flex-col items-center gap-2">
               <span className="max-w-[100px] truncate text-sm font-semibold text-white">
                 {voornaam1}
               </span>
-              <input
-                type="number"
-                min={0}
-                max={9}
-                value={score1}
-                onChange={(e) => setScore1(clampScore(e.target.value))}
-                className="h-16 w-20 rounded-2xl border-2 border-red-700 bg-black text-center text-3xl font-bold text-white focus:outline-none"
-                aria-label={`Score ${wedstrijd.speler1}`}
-              />
+              {useNumpad ? (
+                <button
+                  type="button"
+                  onClick={() => setActiveScore("score1")}
+                  className="flex h-16 w-20 items-center justify-center rounded-2xl border-2 border-red-700 bg-black text-3xl font-bold text-white"
+                >
+                  {score1}
+                </button>
+              ) : (
+                <input
+                  type="number"
+                  min={0}
+                  max={9}
+                  value={score1}
+                  onChange={(e) => setScore1(clampScore(e.target.value))}
+                  className="h-16 w-20 rounded-2xl border-2 border-red-700 bg-black text-center text-3xl font-bold text-white focus:outline-none"
+                  aria-label={`Score ${wedstrijd.speler1}`}
+                />
+              )}
             </div>
             <span className="text-2xl font-bold text-zinc-600">vs</span>
             <div className="flex flex-col items-center gap-2">
               <span className="max-w-[100px] truncate text-sm font-semibold text-white">
                 {voornaam2}
               </span>
-              <input
-                type="number"
-                min={0}
-                max={9}
-                value={score2}
-                onChange={(e) => setScore2(clampScore(e.target.value))}
-                className="h-16 w-20 rounded-2xl border-2 border-red-700 bg-black text-center text-3xl font-bold text-white focus:outline-none"
-                aria-label={`Score ${wedstrijd.speler2}`}
-              />
+              {useNumpad ? (
+                <button
+                  type="button"
+                  onClick={() => setActiveScore("score2")}
+                  className="flex h-16 w-20 items-center justify-center rounded-2xl border-2 border-red-700 bg-black text-3xl font-bold text-white"
+                >
+                  {score2}
+                </button>
+              ) : (
+                <input
+                  type="number"
+                  min={0}
+                  max={9}
+                  value={score2}
+                  onChange={(e) => setScore2(clampScore(e.target.value))}
+                  className="h-16 w-20 rounded-2xl border-2 border-red-700 bg-black text-center text-3xl font-bold text-white focus:outline-none"
+                  aria-label={`Score ${wedstrijd.speler2}`}
+                />
+              )}
             </div>
           </div>
+          )}
 
+          {!activeScore && (
+          <>
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-3">
               <p className="mb-2 truncate text-xs font-bold uppercase text-zinc-500">
@@ -200,6 +259,13 @@ export default function MobileScoreEntry({
             />
             <span className="font-semibold text-white">Wedstrijd gespeeld</span>
           </label>
+          {gespeeld && score1 === score2 && (
+            <p className="mt-2 text-center text-xs text-amber-400">
+              Gelijkspel — geen winnaar, wel bonuspunten mogelijk
+            </p>
+          )}
+          </>
+          )}
         </div>
 
         <div className="border-t border-zinc-800 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">

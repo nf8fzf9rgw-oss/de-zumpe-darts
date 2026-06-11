@@ -17,6 +17,12 @@ export const metadata: Metadata = {
   title: "De Zumpe | Dart Vereniging Competitie",
   description:
     "Professionele vrijdagavond competitie-applicatie voor Dart Vereniging De Zumpe.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "De Zumpe",
+  },
 };
 
 export default function RootLayout({

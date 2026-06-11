@@ -1,5 +1,5 @@
 import { telWedstrijden } from "@/lib/competition";
-import { bereken180Bonus, berekenFinishBonus } from "@/lib/scoring";
+import { bereken180Bonus, berekenFinishBonus, PUNTEN_PER_WINST } from "@/lib/scoring";
 import type {
   Bord,
   Speelavond,
@@ -7,8 +7,6 @@ import type {
   SpelerStand,
   Wedstrijd,
 } from "@/types/competition";
-
-const PUNTEN_PER_WINST = 3;
 
 interface SpelerAggregaat {
   competitiepunten: number;

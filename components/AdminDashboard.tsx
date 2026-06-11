@@ -9,6 +9,8 @@ import QuickActions from "@/components/QuickActions";
 import SeasonSelector from "@/components/SeasonSelector";
 import SpelerVanDeAvondBanner from "@/components/SpelerVanDeAvondBanner";
 import SpeelavondPanel from "@/components/SpeelavondPanel";
+import AvondNotities from "@/components/AvondNotities";
+import SpelerVerplaatsen from "@/components/SpelerVerplaatsen";
 
 export default function AdminDashboard() {
   return (
@@ -47,6 +49,7 @@ export default function AdminDashboard() {
 
         <div className="flex flex-col gap-4 md:col-span-1 md:gap-6 lg:col-span-4">
           <SpeelavondPanel />
+          <AvondNotities />
           <ProtectedAction>
             <QrAanmelden />
             <GuestsPanel compact />
@@ -56,6 +59,9 @@ export default function AdminDashboard() {
 
         <div className="md:col-span-2 lg:col-span-5">
           <CompetitionColumn />
+          <div className="mt-4">
+            <SpelerVerplaatsen />
+          </div>
         </div>
       </div>
     </div>
