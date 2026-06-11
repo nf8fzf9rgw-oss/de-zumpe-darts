@@ -6,6 +6,8 @@ import Header from "@/components/Header";
 import PrintCompetition from "@/components/PrintCompetition";
 import PrintPreviewModal from "@/components/PrintPreviewModal";
 import Sidebar from "@/components/Sidebar";
+import { ConfirmProvider } from "@/components/ui/ConfirmModal";
+import { ToastProvider } from "@/components/ui/Toast";
 import { SpeelavondProvider } from "@/context/SpeelavondContext";
 
 function ShellContent({ children }: { children: React.ReactNode }) {
@@ -36,8 +38,12 @@ export default function AppShell({
   children: React.ReactNode;
 }) {
   return (
-    <SpeelavondProvider>
-      <ShellContent>{children}</ShellContent>
-    </SpeelavondProvider>
+    <ToastProvider>
+      <ConfirmProvider>
+        <SpeelavondProvider>
+          <ShellContent>{children}</ShellContent>
+        </SpeelavondProvider>
+      </ConfirmProvider>
+    </ToastProvider>
   );
 }

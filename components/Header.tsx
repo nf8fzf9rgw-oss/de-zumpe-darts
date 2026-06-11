@@ -18,9 +18,10 @@ export default function Header() {
           <p className="hidden text-xs font-semibold uppercase tracking-[0.25em] text-red-500 md:block">
             Vrijdagavond Competitie
           </p>
-          <h2 className="truncate text-lg font-bold text-white md:text-xl lg:text-2xl">
-            🎯 De Zumpe
-          </h2>
+          <h1 className="truncate text-lg font-bold text-white md:text-xl lg:text-2xl">
+            <span className="lg:hidden">De Zumpe</span>
+            <span className="hidden lg:inline">🎯 De Zumpe</span>
+          </h1>
           <p className="mt-0.5 truncate text-xs capitalize text-zinc-400 md:text-sm lg:mt-1">
             {vandaag}
           </p>

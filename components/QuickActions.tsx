@@ -29,7 +29,7 @@ export default function QuickActions({
       className: "bg-orange-700 hover:bg-orange-600 text-white",
     },
     {
-      label: "Print Preview",
+      label: "Print preview",
       onClick: openPrintPreview,
       disabled: borden.length === 0,
       className:
@@ -54,7 +54,7 @@ export default function QuickActions({
             type="button"
             onClick={knop.onClick}
             disabled={"disabled" in knop && knop.disabled}
-            className={`min-h-11 rounded-xl px-4 py-2.5 text-sm font-bold shadow-lg transition ${knop.className}`}
+            className={`min-h-11 rounded-xl px-3 py-2 text-xs font-bold shadow-lg transition sm:px-4 sm:py-2.5 sm:text-sm ${knop.className}`}
           >
             {knop.label}
           </button>

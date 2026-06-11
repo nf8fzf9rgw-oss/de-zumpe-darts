@@ -1,6 +1,17 @@
 import { normaliseerSpeelavond } from "@/lib/competition";
-import { haalHuidigSeizoenId, haalSeizoenVanDatum } from "@/lib/seasons";
-import type { AanmeldSessie, Speelavond } from "@/types/competition";
+import { laadLeden, slaLedenOp } from "@/lib/leden";
+import {
+  haalHuidigSeizoenId,
+  haalSeizoenVanDatum,
+  laadActiefSeizoen,
+  slaActiefSeizoenOp,
+} from "@/lib/seasons";
+import {
+  SPEELAVOND_DATA_VERSIE,
+  type AanmeldSessie,
+  type Speelavond,
+  type ZumpeDataBackup,
+} from "@/types/competition";
 
 const SPEELAVOND_KEY = "deZumpeSpeelavond";
 const HISTORIE_KEY = "deZumpeHistorie";
@@ -121,7 +132,48 @@ export function maakLegeSpeelavond(seizoen?: string): Speelavond {
     borden: [],
     spelerVanDeAvond: null,
     aanmeldToken: null,
+    versie: SPEELAVOND_DATA_VERSIE,
   };
+}
+
+export function exportDataBackup(): ZumpeDataBackup {
+  return {
+    versie: SPEELAVOND_DATA_VERSIE,
+    geexporteerd: new Date().toISOString(),
+    speelavond: laadSpeelavond(),
+    historie: laadHistorie(),
+    leden: laadLeden(),
+    actiefSeizoen: laadActiefSeizoen(),
+  };
+}
+
+export function importDataBackup(
+  backup: ZumpeDataBackup
+): { success: boolean; error?: string } {
+  if (!backup || typeof backup !== "object") {
+    return { success: false, error: "Ongeldig backupbestand." };
+  }
+  if (backup.versie !== SPEELAVOND_DATA_VERSIE) {
+    return {
+      success: false,
+      error: `Onbekende backupversie (${backup.versie}). Verwacht versie ${SPEELAVOND_DATA_VERSIE}.`,
+    };
+  }
+  if (!Array.isArray(backup.historie) || !Array.isArray(backup.leden)) {
+    return { success: false, error: "Backup mist historie of leden." };
+  }
+
+  slaHistorieOp(backup.historie);
+  slaLedenOp(backup.leden);
+  slaActiefSeizoenOp(backup.actiefSeizoen);
+
+  if (backup.speelavond) {
+    slaSpeelavondOp(backup.speelavond);
+  } else {
+    verwijderSpeelavond();
+  }
+
+  return { success: true };
 }
 
 export function laadAanmeldSessie(): AanmeldSessie | null {

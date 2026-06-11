@@ -34,7 +34,7 @@ export default function PrintCompetition({
     >
       <header className="print-header">
         <p className="print-club-sub">Dart Vereniging De Zumpe</p>
-        <h1 className="print-title">Speelavond</h1>
+        <h1 className="print-title">Speelschema Vrijdagavond</h1>
         <div className="print-meta">
           <span>Datum: {datumLabel}</span>
           <span>{seizoenLabel(seizoen)}</span>
@@ -50,25 +50,35 @@ export default function PrintCompetition({
 
           <div className="print-section">
             <h3 className="print-section-title">Spelers</h3>
-            <ul className="print-spelers-lijst">
-              {bord.spelers.map((speler) => (
-                <li key={speler}>{speler}</li>
-              ))}
-            </ul>
+            <p className="print-spelers-inline">
+              {bord.spelers.join(" · ")}
+            </p>
           </div>
 
           <div className="print-section">
             <h3 className="print-section-title">Wedstrijden</h3>
-            <ul className="print-wedstrijden-lijst">
-              {bord.wedstrijden.map((wedstrijd) => (
-                <li key={wedstrijd.id} className="print-wedstrijd-item">
-                  <span className="print-checkbox" aria-hidden>
-                    ☐
-                  </span>
-                  <span>{formatWedstrijd(wedstrijd)}</span>
-                </li>
-              ))}
-            </ul>
+            <table className="print-wedstrijden-tabel">
+              <thead>
+                <tr>
+                  <th className="print-th-check" scope="col">Gespeeld</th>
+                  <th scope="col">Wedstrijd</th>
+                  <th className="print-th-score" scope="col">Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bord.wedstrijden.map((wedstrijd) => (
+                  <tr key={wedstrijd.id} className="print-wedstrijd-row">
+                    <td className="print-td-check">
+                      <span className="print-checkbox" aria-hidden>[ ]</span>
+                    </td>
+                    <td>{formatWedstrijd(wedstrijd)}</td>
+                    <td className="print-td-score">
+                      <span className="print-score-blank" aria-hidden>_____</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
       ))}

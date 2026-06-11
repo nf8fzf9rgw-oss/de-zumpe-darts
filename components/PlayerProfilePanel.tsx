@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { berekenSpelerProfiel } from "@/lib/standings";
+import { confirmDialog, toast } from "@/lib/ui-feedback";
 import { useSpeelavond } from "@/context/SpeelavondContext";
 
 export default function PlayerProfilePanel() {
@@ -45,7 +46,7 @@ export default function PlayerProfilePanel() {
           onChange={(e) => setZoekterm(e.target.value)}
           placeholder="Zoek speler..."
           type="search"
-          className="mt-4 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-red-600 focus:outline-none"
+          className="mt-4 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-red-600"
         />
 
         <div className="mt-4 flex gap-2">
@@ -127,11 +128,17 @@ export default function PlayerProfilePanel() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (confirm(`${geselecteerd} verwijderen?`)) {
-                      verwijderLid(geselecteerd);
-                      setGeselecteerd(null);
-                    }
+                  onClick={async () => {
+                    const bevestigd = await confirmDialog({
+                      title: "Speler verwijderen",
+                      message: `Weet je zeker dat je ${geselecteerd} wilt verwijderen?`,
+                      confirmLabel: "Verwijderen",
+                      destructive: true,
+                    });
+                    if (!bevestigd) return;
+                    verwijderLid(geselecteerd);
+                    setGeselecteerd(null);
+                    toast("Speler verwijderd.", "success");
                   }}
                   className="rounded-lg border border-red-900 px-3 py-2 text-xs font-semibold text-red-400"
                 >

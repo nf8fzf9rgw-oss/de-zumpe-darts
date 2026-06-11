@@ -21,6 +21,8 @@ export interface Bord {
   status: BordStatus;
 }
 
+export const SPEELAVOND_DATA_VERSIE = 1;
+
 export interface Speelavond {
   datum: string;
   seizoen: string;
@@ -29,6 +31,16 @@ export interface Speelavond {
   borden: Bord[];
   spelerVanDeAvond: string | null;
   aanmeldToken: string | null;
+  versie?: number;
+}
+
+export interface ZumpeDataBackup {
+  versie: number;
+  geexporteerd: string;
+  speelavond: Speelavond | null;
+  historie: Speelavond[];
+  leden: string[];
+  actiefSeizoen: string;
 }
 
 export interface Seizoen {

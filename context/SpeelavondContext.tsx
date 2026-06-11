@@ -11,6 +11,7 @@ import {
 import {
   berekenDashboardStats,
   genereerCompetitie,
+  MAX_SPELERS_PER_AVOND,
   normaliseerSpeelavond,
   updateWedstrijdInBord,
   type WedstrijdUpdate,
@@ -36,6 +37,7 @@ import {
   berekenStatistieken,
   haalKomendeVrijdag,
 } from "@/lib/statistics";
+import { confirmDialog, toast } from "@/lib/ui-feedback";
 import {
   formatDatum,
   formatDatumAlleen,
@@ -320,17 +322,17 @@ export function SpeelavondProvider({
   const genereerCompetitieAvond = useCallback(() => {
     const spelers = [...aanwezigen, ...gasten];
     if (spelers.length < 3) {
-      alert("Minimaal 3 spelers nodig voor een competitie.");
+      toast("Minimaal 3 spelers nodig voor een competitie.", "error");
       return;
     }
-    if (spelers.length > 32) {
-      alert("Maximaal 32 spelers per speelavond.");
+    if (spelers.length > MAX_SPELERS_PER_AVOND) {
+      toast(`Maximaal ${MAX_SPELERS_PER_AVOND} spelers per speelavond.`, "error");
       return;
     }
     const seizoenHistorie = filterOpSeizoen(laadHistorie(), actiefSeizoen);
     const nieuweBorden = genereerCompetitie(spelers, seizoenHistorie);
     if (!nieuweBorden) {
-      alert("Kon geen geldige bordverdeling maken voor dit aantal spelers.");
+      toast("Kon geen geldige bordverdeling maken voor dit aantal spelers.", "error");
       return;
     }
     setBorden(nieuweBorden);
@@ -366,13 +368,17 @@ export function SpeelavondProvider({
     slaSpeelavondOp(avond);
     void repository.addToHistorie(avond);
     setHistorie(laadHistorie());
-    alert("Speelavond opgeslagen!");
+    toast("Speelavond opgeslagen!", "success");
   }, [aanwezigen, actiefSeizoen, aanmeldToken, borden, gasten, laatsteOpslag]);
 
-  const nieuweAvond = useCallback(() => {
-    if (!confirm("Weet je zeker dat je een nieuwe speelavond wilt starten?")) {
-      return;
-    }
+  const nieuweAvond = useCallback(async () => {
+    const bevestigd = await confirmDialog({
+      title: "Nieuwe speelavond",
+      message: "Weet je zeker dat je een nieuwe speelavond wilt starten?",
+      confirmLabel: "Nieuwe avond starten",
+      destructive: true,
+    });
+    if (!bevestigd) return;
     if (aanwezigen.length > 0 || gasten.length > 0 || borden.length > 0) {
       const huidig = bouwAvond({
         datum: laatsteOpslag || maakHuidigeDatum(),
@@ -448,12 +454,17 @@ export function SpeelavondProvider({
     slaSpeelavondOp(avond);
   }, []);
 
-  const verwijderAvondUitHistorie = useCallback((datum: string) => {
-    if (!confirm("Weet je zeker dat je deze speelavond wilt verwijderen?")) {
-      return;
-    }
+  const verwijderAvondUitHistorie = useCallback(async (datum: string) => {
+    const bevestigd = await confirmDialog({
+      title: "Speelavond verwijderen",
+      message: "Weet je zeker dat je deze speelavond wilt verwijderen?",
+      confirmLabel: "Verwijderen",
+      destructive: true,
+    });
+    if (!bevestigd) return;
     verwijderUitHistorie(datum);
     setHistorie(laadHistorie());
+    toast("Speelavond verwijderd.", "success");
   }, []);
 
   const printAvondUitHistorie = useCallback((datum: string) => {

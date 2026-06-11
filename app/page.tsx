@@ -1,5 +1,4 @@
 import CompetitionColumn from "@/components/CompetitionColumn";
-import DashboardCards from "@/components/DashboardCards";
 import DashboardStatisticsPanel from "@/components/DashboardStatisticsPanel";
 import DashboardWidgets from "@/components/DashboardWidgets";
 import GuestsPanel from "@/components/GuestsPanel";
@@ -13,6 +12,10 @@ import SpeelavondPanel from "@/components/SpeelavondPanel";
 export default function HomePage() {
   return (
     <div className="space-y-4 md:space-y-6 lg:space-y-8">
+      <div className="sticky top-[3.25rem] z-20 -mx-4 border-b border-zinc-800 bg-black/95 px-4 py-2 backdrop-blur-md lg:hidden">
+        <QuickActions layout="horizontal" />
+      </div>
+
       <section>
         <div className="mb-4 flex flex-col gap-4 lg:mb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -26,9 +29,6 @@ export default function HomePage() {
           <SeasonSelector />
         </div>
         <SpelerVanDeAvondBanner />
-        <div className="mt-4">
-          <DashboardCards />
-        </div>
       </section>
 
       <DashboardWidgets />
@@ -48,10 +48,6 @@ export default function HomePage() {
         <div className="md:col-span-2 lg:col-span-5">
           <CompetitionColumn />
         </div>
-      </div>
-
-      <div className="lg:hidden">
-        <QuickActions layout="horizontal" />
       </div>
     </div>
   );

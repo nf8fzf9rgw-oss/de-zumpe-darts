@@ -1,9 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRef } from "react";
 import SeasonSelector from "@/components/SeasonSelector";
 import WhatsAppShare from "@/components/WhatsAppShare";
 import { useSpeelavond } from "@/context/SpeelavondContext";
+import { toast } from "@/lib/ui-feedback";
+import {
+  exportDataBackup,
+  importDataBackup,
+} from "@/lib/storage";
+import type { ZumpeDataBackup } from "@/types/competition";
 
 export default function InstellingenPage() {
   const {
@@ -11,10 +18,41 @@ export default function InstellingenPage() {
     opslaan,
     nieuweAvond,
     openPrintPreview,
-    exportPdf,
+    printSchema,
     borden,
     actiefSeizoenLabel,
   } = useSpeelavond();
+  const importRef = useRef<HTMLInputElement>(null);
+
+  const handleExportBackup = () => {
+    const backup = exportDataBackup();
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `de-zumpe-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast("Backup geëxporteerd.", "success");
+  };
+
+  const handleImportBackup = async (file: File) => {
+    try {
+      const text = await file.text();
+      const backup = JSON.parse(text) as ZumpeDataBackup;
+      const result = importDataBackup(backup);
+      if (!result.success) {
+        toast(result.error ?? "Import mislukt.", "error");
+        return;
+      }
+      toast("Backup geïmporteerd. Pagina wordt ververst.", "success");
+      setTimeout(() => window.location.reload(), 800);
+    } catch {
+      toast("Ongeldig JSON-bestand.", "error");
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -79,6 +117,33 @@ export default function InstellingenPage() {
             Seizoen:{" "}
             <span className="font-semibold text-white">{actiefSeizoenLabel}</span>
           </p>
+          <div className="mt-6 space-y-3">
+            <button
+              type="button"
+              onClick={handleExportBackup}
+              className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
+            >
+              Export JSON backup
+            </button>
+            <input
+              ref={importRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImportBackup(file);
+                e.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => importRef.current?.click()}
+              className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
+            >
+              Import JSON backup
+            </button>
+          </div>
         </section>
 
         <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
@@ -101,11 +166,11 @@ export default function InstellingenPage() {
             </button>
             <button
               type="button"
-              onClick={exportPdf}
+              onClick={printSchema}
               disabled={borden.length === 0}
               className="min-h-11 w-full rounded-xl bg-zinc-700 px-4 py-3 font-semibold text-white hover:bg-zinc-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
             >
-              Opslaan als PDF
+              Printen / PDF
             </button>
             <button
               type="button"

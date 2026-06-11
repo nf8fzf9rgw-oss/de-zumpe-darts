@@ -12,8 +12,8 @@ export default function SpeelavondPanel() {
   } = useSpeelavond();
 
   const items = [
-    { label: "Aanwezigen", value: aanwezigen.length, icon: "👥" },
-    { label: "Gasten", value: gasten.length, icon: "🧑" },
+    { label: "Aanwezige leden", value: aanwezigen.length, icon: "👥" },
+    { label: "Gastspelers", value: gasten.length, icon: "🧑" },
     { label: "Totaal spelers", value: dashboardStats.totaalSpelers, icon: "🎯" },
     { label: "Actieve borden", value: dashboardStats.aantalBorden, icon: "📋" },
     {
@@ -27,6 +27,15 @@ export default function SpeelavondPanel() {
       icon: "✓",
     },
   ];
+
+  const progress =
+    dashboardStats.totaalWedstrijden > 0
+      ? Math.round(
+          (dashboardStats.gespeeldeWedstrijden /
+            dashboardStats.totaalWedstrijden) *
+            100
+        )
+      : 0;
 
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-xl lg:p-6">
@@ -52,7 +61,22 @@ export default function SpeelavondPanel() {
         ))}
       </div>
 
-      <div className="mt-4 space-y-2 lg:mt-6">
+      {dashboardStats.totaalWedstrijden > 0 && (
+        <div className="mt-4 lg:mt-6">
+          <div className="flex items-center justify-between text-xs text-zinc-400">
+            <span>Voortgang wedstrijden</span>
+            <span>{progress}%</span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-800">
+            <div
+              className="h-full rounded-full bg-red-600 transition-all"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4 grid grid-cols-2 gap-2 lg:mt-6 lg:gap-4">
         <div className="rounded-xl border border-zinc-800 bg-black px-4 py-3">
           <p className="text-xs uppercase tracking-wider text-zinc-500">Datum</p>
           <p className="mt-1 text-sm font-semibold text-white lg:text-base">

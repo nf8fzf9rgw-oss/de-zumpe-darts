@@ -10,7 +10,9 @@ const MIN_SPELERS_PER_BORD = 3;
 const MAX_SPELERS_PER_BORD = 5;
 const MAX_BORDEN = 8;
 const MIN_SPELERS = 3;
-const MAX_SPELERS = 32;
+const MAX_SPELERS = 40;
+
+export const MAX_SPELERS_PER_AVOND = MAX_SPELERS;
 
 export function maakWedstrijdId(speler1: string, speler2: string): string {
   return `${speler1}__${speler2}`;
@@ -312,6 +314,7 @@ export function normaliseerSpeelavond(avond: Speelavond): Speelavond {
     seizoen: avond.seizoen ?? String(new Date(avond.datum || Date.now()).getFullYear()),
     spelerVanDeAvond: avond.spelerVanDeAvond ?? null,
     aanmeldToken: avond.aanmeldToken ?? null,
+    versie: avond.versie ?? 1,
     borden: normaliseerBorden(avond.borden),
   };
 }
