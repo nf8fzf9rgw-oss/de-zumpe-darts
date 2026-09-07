@@ -31,9 +31,12 @@ import { berekenClubRecords } from "@/lib/records";
 import {
   filterOpSeizoen,
   laadActiefSeizoen,
+  laadSeizoenen,
   seizoenLabel,
   slaActiefSeizoenOp,
   STANDAARD_SEIZOEN_ID,
+  verwijderSeizoen as verwijderSeizoenUitOpslag,
+  voegSeizoenToe as voegSeizoenToeAanOpslag,
 } from "@/lib/seasons";
 import { createLocalSpeelavondRepository } from "@/lib/services/speelavond.service";
 import {
@@ -73,6 +76,7 @@ import type {
   Bord,
   ClubRecords,
   DashboardStatistieken,
+  Seizoen,
   Speelavond,
   SpeelavondStatistieken,
   SpelerStand,
@@ -89,6 +93,7 @@ interface SpeelavondContextValue {
   seizoenHistorie: Speelavond[];
   actiefSeizoen: string;
   actiefSeizoenLabel: string;
+  seizoenen: Seizoen[];
   laatsteOpslag: string;
   laatsteOpslagLabel: string;
   speelDatumLabel: string;
@@ -105,6 +110,9 @@ interface SpeelavondContextValue {
   printPreviewOpen: boolean;
   setGastNaam: (naam: string) => void;
   setActiefSeizoen: (seizoenId: string) => void;
+  voegSeizoenToe: (startJaar: number) => void;
+  verwijderSeizoen: (seizoenId: string) => void;
+  volgendSeizoenStartJaar: number;
   toggleLid: (naam: string) => void;
   selecteerAlleLeden: () => void;
   deselecteerAlleLeden: () => void;
@@ -199,6 +207,7 @@ export function SpeelavondProvider({
   const [borden, setBorden] = useState<Bord[]>([]);
   const [laatsteOpslag, setLaatsteOpslag] = useState("");
   const [actiefSeizoen, setActiefSeizoenState] = useState(STANDAARD_SEIZOEN_ID);
+  const [seizoenen, setSeizoenen] = useState<Seizoen[]>(() => laadSeizoenen());
   const [aanmeldToken, setAanmeldToken] = useState<string | null>(null);
   const [isGeladen, setIsGeladen] = useState(false);
   const [historie, setHistorie] = useState<Speelavond[]>([]);
@@ -227,6 +236,7 @@ export function SpeelavondProvider({
       setNotitiesState(state.notities);
       if (state.seizoen) setActiefSeizoenState(state.seizoen);
     }
+    setSeizoenen(laadSeizoenen());
     setHistorie(laadHistorie());
   }, []);
 
@@ -235,6 +245,7 @@ export function SpeelavondProvider({
     const seizoen = laadActiefSeizoen();
     /* eslint-disable react-hooks/set-state-in-effect -- localStorage hydratie na client mount */
     setLeden(migreerOfficieleSpelersnamen());
+    setSeizoenen(laadSeizoenen());
     setActiefSeizoenState(seizoen);
     if (opgeslagen) {
       const state = syncState(opgeslagen);
@@ -309,6 +320,37 @@ export function SpeelavondProvider({
     setActiefSeizoenState(seizoenId);
     slaActiefSeizoenOp(seizoenId);
   }, []);
+
+  const voegSeizoenToe = useCallback(
+    (startJaar: number) => {
+      const bijgewerkt = voegSeizoenToeAanOpslag(startJaar);
+      const nieuw = bijgewerkt.find((s) => s.startJaar === startJaar);
+      if (!nieuw) {
+        toast("Ongeldig startjaar voor een seizoen.", "error");
+        return;
+      }
+      setSeizoenen(bijgewerkt);
+      setActiefSeizoen(nieuw.id);
+      logAuditActie("Seizoen toegevoegd", nieuw.label);
+      toast(`${nieuw.label} toegevoegd.`, "success");
+      broadcastReload();
+    },
+    [setActiefSeizoen]
+  );
+
+  const verwijderSeizoen = useCallback(
+    (seizoenId: string) => {
+      const bijgewerkt = verwijderSeizoenUitOpslag(seizoenId);
+      setSeizoenen(bijgewerkt);
+      if (!bijgewerkt.some((s) => s.id === seizoenId)) {
+        setActiefSeizoen(STANDAARD_SEIZOEN_ID);
+        logAuditActie("Seizoen verwijderd", seizoenLabel(seizoenId));
+        toast(`${seizoenLabel(seizoenId)} verwijderd.`, "success");
+        broadcastReload();
+      }
+    },
+    [setActiefSeizoen]
+  );
 
   const toggleLid = useCallback(
     (naam: string) => {
@@ -642,6 +684,11 @@ export function SpeelavondProvider({
     [historie, actiefSeizoen]
   );
 
+  const volgendStartJaar = useMemo(
+    () => seizoenen.reduce((max, s) => Math.max(max, s.startJaar ?? 0), 0) + 1,
+    [seizoenen]
+  );
+
   const dashboardStats = useMemo(
     () => berekenDashboardStats(aanwezigen, gasten, borden, leden.length),
     [aanwezigen, borden, gasten, leden.length]
@@ -703,6 +750,7 @@ export function SpeelavondProvider({
       seizoenHistorie,
       actiefSeizoen,
       actiefSeizoenLabel: seizoenLabel(actiefSeizoen),
+      seizoenen,
       laatsteOpslag,
       laatsteOpslagLabel: formatDatum(laatsteOpslag),
       speelDatumLabel: formatDatumAlleen(laatsteOpslag),
@@ -719,6 +767,9 @@ export function SpeelavondProvider({
       printPreviewOpen,
       setGastNaam,
       setActiefSeizoen,
+      voegSeizoenToe,
+      verwijderSeizoen,
+      volgendSeizoenStartJaar: volgendStartJaar,
       toggleLid,
       selecteerAlleLeden,
       deselecteerAlleLeden,
@@ -771,9 +822,11 @@ export function SpeelavondProvider({
       laatsteOpslag,
       notities,
       printPreviewOpen,
+      seizoenen,
       seizoenHistorie,
       spelerVanDeAvond,
       stand,
+      volgendStartJaar,
       statistieken,
       deselecteerAlleLeden,
       exportPdf,
@@ -789,6 +842,8 @@ export function SpeelavondProvider({
       printSchema,
       selecteerAlleLeden,
       setActiefSeizoen,
+      voegSeizoenToe,
+      verwijderSeizoen,
       setNotities,
       sluitPrintPreview,
       startAanmelden,
