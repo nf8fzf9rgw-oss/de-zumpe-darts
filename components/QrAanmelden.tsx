@@ -1,6 +1,7 @@
 "use client";
 
 import { useSpeelavond } from "@/context/SpeelavondContext";
+import { MAX_SPELERS_PER_AVOND } from "@/lib/competition";
 
 export default function QrAanmelden() {
   const {
@@ -9,6 +10,7 @@ export default function QrAanmelden() {
     startAanmelden,
     stopAanmelden,
     aanwezigen,
+    gasten,
   } = useSpeelavond();
 
   if (!aanmeldToken) {
@@ -37,7 +39,7 @@ export default function QrAanmelden() {
         <div>
           <h3 className="text-lg font-bold text-white">QR Aanmelden actief</h3>
           <p className="mt-1 text-sm text-zinc-400">
-            {aanwezigen.length} spelers aangemeld
+            {aanwezigen.length + gasten.length}/{MAX_SPELERS_PER_AVOND} aangemeld
           </p>
         </div>
         <button

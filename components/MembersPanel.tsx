@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useSpeelavond } from "@/context/SpeelavondContext";
+import { MAX_SPELERS_PER_AVOND } from "@/lib/competition";
 import { haalHistorischeSpeler } from "@/lib/historische-tussenstand";
 
 interface MembersPanelProps {
@@ -14,6 +15,7 @@ export default function MembersPanel({
   const {
     leden,
     aanwezigen,
+    gasten,
     toggleLid,
     selecteerAlleLeden,
     deselecteerAlleLeden,
@@ -35,7 +37,8 @@ export default function MembersPanel({
         <div>
           <h3 className="text-xl font-bold text-white">Leden</h3>
           <p className="mt-1 text-sm text-zinc-400">
-            {aanwezigen.length} van {leden.length} geselecteerd
+            {aanwezigen.length + gasten.length}/{MAX_SPELERS_PER_AVOND} vanavond
+            · {aanwezigen.length} van {leden.length} leden
           </p>
         </div>
 
@@ -73,16 +76,20 @@ export default function MembersPanel({
       >
         {gefilterdeLeden.map((lid) => {
           const isAanwezig = aanwezigen.includes(lid);
+          const vol = !isAanwezig && aanwezigen.length >= MAX_SPELERS_PER_AVOND;
           const officieel = haalHistorischeSpeler(actiefSeizoen, lid);
           return (
             <button
               key={lid}
               type="button"
               onClick={() => toggleLid(lid)}
+              disabled={vol}
               className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition active:scale-[0.98] ${
                 isAanwezig
                   ? "bg-red-700 text-white shadow-lg shadow-red-900/30"
-                  : "bg-zinc-900 text-zinc-200 hover:bg-zinc-800"
+                  : vol
+                    ? "cursor-not-allowed bg-zinc-950 text-zinc-600"
+                    : "bg-zinc-900 text-zinc-200 hover:bg-zinc-800"
               }`}
             >
               <span>{lid}</span>

@@ -12,6 +12,7 @@ import {
   updateWedstrijdInBord,
 } from "@/lib/competition";
 import type { Bord, Speelavond } from "@/types/competition";
+import { pasAvondLimietToe } from "@/lib/avond-limiet";
 import { berekenStand } from "@/lib/standings";
 import { PUNTEN_PER_WINST } from "@/lib/scoring";
 import { genereerWinnaarsVerliezersRonde } from "@/lib/knockout";
@@ -65,7 +66,7 @@ describe("berekenBordVerdeling", () => {
   it("exporteert board-limieten", () => {
     expect(MIN_SPELERS_PER_BORD).toBe(3);
     expect(MAX_SPELERS_PER_BORD).toBe(7);
-    expect(MAX_SPELERS_PER_AVOND).toBe(35);
+    expect(MAX_SPELERS_PER_AVOND).toBe(30);
   });
 
   it("weigert meer dan 35 spelers (5 borden × 7 spelers)", () => {
@@ -93,7 +94,8 @@ describe("genereerCompetitie", () => {
   });
 
   it("maakt nooit meer dan MAX_BORDEN_PER_AVOND borden", () => {
-    for (let n = 3; n <= MAX_SPELERS_PER_AVOND; n += 1) {
+    const maxGenerator = MAX_BORDEN_PER_AVOND * MAX_SPELERS_PER_BORD;
+    for (let n = 3; n <= maxGenerator; n += 1) {
       const spelers = Array.from({ length: n }, (_, i) => `Speler ${i + 1}`);
       const borden = genereerCompetitie(spelers, [], 1);
       if (borden) {
@@ -396,5 +398,39 @@ describe("winnaars- en verliezersronde", () => {
       speler1: "Jan",
       speler2: "Piet",
     });
+  });
+});
+
+describe("pasAvondLimietToe", () => {
+  it("houdt maximaal 30 leden en weigert de rest", () => {
+    const leden = Array.from({ length: 32 }, (_, i) => `Lid ${i + 1}`);
+    const result = pasAvondLimietToe(leden, []);
+    expect(result.aanwezigen).toHaveLength(30);
+    expect(result.geweigerdeLeden).toEqual(["Lid 31", "Lid 32"]);
+    expect(result.gasten).toEqual([]);
+  });
+
+  it("laat gasten meedoen zolang er plek is", () => {
+    const leden = Array.from({ length: 28 }, (_, i) => `Lid ${i + 1}`);
+    const result = pasAvondLimietToe(leden, ["Gast A", "Gast B"]);
+    expect(result.aanwezigen).toHaveLength(28);
+    expect(result.gasten).toEqual(["Gast A", "Gast B"]);
+    expect(result.verwijderdeGasten).toEqual([]);
+  });
+
+  it("laat gasten afvallen als leden de avond vol maken", () => {
+    const leden = Array.from({ length: 29 }, (_, i) => `Lid ${i + 1}`);
+    const result = pasAvondLimietToe(leden, ["Gast A", "Gast B"]);
+    expect(result.aanwezigen).toHaveLength(29);
+    expect(result.gasten).toEqual(["Gast A"]);
+    expect(result.verwijderdeGasten).toEqual(["Gast B"]);
+  });
+
+  it("verwijdert alle gasten bij 30 leden", () => {
+    const leden = Array.from({ length: 30 }, (_, i) => `Lid ${i + 1}`);
+    const result = pasAvondLimietToe(leden, ["Gast A", "Gast B"]);
+    expect(result.aanwezigen).toHaveLength(30);
+    expect(result.gasten).toEqual([]);
+    expect(result.verwijderdeGasten).toEqual(["Gast A", "Gast B"]);
   });
 });

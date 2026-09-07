@@ -28,6 +28,7 @@ import {
 } from "@/lib/leden";
 import { berekenSpelerVanDeAvond } from "@/lib/player-of-evening";
 import { berekenClubRecords } from "@/lib/records";
+import { avondIsVol, pasAvondLimietToe } from "@/lib/avond-limiet";
 import {
   filterOpSeizoen,
   laadActiefSeizoen,
@@ -160,9 +161,13 @@ const repository = createLocalSpeelavondRepository({
 
 function syncState(avond: Speelavond) {
   const genormaliseerd = normaliseerSpeelavond(avond);
+  const limiet = pasAvondLimietToe(
+    genormaliseerd.aanwezigen,
+    genormaliseerd.gasten
+  );
   return {
-    aanwezigen: genormaliseerd.aanwezigen,
-    gasten: genormaliseerd.gasten,
+    aanwezigen: limiet.aanwezigen,
+    gasten: limiet.gasten,
     borden: genormaliseerd.borden,
     laatsteOpslag: genormaliseerd.datum,
     seizoen: genormaliseerd.seizoen,
@@ -355,20 +360,66 @@ export function SpeelavondProvider({
   const toggleLid = useCallback(
     (naam: string) => {
       setAanwezigen((huidig) => {
-        const nieuw = huidig.includes(naam)
-          ? huidig.filter((s) => s !== naam)
-          : [...huidig, naam];
-        persist({ aanwezigen: nieuw });
-        return nieuw;
+        if (huidig.includes(naam)) {
+          const nieuw = huidig.filter((s) => s !== naam);
+          persist({ aanwezigen: nieuw });
+          return nieuw;
+        }
+
+        if (huidig.length >= MAX_SPELERS_PER_AVOND) {
+          const over = Math.max(0, leden.length - MAX_SPELERS_PER_AVOND);
+          toast(
+            `Maximaal ${MAX_SPELERS_PER_AVOND} leden vanavond. ${over} ${
+              over === 1 ? "lid doet" : "leden doen"
+            } niet mee.`,
+            "error"
+          );
+          return huidig;
+        }
+
+        const result = pasAvondLimietToe([...huidig, naam], gasten);
+        persist({
+          aanwezigen: result.aanwezigen,
+          gasten: result.gasten,
+        });
+        if (result.verwijderdeGasten.length > 0) {
+          setGasten(result.gasten);
+          toast(
+            `Avond vol. Gast${result.verwijderdeGasten.length === 1 ? "" : "en"} ${result.verwijderdeGasten.join(", ")} ${
+              result.verwijderdeGasten.length === 1 ? "valt" : "vallen"
+            } af. Leden blijven.`,
+            "info"
+          );
+        }
+        return result.aanwezigen;
       });
     },
-    [persist]
+    [gasten, leden.length, persist]
   );
 
   const selecteerAlleLeden = useCallback(() => {
-    setAanwezigen([...leden]);
-    persist({ aanwezigen: [...leden] });
-  }, [leden, persist]);
+    const result = pasAvondLimietToe(leden, gasten);
+    setAanwezigen(result.aanwezigen);
+    setGasten(result.gasten);
+    persist({
+      aanwezigen: result.aanwezigen,
+      gasten: result.gasten,
+    });
+    if (result.geweigerdeLeden.length > 0) {
+      toast(
+        `Maximaal ${MAX_SPELERS_PER_AVOND} leden vanavond. ${result.geweigerdeLeden.length} ${
+          result.geweigerdeLeden.length === 1 ? "lid doet" : "leden doen"
+        } niet mee.`,
+        "info"
+      );
+    }
+    if (result.verwijderdeGasten.length > 0) {
+      toast(
+        `Avond vol. Gasten vallen af zodat de leden kunnen spelen.`,
+        "info"
+      );
+    }
+  }, [gasten, leden, persist]);
 
   const deselecteerAlleLeden = useCallback(() => {
     setAanwezigen([]);
@@ -378,13 +429,24 @@ export function SpeelavondProvider({
   const voegGastToe = useCallback(() => {
     const naam = gastNaam.trim();
     if (!naam) return;
+    if (gasten.includes(naam)) {
+      toast("Deze gast staat er al op.", "error");
+      return;
+    }
+    if (avondIsVol(aanwezigen.length, gasten.length)) {
+      toast(
+        `Avond is vol (${MAX_SPELERS_PER_AVOND}/${MAX_SPELERS_PER_AVOND}). Gasten kunnen alleen meedoen als er plek is.`,
+        "error"
+      );
+      return;
+    }
     setGasten((huidig) => {
       const nieuw = [...huidig, naam];
       persist({ gasten: nieuw });
       return nieuw;
     });
     setGastNaam("");
-  }, [gastNaam, persist]);
+  }, [aanwezigen.length, gastNaam, gasten, persist]);
 
   const verwijderGast = useCallback(
     (naam: string) => {

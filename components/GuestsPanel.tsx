@@ -1,14 +1,22 @@
 "use client";
 
 import { useSpeelavond } from "@/context/SpeelavondContext";
+import { MAX_SPELERS_PER_AVOND } from "@/lib/competition";
 
 interface GuestsPanelProps {
   compact?: boolean;
 }
 
 export default function GuestsPanel({ compact = false }: GuestsPanelProps) {
-  const { gasten, gastNaam, setGastNaam, voegGastToe, verwijderGast } =
-    useSpeelavond();
+  const {
+    gasten,
+    gastNaam,
+    setGastNaam,
+    voegGastToe,
+    verwijderGast,
+    aanwezigen,
+  } = useSpeelavond();
+  const plekOver = Math.max(0, MAX_SPELERS_PER_AVOND - aanwezigen.length - gasten.length);
 
   return (
     <section
@@ -18,7 +26,10 @@ export default function GuestsPanel({ compact = false }: GuestsPanelProps) {
     >
       <div className="mb-6">
         <h3 className="text-xl font-bold text-white">Gastspelers</h3>
-        <p className="mt-1 text-sm text-zinc-400">{gasten.length} gasten</p>
+        <p className="mt-1 text-sm text-zinc-400">
+          {gasten.length} gasten · {plekOver}{" "}
+          {plekOver === 1 ? "plek" : "plekken"} over
+        </p>
       </div>
 
       <div className="mb-4 flex gap-2">
@@ -34,7 +45,8 @@ export default function GuestsPanel({ compact = false }: GuestsPanelProps) {
         <button
           type="button"
           onClick={voegGastToe}
-          className="rounded-xl bg-red-700 px-5 py-3 font-semibold text-white transition hover:bg-red-600"
+          disabled={plekOver === 0}
+          className="rounded-xl bg-red-700 px-5 py-3 font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
         >
           Toevoegen
         </button>

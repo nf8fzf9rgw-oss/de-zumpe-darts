@@ -12,7 +12,8 @@ const MAX_BORDEN = 5;
 const MIN_SPELERS = 3;
 const MAX_SPELERS = MAX_BORDEN * MAX_SPELERS_PER_BORD;
 
-export const MAX_SPELERS_PER_AVOND = MAX_SPELERS;
+/** Hard maximum voor een vrijdagavond: leden eerst, gasten vullen de rest. */
+export const MAX_SPELERS_PER_AVOND = 30;
 export const MAX_BORDEN_PER_AVOND = MAX_BORDEN;
 
 export function maakWedstrijdId(speler1: string, speler2: string): string {
