@@ -9,6 +9,10 @@ export const STANDAARD_SEIZOEN_ID = "2025-2026";
 const SEIZOEN_KEY = "deZumpeActiefSeizoen";
 const SEIZOENEN_KEY = "deZumpeSeizoenen";
 const SEIZOENEN_RESET_KEY = "deZumpeSeizoenenReset";
+const SEIZOENEN_RESET_VERSIE = "2";
+
+/** Oude jaartal-id's uit de vorige vaste seizoenlijst. */
+const VERWIJDERDE_SEIZOEN_IDS = new Set(["2025", "2026", "2027"]);
 
 /**
  * Seizoenen die altijd bestaan en niet verwijderd kunnen worden.
@@ -39,9 +43,9 @@ function leesStartJaren(): number[] {
 
   // Oudere versies zetten seizoenen in de opslag die het bestuur nooit zelf
   // heeft toegevoegd. Die lijst wordt eenmalig opgeschoond.
-  if (!localStorage.getItem(SEIZOENEN_RESET_KEY)) {
+  if (localStorage.getItem(SEIZOENEN_RESET_KEY) !== SEIZOENEN_RESET_VERSIE) {
     localStorage.removeItem(SEIZOENEN_KEY);
-    localStorage.setItem(SEIZOENEN_RESET_KEY, "1");
+    localStorage.setItem(SEIZOENEN_RESET_KEY, SEIZOENEN_RESET_VERSIE);
     return [...BASIS_SEIZOEN_STARTJAREN];
   }
 
@@ -71,7 +75,9 @@ function schrijfStartJaren(jaren: number[]): void {
 
 /** Alle seizoenen die het bestuur kan kiezen, oplopend op startjaar. */
 export function laadSeizoenen(): Seizoen[] {
-  return leesStartJaren().map(maakSeizoen);
+  return leesStartJaren()
+    .map(maakSeizoen)
+    .filter((seizoen) => !VERWIJDERDE_SEIZOEN_IDS.has(seizoen.id));
 }
 
 export function isBasisSeizoen(seizoenId: string): boolean {
@@ -127,7 +133,11 @@ export function laadActiefSeizoen(): string {
   if (typeof window === "undefined") return STANDAARD_SEIZOEN_ID;
 
   const opgeslagen = localStorage.getItem(SEIZOEN_KEY);
-  if (opgeslagen && laadSeizoenen().some((s) => s.id === opgeslagen)) {
+  if (
+    opgeslagen &&
+    !VERWIJDERDE_SEIZOEN_IDS.has(opgeslagen) &&
+    laadSeizoenen().some((s) => s.id === opgeslagen)
+  ) {
     return opgeslagen;
   }
 
