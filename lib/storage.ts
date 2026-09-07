@@ -9,7 +9,7 @@ import {
   normaliseerLedenLijst,
   slaLedenOp,
 } from "@/lib/leden";
-import { canoniekeSpelerNaam } from "@/lib/namen";
+import { canoniekeSpelerNaam, namenZijnGelijk } from "@/lib/namen";
 import {
   haalHuidigSeizoenId,
   haalSeizoenVanDatum,
@@ -165,7 +165,8 @@ export function hernoemSpelerInData(
   oudeNaam: string,
   nieuweNaam: string
 ): void {
-  const mapNaam = (n: string) => (n === oudeNaam ? nieuweNaam : n);
+  const mapNaam = (n: string) =>
+    namenZijnGelijk(n, oudeNaam) ? nieuweNaam : n;
 
   const historie = laadHistorie().map((avond) =>
     normaliseerSpeelavond({
@@ -174,7 +175,7 @@ export function hernoemSpelerInData(
       gasten: avond.gasten.map(mapNaam),
       borden: hernoemSpelerInBorden(avond.borden, oudeNaam, nieuweNaam),
       spelerVanDeAvond:
-        avond.spelerVanDeAvond === oudeNaam
+        avond.spelerVanDeAvond && namenZijnGelijk(avond.spelerVanDeAvond, oudeNaam)
           ? nieuweNaam
           : avond.spelerVanDeAvond,
     })
@@ -190,7 +191,8 @@ export function hernoemSpelerInData(
         gasten: huidig.gasten.map(mapNaam),
         borden: hernoemSpelerInBorden(huidig.borden, oudeNaam, nieuweNaam),
         spelerVanDeAvond:
-          huidig.spelerVanDeAvond === oudeNaam
+          huidig.spelerVanDeAvond &&
+          namenZijnGelijk(huidig.spelerVanDeAvond, oudeNaam)
             ? nieuweNaam
             : huidig.spelerVanDeAvond,
       })

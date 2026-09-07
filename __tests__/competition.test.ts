@@ -10,12 +10,19 @@ import {
   MIN_SPELERS_PER_BORD,
   normaliseerSpeelavond,
   updateWedstrijdInBord,
+  verplaatsSpeler,
 } from "@/lib/competition";
 import type { Bord, Speelavond } from "@/types/competition";
+import { pasAvondLimietToe } from "@/lib/avond-limiet";
 import { berekenStand } from "@/lib/standings";
-import { PUNTEN_PER_WINST } from "@/lib/scoring";
+import { vindBordVoorSpeler } from "@/lib/player-utils";
+import { isGeldigeFinish, PUNTEN_PER_WINST } from "@/lib/scoring";
+import { berekenWinstreeksen } from "@/lib/winstreeks";
 import { genereerWinnaarsVerliezersRonde } from "@/lib/knockout";
-import { OFFICIELE_TUSSENSTAND_2025_2026 } from "@/lib/historische-tussenstand";
+import {
+  isAvondNaTussenstand,
+  OFFICIELE_TUSSENSTAND_2025_2026,
+} from "@/lib/historische-tussenstand";
 import { CLUB_LEDEN_DEFAULT } from "@/lib/leden";
 import { canoniekeSpelerNaam } from "@/lib/namen";
 
@@ -31,18 +38,24 @@ describe("berekenBordVerdeling", () => {
     [10, [4, 3, 3]],
     [11, [4, 4, 3]],
     [12, [4, 4, 4]],
-    [13, [5, 4, 4]],
-    [14, [5, 5, 4]],
-    [15, [5, 5, 5]],
+    [13, [4, 3, 3, 3]],
+    [14, [4, 4, 3, 3]],
+    [15, [4, 4, 4, 3]],
     [16, [4, 4, 4, 4]],
-    [17, [5, 4, 4, 4]],
-    [18, [5, 5, 4, 4]],
-    [19, [5, 5, 5, 4]],
+    [17, [4, 4, 3, 3, 3]],
+    [18, [4, 4, 4, 3, 3]],
+    [19, [4, 4, 4, 4, 3]],
     [20, [4, 4, 4, 4, 4]],
-    [21, [5, 4, 4, 4, 4]],
-    [22, [5, 5, 4, 4, 4]],
-    [23, [5, 5, 5, 4, 4]],
-    [24, [5, 5, 5, 5, 4]],
+    [21, [4, 4, 4, 3, 3, 3]],
+    [22, [4, 4, 4, 4, 3, 3]],
+    [23, [4, 4, 4, 4, 4, 3]],
+    [24, [4, 4, 4, 4, 4, 4]],
+    [25, [5, 4, 4, 4, 4, 4]],
+    [26, [5, 5, 4, 4, 4, 4]],
+    [27, [5, 5, 5, 4, 4, 4]],
+    [28, [5, 5, 5, 5, 4, 4]],
+    [29, [5, 5, 5, 5, 5, 4]],
+    [30, [5, 5, 5, 5, 5, 5]],
   ];
 
   it.each(verwachteVerdelingen)(
@@ -52,24 +65,24 @@ describe("berekenBordVerdeling", () => {
     }
   );
 
-  it("verdeelt 25-35 spelers binnen limieten", () => {
-    for (let n = 25; n <= 35; n += 1) {
-      const verdeling = berekenBordVerdeling(n);
-      expect(verdeling).not.toBeNull();
-      expect(verdeling!.reduce((a, b) => a + b, 0)).toBe(n);
-      expect(verdeling!.length).toBeLessThanOrEqual(5);
-      expect(verdeling!.every((g) => g >= MIN_SPELERS_PER_BORD && g <= MAX_SPELERS_PER_BORD)).toBe(true);
+  it("opent Bord 6 pas vanaf 21 spelers", () => {
+    for (let n = 3; n <= 20; n += 1) {
+      expect(berekenBordVerdeling(n)!.length).toBeLessThanOrEqual(5);
+    }
+    for (let n = 21; n <= 30; n += 1) {
+      expect(berekenBordVerdeling(n)!.length).toBe(6);
     }
   });
 
   it("exporteert board-limieten", () => {
     expect(MIN_SPELERS_PER_BORD).toBe(3);
     expect(MAX_SPELERS_PER_BORD).toBe(7);
-    expect(MAX_SPELERS_PER_AVOND).toBe(35);
+    expect(MAX_BORDEN_PER_AVOND).toBe(6);
+    expect(MAX_SPELERS_PER_AVOND).toBe(30);
   });
 
-  it("weigert meer dan 35 spelers (5 borden × 7 spelers)", () => {
-    expect(berekenBordVerdeling(36)).toBeNull();
+  it("weigert meer dan 42 spelers (6 borden × 7 spelers)", () => {
+    expect(berekenBordVerdeling(43)).toBeNull();
   });
 
   it("weigert te weinig spelers", () => {
@@ -93,7 +106,8 @@ describe("genereerCompetitie", () => {
   });
 
   it("maakt nooit meer dan MAX_BORDEN_PER_AVOND borden", () => {
-    for (let n = 3; n <= MAX_SPELERS_PER_AVOND; n += 1) {
+    const maxGenerator = MAX_BORDEN_PER_AVOND * MAX_SPELERS_PER_BORD;
+    for (let n = 3; n <= maxGenerator; n += 1) {
       const spelers = Array.from({ length: n }, (_, i) => `Speler ${i + 1}`);
       const borden = genereerCompetitie(spelers, [], 1);
       if (borden) {
@@ -396,5 +410,175 @@ describe("winnaars- en verliezersronde", () => {
       speler1: "Jan",
       speler2: "Piet",
     });
+  });
+});
+
+describe("pasAvondLimietToe", () => {
+  it("houdt maximaal 30 leden en weigert de rest", () => {
+    const leden = Array.from({ length: 32 }, (_, i) => `Lid ${i + 1}`);
+    const result = pasAvondLimietToe(leden, []);
+    expect(result.aanwezigen).toHaveLength(30);
+    expect(result.geweigerdeLeden).toEqual(["Lid 31", "Lid 32"]);
+    expect(result.gasten).toEqual([]);
+  });
+
+  it("laat gasten meedoen zolang er plek is", () => {
+    const leden = Array.from({ length: 28 }, (_, i) => `Lid ${i + 1}`);
+    const result = pasAvondLimietToe(leden, ["Gast A", "Gast B"]);
+    expect(result.aanwezigen).toHaveLength(28);
+    expect(result.gasten).toEqual(["Gast A", "Gast B"]);
+    expect(result.verwijderdeGasten).toEqual([]);
+  });
+
+  it("laat gasten afvallen als leden de avond vol maken", () => {
+    const leden = Array.from({ length: 29 }, (_, i) => `Lid ${i + 1}`);
+    const result = pasAvondLimietToe(leden, ["Gast A", "Gast B"]);
+    expect(result.aanwezigen).toHaveLength(29);
+    expect(result.gasten).toEqual(["Gast A"]);
+    expect(result.verwijderdeGasten).toEqual(["Gast B"]);
+  });
+
+  it("verwijdert alle gasten bij 30 leden", () => {
+    const leden = Array.from({ length: 30 }, (_, i) => `Lid ${i + 1}`);
+    const result = pasAvondLimietToe(leden, ["Gast A", "Gast B"]);
+    expect(result.aanwezigen).toHaveLength(30);
+    expect(result.gasten).toEqual([]);
+    expect(result.verwijderdeGasten).toEqual(["Gast A", "Gast B"]);
+  });
+});
+
+describe("verplaatsSpeler", () => {
+  it("houdt uitslagen van andere paren intact", () => {
+    const bordA: Bord = {
+      naam: "Bord 1",
+      spelers: ["Jan", "Piet", "Henk", "Klaas"],
+      wedstrijden: genereerRoundRobin(["Jan", "Piet", "Henk", "Klaas"]),
+      status: "wachtend",
+      fase: "poule",
+    };
+    const bordB: Bord = {
+      naam: "Bord 2",
+      spelers: ["Anna", "Bram", "Chris"],
+      wedstrijden: genereerRoundRobin(["Anna", "Bram", "Chris"]),
+      status: "wachtend",
+      fase: "poule",
+    };
+    const janPiet = bordA.wedstrijden.find(
+      (w) => w.speler1 === "Jan" && w.speler2 === "Piet"
+    )!;
+    bordA.wedstrijden = bordA.wedstrijden.map((w) =>
+      w.id === janPiet.id
+        ? {
+            ...w,
+            gespeeld: true,
+            score1: 3,
+            score2: 1,
+            winnaar: "Jan",
+          }
+        : w
+    );
+    const annaBram = bordB.wedstrijden.find(
+      (w) => w.speler1 === "Anna" && w.speler2 === "Bram"
+    )!;
+    bordB.wedstrijden = bordB.wedstrijden.map((w) =>
+      w.id === annaBram.id
+        ? {
+            ...w,
+            gespeeld: true,
+            score1: 3,
+            score2: 0,
+            winnaar: "Anna",
+          }
+        : w
+    );
+
+    const resultaat = verplaatsSpeler([bordA, bordB], "Klaas", "Bord 1", "Bord 2");
+    expect(resultaat).not.toBeNull();
+    const nieuwA = resultaat!.find((b) => b.naam === "Bord 1")!;
+    const nieuwB = resultaat!.find((b) => b.naam === "Bord 2")!;
+    const bewaardeA = nieuwA.wedstrijden.find(
+      (w) => w.speler1 === "Jan" && w.speler2 === "Piet"
+    );
+    const bewaardeB = nieuwB.wedstrijden.find(
+      (w) => w.speler1 === "Anna" && w.speler2 === "Bram"
+    );
+    expect(bewaardeA).toMatchObject({ gespeeld: true, score1: 3, winnaar: "Jan" });
+    expect(bewaardeB).toMatchObject({ gespeeld: true, score1: 3, winnaar: "Anna" });
+    expect(nieuwA.spelers).toEqual(["Jan", "Piet", "Henk"]);
+    expect(nieuwB.spelers).toEqual(["Anna", "Bram", "Chris", "Klaas"]);
+    expect(
+      nieuwB.wedstrijden.filter(
+        (w) => w.speler1 === "Klaas" || w.speler2 === "Klaas"
+      )
+    ).toHaveLength(3);
+  });
+});
+
+describe("berekenWinstreeksen", () => {
+  it("telt dezelfde avond niet dubbel via historie én huidige borden", () => {
+    const borden = genereerCompetitie(["Alice", "Bob", "Carol"], [], 1)!;
+    const wedstrijd = borden[0].wedstrijden[0];
+    borden[0] = updateWedstrijdInBord(borden[0], wedstrijd.id, {
+      gespeeld: true,
+      score1: 3,
+      score2: 1,
+    });
+    const datum = "2026-09-04T19:00:00.000Z";
+    const avond: Speelavond = {
+      datum,
+      seizoen: "2025-2026",
+      aanwezigen: ["Alice", "Bob", "Carol"],
+      gasten: [],
+      borden,
+      spelerVanDeAvond: null,
+      aanmeldToken: null,
+    };
+    const streaks = berekenWinstreeksen([avond], borden, datum);
+    const gespeeld = borden[0].wedstrijden.find((w) => w.id === wedstrijd.id);
+    expect(gespeeld?.winnaar).toBeTruthy();
+    expect(streaks.get(gespeeld!.winnaar!)).toBe(1);
+    expect(streaks.size).toBe(1);
+  });
+});
+
+describe("isGeldigeFinish", () => {
+  it("accepteert 0 en mogelijke high finishes", () => {
+    expect(isGeldigeFinish(0)).toBe(true);
+    expect(isGeldigeFinish(170)).toBe(true);
+    expect(isGeldigeFinish(167)).toBe(true);
+    expect(isGeldigeFinish(100)).toBe(true);
+  });
+
+  it("weigert onmogelijke checkouts", () => {
+    expect(isGeldigeFinish(168)).toBe(false);
+    expect(isGeldigeFinish(169)).toBe(false);
+    expect(isGeldigeFinish(159)).toBe(false);
+    expect(isGeldigeFinish(99)).toBe(false);
+    expect(isGeldigeFinish(171)).toBe(false);
+  });
+});
+
+describe("isAvondNaTussenstand", () => {
+  it("vergelijkt op kalenderdatum in Amsterdam", () => {
+    expect(isAvondNaTussenstand("2026-08-15T20:00:00.000Z", "2026-08-15")).toBe(
+      false
+    );
+    expect(isAvondNaTussenstand("2026-08-16T18:00:00.000Z", "2026-08-15")).toBe(
+      true
+    );
+    expect(isAvondNaTussenstand("2026-08-15", "2026-08-15")).toBe(false);
+  });
+});
+
+describe("vindBordVoorSpeler", () => {
+  it("vindt een poule via een naam-alias", () => {
+    const bord: Bord = {
+      naam: "Bord 1",
+      spelers: ["Erwin Smit", "Jan", "Piet"],
+      wedstrijden: genereerRoundRobin(["Erwin Smit", "Jan", "Piet"]),
+      status: "wachtend",
+      fase: "poule",
+    };
+    expect(vindBordVoorSpeler([bord], "Ervin Smit")?.naam).toBe("Bord 1");
   });
 });

@@ -1,4 +1,5 @@
 import type { Bord, Wedstrijd } from "@/types/competition";
+import { canoniekeSpelerNaam, namenZijnGelijk } from "@/lib/namen";
 import { berekenStand } from "@/lib/standings";
 
 export const SPELER_NAAM_KEY = "deZumpeSpelerNaam";
@@ -13,8 +14,11 @@ export function verzamelAlleSpelers(
   gasten: string[],
   borden: Bord[]
 ): string[] {
-  const set = new Set<string>([...leden, ...gasten]);
-  borden.forEach((bord) => bord.spelers.forEach((s) => set.add(s)));
+  const set = new Set<string>();
+  [...leden, ...gasten].forEach((naam) => set.add(canoniekeSpelerNaam(naam)));
+  borden.forEach((bord) =>
+    bord.spelers.forEach((s) => set.add(canoniekeSpelerNaam(s)))
+  );
   return Array.from(set).sort((a, b) => a.localeCompare(b, "nl"));
 }
 
@@ -22,7 +26,11 @@ export function vindBordVoorSpeler(
   borden: Bord[],
   spelerNaam: string
 ): Bord | null {
-  return borden.find((b) => b.spelers.includes(spelerNaam)) ?? null;
+  return (
+    borden.find((b) =>
+      b.spelers.some((s) => namenZijnGelijk(s, spelerNaam))
+    ) ?? null
+  );
 }
 
 export function vindWedstrijdenVoorSpeler(
@@ -33,8 +41,8 @@ export function vindWedstrijdenVoorSpeler(
   borden.forEach((bord) => {
     bord.wedstrijden.forEach((wedstrijd) => {
       if (
-        wedstrijd.speler1 === spelerNaam ||
-        wedstrijd.speler2 === spelerNaam
+        namenZijnGelijk(wedstrijd.speler1, spelerNaam) ||
+        namenZijnGelijk(wedstrijd.speler2, spelerNaam)
       ) {
         resultaat.push({ bordNaam: bord.naam, wedstrijd });
       }
@@ -44,7 +52,9 @@ export function vindWedstrijdenVoorSpeler(
 }
 
 export function berekenBordStand(bord: Bord) {
-  return berekenStand([], [bord]).filter((s) => bord.spelers.includes(s.naam));
+  return berekenStand([], [bord]).filter((s) =>
+    bord.spelers.some((n) => namenZijnGelijk(n, s.naam))
+  );
 }
 
 export function laatsteWinnaar(borden: Bord[]): string | null {
@@ -69,8 +79,8 @@ export function komendeWedstrijden(
       if (wedstrijd.gespeeld) return;
       if (
         spelerNaam &&
-        wedstrijd.speler1 !== spelerNaam &&
-        wedstrijd.speler2 !== spelerNaam
+        !namenZijnGelijk(wedstrijd.speler1, spelerNaam) &&
+        !namenZijnGelijk(wedstrijd.speler2, spelerNaam)
       ) {
         return;
       }

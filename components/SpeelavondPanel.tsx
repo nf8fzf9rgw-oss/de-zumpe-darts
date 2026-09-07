@@ -1,6 +1,7 @@
 "use client";
 
 import { useSpeelavond } from "@/context/SpeelavondContext";
+import { MAX_SPELERS_PER_AVOND } from "@/lib/competition";
 
 export default function SpeelavondPanel() {
   const {
@@ -14,7 +15,11 @@ export default function SpeelavondPanel() {
   const items = [
     { label: "Aanwezige leden", value: aanwezigen.length, icon: "👥" },
     { label: "Gastspelers", value: gasten.length, icon: "🧑" },
-    { label: "Totaal spelers", value: dashboardStats.totaalSpelers, icon: "🎯" },
+    {
+      label: "Totaal spelers",
+      value: `${dashboardStats.totaalSpelers}/${MAX_SPELERS_PER_AVOND}`,
+      icon: "🎯",
+    },
     { label: "Actieve borden", value: dashboardStats.aantalBorden, icon: "📋" },
     {
       label: "Wedstrijden vandaag",

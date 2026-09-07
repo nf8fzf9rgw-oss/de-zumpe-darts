@@ -14,7 +14,8 @@ export function berekenHeadToHead(
   spelerA: string,
   spelerB: string,
   historie: Speelavond[],
-  huidigeBorden: Bord[] = []
+  huidigeBorden: Bord[] = [],
+  huidigeAvondDatum?: string
 ): HeadToHead {
   let winstA = 0;
   let winstB = 0;
@@ -37,7 +38,9 @@ export function berekenHeadToHead(
     });
   };
 
-  historie.forEach((avond) => verwerk(avond.borden));
+  historie
+    .filter((avond) => !huidigeAvondDatum || avond.datum !== huidigeAvondDatum)
+    .forEach((avond) => verwerk(avond.borden));
   verwerk(huidigeBorden);
 
   return { spelerA, spelerB, ontmoetingen, winstA, winstB };

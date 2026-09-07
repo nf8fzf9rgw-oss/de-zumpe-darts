@@ -376,7 +376,8 @@ export function berekenSpelerProfiel(
   const winstreeks = langsteWinstreeksVoorSpeler(
     canoniek,
     historie,
-    huidigeBorden
+    huidigeBorden,
+    huidigeAvondDatum
   );
   const badges = berekenBadges({
     aantal180s: rij?.aantal180s ?? 0,

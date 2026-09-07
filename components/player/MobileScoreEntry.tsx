@@ -36,6 +36,10 @@ export default function MobileScoreEntry({
     number | null
   >(wedstrijd.hoogsteFinishSpeler2);
   const [gespeeld, setGespeeld] = useState(wedstrijd.gespeeld);
+  const [activeScore, setActiveScore] = useState<"score1" | "score2" | null>(
+    null
+  );
+  const [useNumpad, setUseNumpad] = useState(true);
 
   const clampScore = (waarde: string) =>
     Math.max(0, Math.min(9, parseInt(waarde, 10) || 0));
@@ -65,9 +69,6 @@ export default function MobileScoreEntry({
     if (navigator.vibrate) navigator.vibrate(30);
     toast("Uitslag opgeslagen!", "success");
   };
-
-  const [activeScore, setActiveScore] = useState<"score1" | "score2" | null>(null);
-  const [useNumpad, setUseNumpad] = useState(true);
 
   const voornaam1 = wedstrijd.speler1.split(" ")[0];
   const voornaam2 = wedstrijd.speler2.split(" ")[0];

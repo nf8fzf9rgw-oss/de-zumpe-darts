@@ -1,3 +1,4 @@
+import { namenZijnGelijk } from "@/lib/namen";
 import type {
   Bord,
   BordStatus,
@@ -7,12 +8,16 @@ import type {
 } from "@/types/competition";
 
 export const MIN_SPELERS_PER_BORD = 3;
+/** Harde bovengrens; alleen bereikbaar via handmatig verplaatsen of oude data. */
 export const MAX_SPELERS_PER_BORD = 7;
-const MAX_BORDEN = 5;
+export const IDEALE_SPELERS_PER_BORD = 4;
+export const MAX_AUTOMATISCH_PER_BORD = 5;
+const MAX_BORDEN = 6;
 const MIN_SPELERS = 3;
 const MAX_SPELERS = MAX_BORDEN * MAX_SPELERS_PER_BORD;
 
-export const MAX_SPELERS_PER_AVOND = MAX_SPELERS;
+/** Hard maximum voor een vrijdagavond: leden eerst, gasten vullen de rest. */
+export const MAX_SPELERS_PER_AVOND = 30;
 export const MAX_BORDEN_PER_AVOND = MAX_BORDEN;
 
 export function maakWedstrijdId(speler1: string, speler2: string): string {
@@ -36,164 +41,60 @@ export function maakWedstrijd(speler1: string, speler2: string): Wedstrijd {
   };
 }
 
-function variantie(verdeling: number[]): number {
-  const gemiddelde =
-    verdeling.reduce((totaal, waarde) => totaal + waarde, 0) / verdeling.length;
-  return verdeling.reduce(
-    (totaal, waarde) => totaal + (waarde - gemiddelde) ** 2,
-    0
-  );
+/** Verdeelt spelers zo gelijk mogelijk over de borden, grootste borden eerst. */
+function gelijkeVerdeling(
+  aantalSpelers: number,
+  aantalBorden: number,
+  maxPerBord: number
+): number[] | null {
+  if (aantalBorden < 1) return null;
+
+  const basis = Math.floor(aantalSpelers / aantalBorden);
+  const rest = aantalSpelers % aantalBorden;
+  const grootste = rest > 0 ? basis + 1 : basis;
+
+  if (basis < MIN_SPELERS_PER_BORD) return null;
+  if (grootste > maxPerBord) return null;
+
+  return [
+    ...Array<number>(rest).fill(basis + 1),
+    ...Array<number>(aantalBorden - rest).fill(basis),
+  ];
 }
 
-function roundRobinWedstrijden(grootte: number): number {
-  return (grootte * (grootte - 1)) / 2;
-}
-
-function afstandTotIdealeGrootte(verdeling: number[]): number {
-  return verdeling.reduce(
-    (totaal, grootte) => totaal + Math.abs(grootte - 4),
-    0
-  );
-}
-
-function uniformBonus(aantalSpelers: number, verdeling: number[]): number {
-  const isUniform = verdeling.every((g) => g === verdeling[0]);
-  if (!isUniform) return 0;
-
-  const grootte = verdeling[0];
-  const aantalBorden = verdeling.length;
-
-  if (
-    grootte === 4 &&
-    aantalSpelers % 4 === 0 &&
-    aantalBorden === aantalSpelers / 4 &&
-    aantalBorden <= MAX_BORDEN
-  ) {
-    return -200;
-  }
-
-  if (
-    grootte === 5 &&
-    aantalSpelers % 5 === 0 &&
-    aantalBorden === aantalSpelers / 5 &&
-    aantalBorden <= MAX_BORDEN &&
-    aantalBorden >= 3 &&
-    !(aantalSpelers % 4 === 0 && aantalSpelers / 4 <= MAX_BORDEN)
-  ) {
-    return -200;
-  }
-
-  if (
-    grootte === 3 &&
-    aantalSpelers % 3 === 0 &&
-    aantalBorden === aantalSpelers / 3 &&
-    aantalBorden <= MAX_BORDEN &&
-    !(
-      aantalSpelers % 4 === 0 &&
-      aantalSpelers / 4 <= MAX_BORDEN &&
-      aantalSpelers / 4 <= aantalBorden
-    )
-  ) {
-    return -150;
-  }
-
-  return 0;
-}
-
-/** Lagere score = betere verdeling (uniform rond 4 spelers, weinig wachttijd). */
-function scoreVerdeling(aantalSpelers: number, verdeling: number[]): number {
-  let score = 0;
-
-  for (const grootte of verdeling) {
-    if (grootte === 7) score += 1000;
-    else if (grootte === 6) score += 100;
-    else if (grootte === 5) score += 10;
-    else if (grootte === 3) score += 15;
-  }
-
-  score += variantie(verdeling) * 100;
-  score += afstandTotIdealeGrootte(verdeling) * 20;
-  score += uniformBonus(aantalSpelers, verdeling);
-
-  if (verdeling.length === 2 && verdeling.every((g) => g === 5)) {
-    score += 50;
-  }
-
-  const aantalDrie = verdeling.filter((g) => g === 3).length;
-  const aantalVier = verdeling.filter((g) => g === 4).length;
-  if (aantalDrie === 1 && aantalVier >= 3) {
-    score += 80;
-  }
-
-  const totaalWedstrijden = verdeling.reduce(
-    (totaal, grootte) => totaal + roundRobinWedstrijden(grootte),
-    0
-  );
-  const maxWedstrijdenPerBord = Math.max(
-    ...verdeling.map((grootte) => roundRobinWedstrijden(grootte))
-  );
-  score += totaalWedstrijden;
-  score += maxWedstrijdenPerBord * 5;
-
-  return score;
-}
-
+/**
+ * Zoveel borden als nodig om onder de 4 spelers per bord te blijven:
+ * ceil(spelers / 4), met 6 borden als maximum.
+ */
 export function berekenBordVerdeling(aantalSpelers: number): number[] | null {
   if (aantalSpelers < MIN_SPELERS || aantalSpelers > MAX_SPELERS) {
     return null;
   }
 
-  const mogelijkheden: number[][] = [];
+  const gewensteBorden = Math.min(
+    Math.ceil(aantalSpelers / IDEALE_SPELERS_PER_BORD),
+    MAX_BORDEN
+  );
 
-  function zoek(
-    resterend: number,
-    huidigeVerdeling: number[],
-    resterendeBorden: number
-  ): void {
-    if (resterendeBorden === 0) {
-      if (resterend === 0) {
-        mogelijkheden.push(huidigeVerdeling);
-      }
-      return;
-    }
-
-    for (
-      let grootte = MIN_SPELERS_PER_BORD;
-      grootte <= MAX_SPELERS_PER_BORD;
-      grootte += 1
-    ) {
-      const minimaalNodig =
-        (resterendeBorden - 1) * MIN_SPELERS_PER_BORD;
-      const maximaalNodig =
-        (resterendeBorden - 1) * MAX_SPELERS_PER_BORD;
-
-      if (
-        grootte <= resterend &&
-        resterend - grootte >= minimaalNodig &&
-        resterend - grootte <= maximaalNodig
-      ) {
-        zoek(
-          resterend - grootte,
-          [...huidigeVerdeling, grootte],
-          resterendeBorden - 1
-        );
-      }
-    }
+  for (let borden = gewensteBorden; borden >= 1; borden -= 1) {
+    const verdeling = gelijkeVerdeling(
+      aantalSpelers,
+      borden,
+      MAX_AUTOMATISCH_PER_BORD
+    );
+    if (verdeling) return verdeling;
   }
 
-  for (let aantalBorden = 1; aantalBorden <= MAX_BORDEN; aantalBorden += 1) {
-    zoek(aantalSpelers, [], aantalBorden);
+  for (let borden = MAX_BORDEN; borden >= 1; borden -= 1) {
+    const verdeling = gelijkeVerdeling(
+      aantalSpelers,
+      borden,
+      MAX_SPELERS_PER_BORD
+    );
+    if (verdeling) return verdeling;
   }
 
-  if (mogelijkheden.length === 0) return null;
-
-  mogelijkheden.sort((a, b) => {
-    const verschilScore = scoreVerdeling(aantalSpelers, a) - scoreVerdeling(aantalSpelers, b);
-    if (verschilScore !== 0) return verschilScore;
-    return b.length - a.length;
-  });
-
-  return [...mogelijkheden[0]].sort((a, b) => b - a);
+  return null;
 }
 
 export function genereerRoundRobin(spelers: string[]): Wedstrijd[] {
@@ -462,6 +363,10 @@ export function berekenDashboardStats(
   };
 }
 
+function vervangSpelerNaam(naam: string, oudeNaam: string, nieuweNaam: string) {
+  return namenZijnGelijk(naam, oudeNaam) ? nieuweNaam : naam;
+}
+
 /** Hernoem speler in alle borden (huidige avond). */
 export function hernoemSpelerInBorden(
   borden: Bord[],
@@ -470,21 +375,43 @@ export function hernoemSpelerInBorden(
 ): Bord[] {
   return borden.map((bord) => ({
     ...bord,
-    spelers: bord.spelers.map((s) => (s === oudeNaam ? nieuweNaam : s)),
-    wedstrijden: bord.wedstrijden.map((w) => ({
-      ...w,
-      speler1: w.speler1 === oudeNaam ? nieuweNaam : w.speler1,
-      speler2: w.speler2 === oudeNaam ? nieuweNaam : w.speler2,
-      id: maakWedstrijdId(
-        w.speler1 === oudeNaam ? nieuweNaam : w.speler1,
-        w.speler2 === oudeNaam ? nieuweNaam : w.speler2
-      ),
-      winnaar: w.winnaar === oudeNaam ? nieuweNaam : w.winnaar,
-    })),
+    spelers: bord.spelers.map((s) => vervangSpelerNaam(s, oudeNaam, nieuweNaam)),
+    wedstrijden: bord.wedstrijden.map((w) => {
+      const speler1 = vervangSpelerNaam(w.speler1, oudeNaam, nieuweNaam);
+      const speler2 = vervangSpelerNaam(w.speler2, oudeNaam, nieuweNaam);
+      return {
+        ...w,
+        speler1,
+        speler2,
+        id: maakWedstrijdId(speler1, speler2),
+        winnaar: w.winnaar
+          ? vervangSpelerNaam(w.winnaar, oudeNaam, nieuweNaam)
+          : w.winnaar,
+      };
+    }),
   }));
 }
 
-/** Verplaats speler van bord A naar bord B en herbereken round-robin. */
+function zonderSpeler(bord: Bord, speler: string): Bord {
+  const spelers = bord.spelers.filter((s) => !namenZijnGelijk(s, speler));
+  const wedstrijden = bord.wedstrijden.filter(
+    (w) =>
+      !namenZijnGelijk(w.speler1, speler) && !namenZijnGelijk(w.speler2, speler)
+  );
+  const bijgewerkt = { ...bord, spelers, wedstrijden };
+  return { ...bijgewerkt, status: berekenBordStatus(bijgewerkt) };
+}
+
+/** Verwijder een speler van alle borden; uitslagen van anderen blijven staan. */
+export function verwijderSpelerUitBorden(borden: Bord[], speler: string): Bord[] {
+  return borden.map((bord) =>
+    bord.spelers.some((s) => namenZijnGelijk(s, speler))
+      ? zonderSpeler(bord, speler)
+      : bord
+  );
+}
+
+/** Verplaats speler van bord A naar bord B zonder andere uitslagen te wissen. */
 export function verplaatsSpeler(
   borden: Bord[],
   speler: string,
@@ -496,26 +423,20 @@ export function verplaatsSpeler(
   const van = borden.find((b) => b.naam === vanBord);
   const naar = borden.find((b) => b.naam === naarBord);
   if (!van || !naar) return null;
-  if (!van.spelers.includes(speler)) return null;
+  if (!van.spelers.some((s) => namenZijnGelijk(s, speler))) return null;
   if (naar.spelers.length >= MAX_SPELERS_PER_BORD) return null;
   if (van.spelers.length <= MIN_SPELERS_PER_BORD) return null;
 
   return borden.map((bord) => {
     if (bord.naam === vanBord) {
-      const spelers = bord.spelers.filter((s) => s !== speler);
-      const bijgewerkt = {
-        ...bord,
-        spelers,
-        wedstrijden: genereerRoundRobin(spelers),
-      };
-      return { ...bijgewerkt, status: berekenBordStatus(bijgewerkt) };
+      return zonderSpeler(bord, speler);
     }
     if (bord.naam === naarBord) {
-      const spelers = [...bord.spelers, speler];
+      const extra = bord.spelers.map((andere) => maakWedstrijd(andere, speler));
       const bijgewerkt = {
         ...bord,
-        spelers,
-        wedstrijden: genereerRoundRobin(spelers),
+        spelers: [...bord.spelers, speler],
+        wedstrijden: [...bord.wedstrijden, ...extra],
       };
       return { ...bijgewerkt, status: berekenBordStatus(bijgewerkt) };
     }
