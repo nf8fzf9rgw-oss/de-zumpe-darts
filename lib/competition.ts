@@ -1,3 +1,4 @@
+import { namenZijnGelijk } from "@/lib/namen";
 import type {
   Bord,
   BordStatus,
@@ -362,6 +363,10 @@ export function berekenDashboardStats(
   };
 }
 
+function vervangSpelerNaam(naam: string, oudeNaam: string, nieuweNaam: string) {
+  return namenZijnGelijk(naam, oudeNaam) ? nieuweNaam : naam;
+}
+
 /** Hernoem speler in alle borden (huidige avond). */
 export function hernoemSpelerInBorden(
   borden: Bord[],
@@ -370,21 +375,43 @@ export function hernoemSpelerInBorden(
 ): Bord[] {
   return borden.map((bord) => ({
     ...bord,
-    spelers: bord.spelers.map((s) => (s === oudeNaam ? nieuweNaam : s)),
-    wedstrijden: bord.wedstrijden.map((w) => ({
-      ...w,
-      speler1: w.speler1 === oudeNaam ? nieuweNaam : w.speler1,
-      speler2: w.speler2 === oudeNaam ? nieuweNaam : w.speler2,
-      id: maakWedstrijdId(
-        w.speler1 === oudeNaam ? nieuweNaam : w.speler1,
-        w.speler2 === oudeNaam ? nieuweNaam : w.speler2
-      ),
-      winnaar: w.winnaar === oudeNaam ? nieuweNaam : w.winnaar,
-    })),
+    spelers: bord.spelers.map((s) => vervangSpelerNaam(s, oudeNaam, nieuweNaam)),
+    wedstrijden: bord.wedstrijden.map((w) => {
+      const speler1 = vervangSpelerNaam(w.speler1, oudeNaam, nieuweNaam);
+      const speler2 = vervangSpelerNaam(w.speler2, oudeNaam, nieuweNaam);
+      return {
+        ...w,
+        speler1,
+        speler2,
+        id: maakWedstrijdId(speler1, speler2),
+        winnaar: w.winnaar
+          ? vervangSpelerNaam(w.winnaar, oudeNaam, nieuweNaam)
+          : w.winnaar,
+      };
+    }),
   }));
 }
 
-/** Verplaats speler van bord A naar bord B en herbereken round-robin. */
+function zonderSpeler(bord: Bord, speler: string): Bord {
+  const spelers = bord.spelers.filter((s) => !namenZijnGelijk(s, speler));
+  const wedstrijden = bord.wedstrijden.filter(
+    (w) =>
+      !namenZijnGelijk(w.speler1, speler) && !namenZijnGelijk(w.speler2, speler)
+  );
+  const bijgewerkt = { ...bord, spelers, wedstrijden };
+  return { ...bijgewerkt, status: berekenBordStatus(bijgewerkt) };
+}
+
+/** Verwijder een speler van alle borden; uitslagen van anderen blijven staan. */
+export function verwijderSpelerUitBorden(borden: Bord[], speler: string): Bord[] {
+  return borden.map((bord) =>
+    bord.spelers.some((s) => namenZijnGelijk(s, speler))
+      ? zonderSpeler(bord, speler)
+      : bord
+  );
+}
+
+/** Verplaats speler van bord A naar bord B zonder andere uitslagen te wissen. */
 export function verplaatsSpeler(
   borden: Bord[],
   speler: string,
@@ -396,26 +423,20 @@ export function verplaatsSpeler(
   const van = borden.find((b) => b.naam === vanBord);
   const naar = borden.find((b) => b.naam === naarBord);
   if (!van || !naar) return null;
-  if (!van.spelers.includes(speler)) return null;
+  if (!van.spelers.some((s) => namenZijnGelijk(s, speler))) return null;
   if (naar.spelers.length >= MAX_SPELERS_PER_BORD) return null;
   if (van.spelers.length <= MIN_SPELERS_PER_BORD) return null;
 
   return borden.map((bord) => {
     if (bord.naam === vanBord) {
-      const spelers = bord.spelers.filter((s) => s !== speler);
-      const bijgewerkt = {
-        ...bord,
-        spelers,
-        wedstrijden: genereerRoundRobin(spelers),
-      };
-      return { ...bijgewerkt, status: berekenBordStatus(bijgewerkt) };
+      return zonderSpeler(bord, speler);
     }
     if (bord.naam === naarBord) {
-      const spelers = [...bord.spelers, speler];
+      const extra = bord.spelers.map((andere) => maakWedstrijd(andere, speler));
       const bijgewerkt = {
         ...bord,
-        spelers,
-        wedstrijden: genereerRoundRobin(spelers),
+        spelers: [...bord.spelers, speler],
+        wedstrijden: [...bord.wedstrijden, ...extra],
       };
       return { ...bijgewerkt, status: berekenBordStatus(bijgewerkt) };
     }

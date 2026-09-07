@@ -70,6 +70,11 @@ export function bereken180Bonus(aantal: number): number {
   return Math.max(0, aantal);
 }
 
+/** Finishes die in 501 niet als checkout mogelijk zijn. */
+const ONMOGELIJKE_FINISHES = new Set([159, 162, 163, 165, 166, 168, 169]);
+
 export function isGeldigeFinish(waarde: number): boolean {
-  return waarde === 0 || (waarde >= 100 && waarde <= 170);
+  if (waarde === 0) return true;
+  if (!Number.isInteger(waarde) || waarde < 100 || waarde > 170) return false;
+  return !ONMOGELIJKE_FINISHES.has(waarde);
 }

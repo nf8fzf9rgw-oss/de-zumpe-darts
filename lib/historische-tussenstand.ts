@@ -453,15 +453,18 @@ export function historischeSpelerAlsMap(
   return new Map(tussenstand.spelers.map((s) => [s.naam, s]));
 }
 
+function kalenderDatumAmsterdam(waarde: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(waarde)) return waarde;
+  const datum = new Date(waarde);
+  if (Number.isNaN(datum.getTime())) return waarde;
+  return datum.toLocaleDateString("en-CA", { timeZone: "Europe/Amsterdam" });
+}
+
 /** Avonden op of vóór de snapshot-datum zitten al in de officiële stand. */
 export function isAvondNaTussenstand(
   avondDatum: string,
   snapshotDatum: string
 ): boolean {
   if (!avondDatum) return true;
-  const avond = new Date(avondDatum);
-  if (Number.isNaN(avond.getTime())) return true;
-
-  const snapshotEinde = new Date(`${snapshotDatum}T23:59:59.999`);
-  return avond.getTime() > snapshotEinde.getTime();
+  return kalenderDatumAmsterdam(avondDatum) > snapshotDatum;
 }

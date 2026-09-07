@@ -1,6 +1,7 @@
 import { berekenStand } from "@/lib/standings";
 import { formatDatumKort } from "@/lib/storage";
 import type {
+  Bord,
   Speelavond,
   SpeelavondStatistieken,
   StatistiekGrafieken,
@@ -8,7 +9,9 @@ import type {
 
 export function berekenStatistieken(
   historie: Speelavond[],
-  seizoenId?: string
+  seizoenId?: string,
+  huidigeBorden: Bord[] = [],
+  huidigeAvondDatum?: string
 ): SpeelavondStatistieken {
   const leeg: SpeelavondStatistieken = {
     totaalAvonden: 0,
@@ -26,7 +29,12 @@ export function berekenStatistieken(
     meeste180sAantal: 0,
   };
 
-  const stand = berekenStand(historie, [], seizoenId);
+  const stand = berekenStand(
+    historie,
+    huidigeBorden,
+    seizoenId,
+    huidigeAvondDatum
+  );
 
   if (historie.length === 0 && stand.length === 0) return leeg;
 

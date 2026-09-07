@@ -46,11 +46,18 @@ export default function CompetitionBoard({
   const renderWedstrijd = (wedstrijd: Wedstrijd) => {
     if (isMobile && toonUitslagen) {
       return (
-        <button
+        <div
           key={wedstrijd.id}
-          type="button"
+          role="button"
+          tabIndex={0}
           onClick={() => setOpenWedstrijd(wedstrijd)}
-          className="w-full text-left"
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              setOpenWedstrijd(wedstrijd);
+            }
+          }}
+          className="w-full cursor-pointer text-left"
         >
           <MatchResultEntry
             wedstrijd={wedstrijd}
@@ -58,7 +65,7 @@ export default function CompetitionBoard({
             onUpdate={() => {}}
             readOnly
           />
-        </button>
+        </div>
       );
     }
 

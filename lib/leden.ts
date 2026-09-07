@@ -1,4 +1,4 @@
-import { canoniekeSpelerNaam, normaliseerNaamKey } from "@/lib/namen";
+import { canoniekeSpelerNaam, namenZijnGelijk, normaliseerNaamKey } from "@/lib/namen";
 import { OFFICIELE_TUSSENSTAND_2025_2026 } from "@/lib/historische-tussenstand";
 
 export const CLUB_LEDEN_DEFAULT = [
@@ -128,14 +128,14 @@ export function hernoemLid(
   const getrimd = canoniekeSpelerNaam(nieuweNaam);
   if (!getrimd || getrimd === oudeNaam) return huidigeLeden;
   const nieuw = uniekeLeden(
-    huidigeLeden.map((lid) => (lid === oudeNaam ? getrimd : lid))
+    huidigeLeden.map((lid) => (namenZijnGelijk(lid, oudeNaam) ? getrimd : lid))
   );
   slaLedenOp(nieuw);
   return nieuw;
 }
 
 export function verwijderLid(naam: string, huidigeLeden: string[]): string[] {
-  const nieuw = huidigeLeden.filter((lid) => lid !== naam);
+  const nieuw = huidigeLeden.filter((lid) => !namenZijnGelijk(lid, naam));
   slaLedenOp(nieuw);
   return nieuw;
 }
