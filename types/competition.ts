@@ -162,6 +162,14 @@ export interface SpelerProfielData {
   badges: string[];
   poulepunten: number;
   historischePunten: number;
+  winnaarsrondeLegsGewonnen: number;
+  winnaarsrondeLegsVerloren: number;
+  verliezersrondeLegsGewonnen: number;
+  verliezersrondeLegsVerloren: number;
+  legsVoor: number;
+  legsTegen: number;
+  /** Positie op de officiële tussenstand, of null */
+  officielePositie: number | null;
 }
 
 export interface ClubRecord {

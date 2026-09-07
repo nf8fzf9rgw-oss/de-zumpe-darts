@@ -406,6 +406,13 @@ export function berekenSpelerProfiel(
       badges,
       poulepunten: 0,
       historischePunten: 0,
+      winnaarsrondeLegsGewonnen: 0,
+      winnaarsrondeLegsVerloren: 0,
+      verliezersrondeLegsGewonnen: 0,
+      verliezersrondeLegsVerloren: 0,
+      legsVoor: 0,
+      legsTegen: 0,
+      officielePositie: historisch?.positie ?? null,
     };
   }
 
@@ -426,6 +433,13 @@ export function berekenSpelerProfiel(
     badges,
     poulepunten: rij.poulepunten,
     historischePunten: rij.historischePunten,
+    winnaarsrondeLegsGewonnen: rij.winnaarsrondeLegsGewonnen,
+    winnaarsrondeLegsVerloren: rij.winnaarsrondeLegsVerloren,
+    verliezersrondeLegsGewonnen: rij.verliezersrondeLegsGewonnen,
+    verliezersrondeLegsVerloren: rij.verliezersrondeLegsVerloren,
+    legsVoor: rij.legsVoor,
+    legsTegen: rij.legsTegen,
+    officielePositie: rij.officielePositie,
   };
 }
 

@@ -8,7 +8,7 @@ export function maakRanglijstBericht(
   const top = stand.slice(0, 10);
   const regels = top.map((s) => {
     const hf = s.hoogsteFinish > 0 ? s.hoogsteFinish : "—";
-    return `${s.positie}. ${s.naam} – ${formatPunten(s.punten)} punten – HF ${hf} – ${s.aantal180s}x 180`;
+    return `${s.positie}. ${s.naam} – ${formatPunten(s.punten)} punten – ${s.aanwezig}x aanwezig – HF ${hf} – ${s.aantal180s}x 180`;
   });
 
   let bericht = `🏆 DE ZUMPE DARTS\n\nTussenstand ${seizoenLabel}\n\n`;
