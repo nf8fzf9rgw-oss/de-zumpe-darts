@@ -2,10 +2,10 @@ import { canoniekeSpelerNaam, normaliseerNaamKey } from "@/lib/namen";
 import { OFFICIELE_TUSSENSTAND_2025_2026 } from "@/lib/historische-tussenstand";
 
 export const CLUB_LEDEN_DEFAULT = [
-  "John Wolsheimer",
+  "John Wolsheumer",
   "Nico Pas",
-  "Toon ten Kamp",
-  "Ronnie Kivekamp",
+  "Toon te Kamp",
+  "Ronnie Kijvekamp",
   "Rinaldo Lenting",
   "Jasper Kempers",
   "Marco Thijssen",
@@ -21,8 +21,8 @@ export const CLUB_LEDEN_DEFAULT = [
   "Muppet",
   "Timme Lensink",
   "Erwin Smit",
-  "Gillian Kempers",
-  "Adwin Graas",
+  "Gilliam Kempers",
+  "Adwin Gras",
   "Rene Lippets",
   "Sjangie Verbeuken",
   "Mike Thijssen",

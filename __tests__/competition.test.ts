@@ -15,6 +15,9 @@ import type { Bord, Speelavond } from "@/types/competition";
 import { berekenStand } from "@/lib/standings";
 import { PUNTEN_PER_WINST } from "@/lib/scoring";
 import { genereerWinnaarsVerliezersRonde } from "@/lib/knockout";
+import { OFFICIELE_TUSSENSTAND_2025_2026 } from "@/lib/historische-tussenstand";
+import { CLUB_LEDEN_DEFAULT } from "@/lib/leden";
+import { canoniekeSpelerNaam } from "@/lib/namen";
 
 describe("berekenBordVerdeling", () => {
   const verwachteVerdelingen: [number, number[]][] = [
@@ -177,12 +180,127 @@ describe("berekenStand", () => {
   });
 });
 
+describe("foto tussenstand 15-08-2026", () => {
+  // Exact overgenomen uit de foto: naam, aanwezig, poulepunten,
+  // winnaarsronde legs gewonnen/verloren, verliezersronde legs
+  // gewonnen/verloren, hoogste uitgooi, aantal 180, punten totaal.
+  const foto: [string, number, number, number, number, number, number, number, number, number][] = [
+    ["John Wolsheumer", 30, 117, 295, 82, 0, 0, 145, 77, 599],
+    ["Nico Pas", 32, 105, 166, 112, 13, 3, 121, 10, 338.5],
+    ["Toon te Kamp", 23, 85, 117, 88, 7, 1, 148, 13, 266.5],
+    ["Ronnie Kijvekamp", 35, 92, 67, 76, 57, 24, 112, 3, 241.5],
+    ["Rinaldo Lenting", 17, 57, 86, 58, 9, 6, 160, 18, 202.5],
+    ["Jasper Kempers", 26, 76, 64, 54, 26, 8, 157, 7, 200],
+    ["Marco Thijssen", 34, 74, 32, 49, 76, 43, 127, 9, 191],
+    ["Willem Thijssen", 20, 80, 77, 71, 0, 0, 132, 6, 190],
+    ["Rocco Meerbeek", 34, 83, 32, 59, 44, 31, 152, 6, 186],
+    ["Luca Schopema", 14, 50, 80, 59, 0, 0, 125, 7, 162],
+    ["Raymond Horst", 19, 56, 48, 44, 29, 17, 130, 11, 156.5],
+    ["Mario v Til", 23, 72, 32, 56, 27, 17, 127, 2, 152.5],
+    ["Bob Smit", 11, 40, 76, 43, 0, 0, 126, 10, 151],
+    ["Dennis van het Hof", 31, 63, 9, 30, 55, 48, 117, 9, 142.5],
+    ["Eddy de Jode", 30, 60, 17, 35, 47, 34, 100, 3, 135.5],
+    ["Frans Spronk", 29, 59, 7, 26, 53, 46, 114, 4, 128.5],
+    ["Muppet", 29, 55, 9, 27, 61, 15, 111, 2, 127.5],
+    ["Timme Lensink", 24, 56, 22, 35, 39, 30, 110, 3, 125.5],
+    ["Erwin Smit", 27, 58, 8, 31, 43, 30, 124, 1, 120.5],
+    ["Gilliam Kempers", 39, 54, 1, 9, 41, 75, 0, 0, 114.5],
+    ["Adwin Gras", 13, 40, 45, 39, 18, 6, 0, 1, 108],
+    ["Rene Lippets", 18, 20, 2, 9, 27, 35, 121, 2, 59.5],
+    ["Sjangie Verbeuken", 9, 18, 6, 13, 33, 11, 125, 4, 57.5],
+    ["Mike Thijssen", 6, 18, 25, 21, 0, 0, 137, 0, 55],
+    ["Rick Hiddink", 7, 16, 18, 17, 10, 5, 120, 1, 54],
+    ["Ian Wagner", 17, 24, 3, 9, 20, 27, 0, 0, 54],
+    ["Henk Hubers", 17, 25, 2, 9, 10, 24, 0, 0, 49],
+    ["Bjorn Schoenakker", 7, 22, 21, 25, 4, 3, 120, 2, 49],
+    ["Daniel Spaink", 6, 11, 7, 11, 7, 7, 0, 2, 29.5],
+    ["Arno Vermeer", 9, 12, 0, 6, 10, 16, 0, 0, 26],
+    ["Sem Riethorst", 4, 6, 1, 3, 4, 8, 0, 0, 13],
+    ["Johan Zaaijer", 1, 1, 0, 0, 1, 2, 0, 0, 2.5],
+  ];
+
+  it("bevat exact 32 spelers in fotovolgorde", () => {
+    expect(OFFICIELE_TUSSENSTAND_2025_2026.spelers).toHaveLength(foto.length);
+    expect(OFFICIELE_TUSSENSTAND_2025_2026.spelers.map((s) => s.naam)).toEqual(
+      foto.map(([naam]) => naam)
+    );
+  });
+
+  it.each(foto)(
+    "rij %s klopt met de foto",
+    (
+      naam,
+      aanwezig,
+      poulepunten,
+      wrGewonnen,
+      wrVerloren,
+      vrGewonnen,
+      vrVerloren,
+      hoogsteFinish,
+      aantal180s,
+      puntenTotaal
+    ) => {
+      const rij = OFFICIELE_TUSSENSTAND_2025_2026.spelers.find(
+        (s) => s.naam === naam
+      );
+      expect(rij).toBeDefined();
+      expect(rij).toMatchObject({
+        aanwezig,
+        poulepunten,
+        winnaarsrondeLegsGewonnen: wrGewonnen,
+        winnaarsrondeLegsVerloren: wrVerloren,
+        verliezersrondeLegsGewonnen: vrGewonnen,
+        verliezersrondeLegsVerloren: vrVerloren,
+        hoogsteFinish,
+        aantal180s,
+        puntenTotaal,
+      });
+    }
+  );
+
+  it("levert de ranglijst exact zoals de foto zonder eigen speelavonden", () => {
+    const stand = berekenStand([], [], "2025-2026");
+    expect(stand).toHaveLength(foto.length);
+
+    foto.forEach(
+      (
+        [naam, aanwezig, poulepunten, , , , , hoogsteFinish, aantal180s, punten],
+        index
+      ) => {
+        expect(stand[index]).toMatchObject({
+          positie: index + 1,
+          naam,
+          aanwezig,
+          poulepunten,
+          hoogsteFinish,
+          aantal180s,
+          punten,
+        });
+      }
+    );
+  });
+
+  it("heeft elke speler uit de foto in de ledenlijst", () => {
+    foto.forEach(([naam]) => {
+      expect(CLUB_LEDEN_DEFAULT as readonly string[]).toContain(naam);
+    });
+  });
+
+  it("mapt oude spellingen naar de naam uit de foto", () => {
+    expect(canoniekeSpelerNaam("John Wolsheimer")).toBe("John Wolsheumer");
+    expect(canoniekeSpelerNaam("Toon ten Kamp")).toBe("Toon te Kamp");
+    expect(canoniekeSpelerNaam("Ronnie Kivekamp")).toBe("Ronnie Kijvekamp");
+    expect(canoniekeSpelerNaam("Gillian Kempers")).toBe("Gilliam Kempers");
+    expect(canoniekeSpelerNaam("Adwin Graas")).toBe("Adwin Gras");
+  });
+});
+
 describe("officiële tussenstand 2025/2026", () => {
   it("neemt de 32 officiële rijen exact over", () => {
     const stand = berekenStand([], [], "2025-2026");
     expect(stand).toHaveLength(32);
     expect(stand[0]).toMatchObject({
-      naam: "John Wolsheimer",
+      naam: "John Wolsheumer",
       punten: 599,
       aantal180s: 77,
       hoogsteFinish: 145,
@@ -205,7 +323,7 @@ describe("officiële tussenstand 2025/2026", () => {
     const avond: Speelavond = {
       datum: "2026-08-15T20:00:00.000Z",
       seizoen: "2025-2026",
-      aanwezigen: ["John Wolsheimer"],
+      aanwezigen: ["John Wolsheumer"],
       gasten: [],
       borden: [],
       spelerVanDeAvond: null,

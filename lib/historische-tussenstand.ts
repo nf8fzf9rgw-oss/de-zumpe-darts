@@ -11,7 +11,7 @@ export const OFFICIELE_TUSSENSTAND_2025_2026: HistorischeTussenstand = {
   spelers: [
     {
       positie: 1,
-      naam: "John Wolsheimer",
+      naam: "John Wolsheumer",
       aanwezig: 30,
       poulepunten: 117,
       winnaarsrondeLegsGewonnen: 295,
@@ -37,7 +37,7 @@ export const OFFICIELE_TUSSENSTAND_2025_2026: HistorischeTussenstand = {
     },
     {
       positie: 3,
-      naam: "Toon ten Kamp",
+      naam: "Toon te Kamp",
       aanwezig: 23,
       poulepunten: 85,
       winnaarsrondeLegsGewonnen: 117,
@@ -50,7 +50,7 @@ export const OFFICIELE_TUSSENSTAND_2025_2026: HistorischeTussenstand = {
     },
     {
       positie: 4,
-      naam: "Ronnie Kivekamp",
+      naam: "Ronnie Kijvekamp",
       aanwezig: 35,
       poulepunten: 92,
       winnaarsrondeLegsGewonnen: 67,
@@ -209,7 +209,7 @@ export const OFFICIELE_TUSSENSTAND_2025_2026: HistorischeTussenstand = {
       naam: "Frans Spronk",
       aanwezig: 29,
       poulepunten: 59,
-      winnaarsrondeLegsGewonnen: 5,
+      winnaarsrondeLegsGewonnen: 7,
       winnaarsrondeLegsVerloren: 26,
       verliezersrondeLegsGewonnen: 53,
       verliezersrondeLegsVerloren: 46,
@@ -258,7 +258,7 @@ export const OFFICIELE_TUSSENSTAND_2025_2026: HistorischeTussenstand = {
     },
     {
       positie: 20,
-      naam: "Gillian Kempers",
+      naam: "Gilliam Kempers",
       aanwezig: 39,
       poulepunten: 54,
       winnaarsrondeLegsGewonnen: 1,
@@ -271,7 +271,7 @@ export const OFFICIELE_TUSSENSTAND_2025_2026: HistorischeTussenstand = {
     },
     {
       positie: 21,
-      naam: "Adwin Graas",
+      naam: "Adwin Gras",
       aanwezig: 13,
       poulepunten: 40,
       winnaarsrondeLegsGewonnen: 45,
