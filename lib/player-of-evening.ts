@@ -1,4 +1,10 @@
-import { bereken180Bonus, berekenFinishBonus, PUNTEN_PER_WINST } from "@/lib/scoring";
+import {
+  bereken180Bonus,
+  berekenFinishBonus,
+  laadFinishBonusTabel,
+  PUNTEN_PER_WINST,
+} from "@/lib/scoring";
+import { isByeSpeler } from "@/lib/knockout";
 import type { Bord, SpelerVanDeAvondScore, Wedstrijd } from "@/types/competition";
 
 function verwerkWedstrijdAvond(
@@ -7,32 +13,51 @@ function verwerkWedstrijdAvond(
 ): void {
   if (!wedstrijd.gespeeld) return;
 
-  const s1 = scores.get(wedstrijd.speler1) ?? leegScore(wedstrijd.speler1);
-  const s2 = scores.get(wedstrijd.speler2) ?? leegScore(wedstrijd.speler2);
+  const finishTabel = laadFinishBonusTabel();
+  const s1 = isByeSpeler(wedstrijd.speler1)
+    ? null
+    : (scores.get(wedstrijd.speler1) ?? leegScore(wedstrijd.speler1));
+  const s2 = isByeSpeler(wedstrijd.speler2)
+    ? null
+    : (scores.get(wedstrijd.speler2) ?? leegScore(wedstrijd.speler2));
 
-  s1.bonus180 += bereken180Bonus(wedstrijd.aantal180Speler1);
-  s2.bonus180 += bereken180Bonus(wedstrijd.aantal180Speler2);
-
-  if (wedstrijd.hoogsteFinishSpeler1) {
-    s1.bonusFinish += berekenFinishBonus(wedstrijd.hoogsteFinishSpeler1);
+  if (s1) {
+    s1.bonus180 += bereken180Bonus(wedstrijd.aantal180Speler1);
+    if (wedstrijd.hoogsteFinishSpeler1) {
+      s1.bonusFinish += berekenFinishBonus(
+        wedstrijd.hoogsteFinishSpeler1,
+        finishTabel
+      );
+    }
   }
-  if (wedstrijd.hoogsteFinishSpeler2) {
-    s2.bonusFinish += berekenFinishBonus(wedstrijd.hoogsteFinishSpeler2);
+  if (s2) {
+    s2.bonus180 += bereken180Bonus(wedstrijd.aantal180Speler2);
+    if (wedstrijd.hoogsteFinishSpeler2) {
+      s2.bonusFinish += berekenFinishBonus(
+        wedstrijd.hoogsteFinishSpeler2,
+        finishTabel
+      );
+    }
   }
 
-  if (wedstrijd.winnaar === wedstrijd.speler1) {
-    s1.overwinningen += 1;
-    s1.competitiepunten += PUNTEN_PER_WINST;
-  } else if (wedstrijd.winnaar === wedstrijd.speler2) {
-    s2.overwinningen += 1;
-    s2.competitiepunten += PUNTEN_PER_WINST;
+  if (wedstrijd.winnaar) {
+    if (s1 && wedstrijd.winnaar === wedstrijd.speler1) {
+      s1.overwinningen += 1;
+      s1.competitiepunten += PUNTEN_PER_WINST;
+    } else if (s2 && wedstrijd.winnaar === wedstrijd.speler2) {
+      s2.overwinningen += 1;
+      s2.competitiepunten += PUNTEN_PER_WINST;
+    }
   }
 
-  s1.totaal = s1.competitiepunten + s1.bonus180 + s1.bonusFinish;
-  s2.totaal = s2.competitiepunten + s2.bonus180 + s2.bonusFinish;
-
-  scores.set(wedstrijd.speler1, s1);
-  scores.set(wedstrijd.speler2, s2);
+  if (s1) {
+    s1.totaal = s1.competitiepunten + s1.bonus180 + s1.bonusFinish;
+    scores.set(wedstrijd.speler1, s1);
+  }
+  if (s2) {
+    s2.totaal = s2.competitiepunten + s2.bonus180 + s2.bonusFinish;
+    scores.set(wedstrijd.speler2, s2);
+  }
 }
 
 function leegScore(naam: string): SpelerVanDeAvondScore {

@@ -14,6 +14,7 @@ import {
 import type { Bord, Speelavond } from "@/types/competition";
 import { berekenStand } from "@/lib/standings";
 import { PUNTEN_PER_WINST } from "@/lib/scoring";
+import { genereerWinnaarsVerliezersRonde } from "@/lib/knockout";
 
 describe("berekenBordVerdeling", () => {
   const verwachteVerdelingen: [number, number[]][] = [
@@ -173,5 +174,109 @@ describe("berekenStand", () => {
     const stand = berekenStand([], borden);
     const alice = stand.find((s) => s.naam === "Alice");
     expect(alice?.competitiepunten).toBe(PUNTEN_PER_WINST);
+  });
+});
+
+describe("officiële tussenstand 2025/2026", () => {
+  it("neemt de 32 officiële rijen exact over", () => {
+    const stand = berekenStand([], [], "2025-2026");
+    expect(stand).toHaveLength(32);
+    expect(stand[0]).toMatchObject({
+      naam: "John Wolsheimer",
+      punten: 599,
+      aantal180s: 77,
+      hoogsteFinish: 145,
+      aanwezig: 30,
+      poulepunten: 117,
+      bron: "historisch",
+    });
+    expect(stand[1].punten).toBe(338.5);
+    expect(stand[24].naam).toBe("Rick Hiddink");
+    expect(stand[25].naam).toBe("Ian Wagner");
+    expect(stand[26].naam).toBe("Henk Hubers");
+    expect(stand[27].naam).toBe("Bjorn Schoenakker");
+    expect(stand[31]).toMatchObject({
+      naam: "Johan Zaaijer",
+      punten: 2.5,
+    });
+  });
+
+  it("telt een avond op of vóór 15-08-2026 niet extra", () => {
+    const avond: Speelavond = {
+      datum: "2026-08-15T20:00:00.000Z",
+      seizoen: "2025-2026",
+      aanwezigen: ["John Wolsheimer"],
+      gasten: [],
+      borden: [],
+      spelerVanDeAvond: null,
+      aanmeldToken: null,
+    };
+    const stand = berekenStand([avond], [], "2025-2026");
+    expect(stand[0].punten).toBe(599);
+    expect(stand[0].aanwezig).toBe(30);
+  });
+
+  it("telt dezelfde avond niet dubbel via historie én huidige borden", () => {
+    const borden = genereerCompetitie(["Alice", "Bob", "Carol"], [], 1)!;
+    const wedstrijd = borden[0].wedstrijden[0];
+    borden[0] = updateWedstrijdInBord(borden[0], wedstrijd.id, {
+      gespeeld: true,
+      score1: 3,
+      score2: 1,
+    });
+    const datum = "2026-09-04T19:00:00.000Z";
+    const avond: Speelavond = {
+      datum,
+      seizoen: "2025-2026",
+      aanwezigen: ["Alice", "Bob", "Carol"],
+      gasten: [],
+      borden,
+      spelerVanDeAvond: null,
+      aanmeldToken: null,
+    };
+    const stand = berekenStand([avond], borden, "2025-2026", datum);
+    const winnaar = stand.find((s) => s.gewonnen === 1);
+    expect(winnaar?.gewonnen).toBe(1);
+    expect(stand.filter((s) => s.gewonnen === 1)).toHaveLength(1);
+  });
+});
+
+describe("winnaars- en verliezersronde", () => {
+  it("verdeelt een bord van 4 als 1-2 winnaars en 3-4 verliezers", () => {
+    const spelers = ["Jan", "Piet", "Henk", "Klaas"];
+    let bord: Bord = {
+      naam: "Bord 1",
+      spelers,
+      wedstrijden: genereerRoundRobin(spelers),
+      status: "wachtend",
+      fase: "poule",
+    };
+
+    const winnaarVan = (w: { speler1: string; speler2: string }) => {
+      const rang = ["Jan", "Piet", "Henk", "Klaas"];
+      return rang.indexOf(w.speler1) < rang.indexOf(w.speler2)
+        ? w.speler1
+        : w.speler2;
+    };
+
+    for (const w of bord.wedstrijden) {
+      const winnaar = winnaarVan(w);
+      bord = updateWedstrijdInBord(bord, w.id, {
+        gespeeld: true,
+        score1: w.speler1 === winnaar ? 3 : 1,
+        score2: w.speler2 === winnaar ? 3 : 1,
+      });
+    }
+
+    const rondes = genereerWinnaarsVerliezersRonde([bord]);
+    expect(rondes).not.toBeNull();
+    const w = rondes!.find((b) => b.fase === "winnaarsronde");
+    const v = rondes!.find((b) => b.fase === "verliezersronde");
+    expect(w?.spelers).toEqual(["Jan", "Piet"]);
+    expect(v?.spelers).toEqual(["Henk", "Klaas"]);
+    expect(w?.wedstrijden[0]).toMatchObject({
+      speler1: "Jan",
+      speler2: "Piet",
+    });
   });
 });

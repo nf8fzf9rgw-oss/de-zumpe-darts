@@ -1,22 +1,18 @@
 import type { Speelavond, SpelerStand } from "@/types/competition";
+import { formatPunten } from "@/lib/format";
 
 export function maakRanglijstBericht(
   stand: SpelerStand[],
   seizoenLabel: string
 ): string {
   const top = stand.slice(0, 10);
-  const regels = top.map(
-    (s) =>
-      `${s.positie}. ${s.naam} - ${s.punten} punten (${s.gewonnen}W, ${s.aantal180s}x180, HF${s.hoogsteFinish || "-"})`
-  );
+  const regels = top.map((s) => {
+    const hf = s.hoogsteFinish > 0 ? s.hoogsteFinish : "—";
+    return `${s.positie}. ${s.naam} – ${formatPunten(s.punten)} punten – HF ${hf} – ${s.aantal180s}x 180`;
+  });
 
-  const meeste180 = [...stand].sort((a, b) => b.aantal180s - a.aantal180s)[0];
-
-  let bericht = `🏆 Ranglijst De Zumpe\n${seizoenLabel}\n\n`;
+  let bericht = `🏆 DE ZUMPE DARTS\n\nTussenstand ${seizoenLabel}\n\n`;
   bericht += regels.join("\n");
-  if (meeste180 && meeste180.aantal180s > 0) {
-    bericht += `\n\n🎯 Meeste 180's: ${meeste180.naam} (${meeste180.aantal180s})`;
-  }
   return bericht;
 }
 

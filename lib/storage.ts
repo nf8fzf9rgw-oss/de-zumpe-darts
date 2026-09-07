@@ -3,7 +3,13 @@ import {
   hernoemSpelerInBorden,
   normaliseerSpeelavond,
 } from "@/lib/competition";
-import { laadLeden, slaLedenOp } from "@/lib/leden";
+import {
+  CLUB_LEDEN_DEFAULT,
+  laadLeden,
+  normaliseerLedenLijst,
+  slaLedenOp,
+} from "@/lib/leden";
+import { canoniekeSpelerNaam } from "@/lib/namen";
 import {
   haalHuidigSeizoenId,
   haalSeizoenVanDatum,
@@ -21,6 +27,7 @@ const SPEELAVOND_KEY = "deZumpeSpeelavond";
 const HISTORIE_KEY = "deZumpeHistorie";
 const AANMELD_KEY = "deZumpeAanmeld";
 const BORDEN_MIGRATIE_KEY = "deZumpeBordenMigratie";
+const NAMEN_MIGRATIE_KEY = "deZumpeNamenMigratieV2";
 
 export function consumeBordenMigratieWaarschuwing(): boolean {
   if (typeof window === "undefined") return false;
@@ -166,6 +173,10 @@ export function hernoemSpelerInData(
       aanwezigen: avond.aanwezigen.map(mapNaam),
       gasten: avond.gasten.map(mapNaam),
       borden: hernoemSpelerInBorden(avond.borden, oudeNaam, nieuweNaam),
+      spelerVanDeAvond:
+        avond.spelerVanDeAvond === oudeNaam
+          ? nieuweNaam
+          : avond.spelerVanDeAvond,
     })
   );
   slaHistorieOp(historie);
@@ -178,9 +189,56 @@ export function hernoemSpelerInData(
         aanwezigen: huidig.aanwezigen.map(mapNaam),
         gasten: huidig.gasten.map(mapNaam),
         borden: hernoemSpelerInBorden(huidig.borden, oudeNaam, nieuweNaam),
+        spelerVanDeAvond:
+          huidig.spelerVanDeAvond === oudeNaam
+            ? nieuweNaam
+            : huidig.spelerVanDeAvond,
       })
     );
   }
+}
+
+/**
+ * Corrigeert spelerspelling naar de officiële tussenstand en
+ * voorkomt dubbele leden door afwijkende schrijfwijzen.
+ */
+export function migreerOfficieleSpelersnamen(): string[] {
+  if (typeof window === "undefined") return normaliseerLedenLijst(laadLeden());
+
+  const raw = localStorage.getItem("deZumpeLeden");
+  let opgeslagenNamen: string[] = [];
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as string[];
+      if (Array.isArray(parsed)) opgeslagenNamen = parsed;
+    } catch {
+      opgeslagenNamen = [];
+    }
+  }
+
+  const bronNamen =
+    opgeslagenNamen.length > 0 ? opgeslagenNamen : [...CLUB_LEDEN_DEFAULT];
+
+  const alGemigreerd = localStorage.getItem(NAMEN_MIGRATIE_KEY) === "1";
+  if (!alGemigreerd) {
+    const hernoemingen = new Map<string, string>();
+    for (const oud of bronNamen) {
+      const nieuw = canoniekeSpelerNaam(oud);
+      if (oud !== nieuw) {
+        hernoemingen.set(oud, nieuw);
+      }
+    }
+    hernoemingen.forEach((nieuw, oud) => {
+      hernoemSpelerInData(oud, nieuw);
+    });
+    localStorage.setItem(NAMEN_MIGRATIE_KEY, "1");
+  }
+
+  const gemigreerd = normaliseerLedenLijst(
+    bronNamen.map((n) => canoniekeSpelerNaam(n))
+  );
+  slaLedenOp(gemigreerd);
+  return gemigreerd;
 }
 
 export function maakLegeSpeelavond(seizoen?: string): Speelavond {

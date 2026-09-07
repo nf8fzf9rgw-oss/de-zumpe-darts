@@ -9,19 +9,41 @@ function escapeCsv(value: string | number): string {
 }
 
 export function exportStandCsv(stand: SpelerStand[], seizoenLabel: string): string {
-  const header = ["Seizoen", "Positie", "Speler", "Punten", "Winst", "Verlies", "180s", "HF", "%"];
+  const header = [
+    "Seizoen",
+    "Positie",
+    "Speler",
+    "Aanwezig",
+    "Poulepunten",
+    "W legs W-ronde",
+    "V legs W-ronde",
+    "W legs V-ronde",
+    "V legs V-ronde",
+    "Hoogste finish",
+    "180s",
+    "Punten totaal",
+    "Nieuwe punten",
+    "Bron",
+  ];
   const rows = stand.map((s) =>
     [
       seizoenLabel,
       s.positie,
       s.naam,
-      s.punten,
-      s.gewonnen,
-      s.verloren,
-      s.aantal180s,
+      s.aanwezig,
+      s.poulepunten,
+      s.winnaarsrondeLegsGewonnen,
+      s.winnaarsrondeLegsVerloren,
+      s.verliezersrondeLegsGewonnen,
+      s.verliezersrondeLegsVerloren,
       s.hoogsteFinish || "",
-      s.percentage,
-    ].map(escapeCsv).join(",")
+      s.aantal180s,
+      s.punten,
+      s.nieuwePunten,
+      s.bron,
+    ]
+      .map(escapeCsv)
+      .join(",")
   );
   return [header.join(","), ...rows].join("\n");
 }

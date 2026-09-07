@@ -12,6 +12,7 @@ function QuickActionsButtons({
 }: QuickActionsProps) {
   const {
     genereerCompetitieAvond,
+    genereerKnockoutRonde,
     opslaan,
     nieuweAvond,
     openPrintPreview,
@@ -25,6 +26,15 @@ function QuickActionsButtons({
       label: "Genereer Competitie",
       onClick: genereerCompetitieAvond,
       className: "bg-green-700 hover:bg-green-600 text-white",
+    },
+    {
+      label: "Winnaars-/verliezersronde",
+      onClick: genereerKnockoutRonde,
+      disabled: borden.length === 0,
+      className:
+        borden.length === 0
+          ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+          : "bg-violet-800 hover:bg-violet-700 text-white",
     },
     ...(canUndo
       ? [

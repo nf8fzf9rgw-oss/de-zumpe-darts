@@ -7,7 +7,8 @@ import type {
 } from "@/types/competition";
 
 export function berekenStatistieken(
-  historie: Speelavond[]
+  historie: Speelavond[],
+  seizoenId?: string
 ): SpeelavondStatistieken {
   const leeg: SpeelavondStatistieken = {
     totaalAvonden: 0,
@@ -25,7 +26,9 @@ export function berekenStatistieken(
     meeste180sAantal: 0,
   };
 
-  if (historie.length === 0) return leeg;
+  const stand = berekenStand(historie, [], seizoenId);
+
+  if (historie.length === 0 && stand.length === 0) return leeg;
 
   const aanwezigheid = new Map<string, number>();
   let totaalSpelers = 0;
@@ -39,6 +42,13 @@ export function berekenStatistieken(
     });
   });
 
+  // Bij historische tussenstand: gebruik officiële aanwezigheid als basis
+  stand.forEach((rij) => {
+    if (rij.aanwezig > (aanwezigheid.get(rij.naam) ?? 0)) {
+      aanwezigheid.set(rij.naam, rij.aanwezig);
+    }
+  });
+
   let meestAanwezig = "-";
   let meestAanwezigAantal = 0;
   aanwezigheid.forEach((aantal, lid) => {
@@ -48,8 +58,9 @@ export function berekenStatistieken(
     }
   });
 
-  const stand = berekenStand(historie);
-  const meesteOverwinningen = stand[0];
+  const meesteOverwinningenRij = [...stand].sort(
+    (a, b) => b.gewonnen - a.gewonnen
+  )[0];
   const meesteWedstrijden = [...stand].sort(
     (a, b) => b.gewonnen + b.verloren - (a.gewonnen + a.verloren)
   )[0];
@@ -60,12 +71,18 @@ export function berekenStatistieken(
 
   return {
     totaalAvonden: historie.length,
-    gemiddeldSpelers: Math.round((totaalSpelers / historie.length) * 10) / 10,
+    gemiddeldSpelers:
+      historie.length > 0
+        ? Math.round((totaalSpelers / historie.length) * 10) / 10
+        : 0,
     meestAanwezig,
     meestAanwezigAantal,
-    gemiddeldBorden: Math.round((totaalBorden / historie.length) * 10) / 10,
-    meesteOverwinningen: meesteOverwinningen?.naam ?? "-",
-    meesteOverwinningenAantal: meesteOverwinningen?.gewonnen ?? 0,
+    gemiddeldBorden:
+      historie.length > 0
+        ? Math.round((totaalBorden / historie.length) * 10) / 10
+        : 0,
+    meesteOverwinningen: meesteOverwinningenRij?.naam ?? "-",
+    meesteOverwinningenAantal: meesteOverwinningenRij?.gewonnen ?? 0,
     hoogsteWinstpercentage: hoogsteWinst?.naam ?? stand[0]?.naam ?? "-",
     hoogsteWinstpercentageWaarde:
       hoogsteWinst?.percentage ?? stand[0]?.percentage ?? 0,

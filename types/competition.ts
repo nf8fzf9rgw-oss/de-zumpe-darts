@@ -1,5 +1,7 @@
 export type BordStatus = "wachtend" | "actief" | "voltooid";
 
+export type BordFase = "poule" | "winnaarsronde" | "verliezersronde";
+
 export interface Wedstrijd {
   id: string;
   speler1: string;
@@ -13,6 +15,7 @@ export interface Wedstrijd {
   aantal180Speler2: number;
   hoogsteFinishSpeler1: number | null;
   hoogsteFinishSpeler2: number | null;
+  bye?: boolean;
 }
 
 export interface Bord {
@@ -20,6 +23,7 @@ export interface Bord {
   spelers: string[];
   wedstrijden: Wedstrijd[];
   status: BordStatus;
+  fase?: BordFase;
 }
 
 export const SPEELAVOND_DATA_VERSIE = 1;
@@ -87,9 +91,35 @@ export interface DashboardStatistieken {
   totaalLeden: number;
 }
 
+/** Officiële rij uit een historische tussenstand (niet herberekend). */
+export interface HistorischeSpelerStand {
+  positie: number;
+  naam: string;
+  aanwezig: number;
+  poulepunten: number;
+  winnaarsrondeLegsGewonnen: number;
+  winnaarsrondeLegsVerloren: number;
+  verliezersrondeLegsGewonnen: number;
+  verliezersrondeLegsVerloren: number;
+  hoogsteFinish: number;
+  aantal180s: number;
+  puntenTotaal: number;
+}
+
+export interface HistorischeTussenstand {
+  seizoen: string;
+  /** ISO-datum van de snapshot, bijv. 2026-08-15 */
+  datum: string;
+  bron: string;
+  spelers: HistorischeSpelerStand[];
+}
+
+export type SpelerStandBron = "historisch" | "wedstrijden" | "gecombineerd";
+
 export interface SpelerStand {
   positie: number;
   naam: string;
+  /** Officieel / gecombineerd punten totaal */
   punten: number;
   competitiepunten: number;
   bonuspunten: number;
@@ -100,6 +130,19 @@ export interface SpelerStand {
   percentage: number;
   aantal180s: number;
   hoogsteFinish: number;
+  aanwezig: number;
+  poulepunten: number;
+  winnaarsrondeLegsGewonnen: number;
+  winnaarsrondeLegsVerloren: number;
+  verliezersrondeLegsGewonnen: number;
+  verliezersrondeLegsVerloren: number;
+  /** Punten uit officiële snapshot (ongewijzigd bewaard) */
+  historischePunten: number;
+  /** Punten uit wedstrijden na de snapshot */
+  nieuwePunten: number;
+  bron: SpelerStandBron;
+  /** Officiële positie uit de snapshot, of null */
+  officielePositie: number | null;
 }
 
 export interface SpelerProfielData {
@@ -117,6 +160,8 @@ export interface SpelerProfielData {
   hoogsteFinish: number;
   spelerVanDeAvondTitels: number;
   badges: string[];
+  poulepunten: number;
+  historischePunten: number;
 }
 
 export interface ClubRecord {

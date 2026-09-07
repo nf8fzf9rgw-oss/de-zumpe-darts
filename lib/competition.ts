@@ -32,6 +32,7 @@ export function maakWedstrijd(speler1: string, speler2: string): Wedstrijd {
     aantal180Speler2: 0,
     hoogsteFinishSpeler1: null,
     hoogsteFinishSpeler2: null,
+    bye: false,
   };
 }
 
@@ -206,6 +207,7 @@ export function genereerRoundRobin(spelers: string[]): Wedstrijd[] {
 }
 
 export function formatWedstrijd(wedstrijd: Wedstrijd): string {
+  if (wedstrijd.bye) return `${wedstrijd.speler1} — bye`;
   return `${wedstrijd.speler1} vs ${wedstrijd.speler2}`;
 }
 
@@ -311,6 +313,7 @@ export function genereerCompetitie(
     spelers: groep,
     wedstrijden: genereerRoundRobin(groep),
     status: "wachtend" as BordStatus,
+    fase: "poule" as const,
   }));
 }
 
@@ -404,11 +407,13 @@ export function normaliseerBord(bord: Bord): Bord {
       aantal180Speler2: basis.aantal180Speler2 ?? 0,
       hoogsteFinishSpeler1: basis.hoogsteFinishSpeler1 ?? null,
       hoogsteFinishSpeler2: basis.hoogsteFinishSpeler2 ?? null,
+      bye: basis.bye ?? false,
     };
   });
   return {
     ...bord,
     wedstrijden,
+    fase: bord.fase ?? "poule",
     status: bord.status ?? berekenBordStatus({ ...bord, wedstrijden }),
   };
 }
@@ -418,7 +423,10 @@ export function normaliseerBorden(borden: Bord[]): Bord[] {
 }
 
 export function heeftTeVeelBorden(borden: Bord[] | undefined): boolean {
-  return (borden?.length ?? 0) > MAX_BORDEN_PER_AVOND;
+  const poules = (borden ?? []).filter(
+    (bord) => !bord.fase || bord.fase === "poule"
+  );
+  return poules.length > MAX_BORDEN_PER_AVOND;
 }
 
 export function normaliseerSpeelavond(avond: Speelavond): Speelavond {
@@ -527,5 +535,6 @@ export function resetWedstrijd(wedstrijd: Wedstrijd): Wedstrijd {
     aantal180Speler2: 0,
     hoogsteFinishSpeler1: null,
     hoogsteFinishSpeler2: null,
+    bye: wedstrijd.bye ?? false,
   };
 }

@@ -9,7 +9,8 @@ export default function StandPage() {
         <div>
           <h2 className="text-xl font-bold text-white lg:text-3xl">Ranglijst</h2>
           <p className="mt-2 text-sm text-zinc-400 lg:text-base">
-            Stand op basis van competitiepunten, 180&apos;s en finish-bonuspunten.
+            Officiële tussenstand seizoen 2025/2026 plus nieuwe wedstrijden.
+            Bestuur ziet de uitgebreide kolommen.
           </p>
         </div>
         <SeasonSelector />

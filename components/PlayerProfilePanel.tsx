@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import ProtectedAction from "@/components/ProtectedAction";
+import { formatPunten } from "@/lib/format";
 import { berekenSpelerProfiel } from "@/lib/standings";
 import { confirmDialog, toast } from "@/lib/ui-feedback";
 import { useSpeelavond } from "@/context/SpeelavondContext";
@@ -14,7 +15,9 @@ export default function PlayerProfilePanel() {
     voegLidToe,
     hernoemLid,
     verwijderLid,
+    actiefSeizoen,
     actiefSeizoenLabel,
+    laatsteOpslag,
   } = useSpeelavond();
   const [zoekterm, setZoekterm] = useState("");
   const [geselecteerd, setGeselecteerd] = useState<string | null>(null);
@@ -31,8 +34,14 @@ export default function PlayerProfilePanel() {
 
   const profiel = useMemo(() => {
     if (!geselecteerd) return null;
-    return berekenSpelerProfiel(geselecteerd, seizoenHistorie, borden);
-  }, [geselecteerd, seizoenHistorie, borden]);
+    return berekenSpelerProfiel(
+      geselecteerd,
+      seizoenHistorie,
+      borden,
+      actiefSeizoen,
+      laatsteOpslag
+    );
+  }, [geselecteerd, seizoenHistorie, borden, actiefSeizoen, laatsteOpslag]);
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-8">
@@ -117,7 +126,8 @@ export default function PlayerProfilePanel() {
               <div>
                 <h3 className="text-2xl font-bold text-white">{profiel.naam}</h3>
                 <p className="mt-1 text-sm text-zinc-400">
-                  Positie #{profiel.positie || "—"} · {profiel.punten} punten
+                  Positie #{profiel.positie || "—"} · {formatPunten(profiel.punten)}{" "}
+                  punten
                 </p>
               </div>
               <ProtectedAction>
@@ -192,14 +202,18 @@ export default function PlayerProfilePanel() {
 
             <div className="mt-6 grid grid-cols-2 gap-3">
               {[
-                { label: "Punten", waarde: profiel.punten },
+                { label: "Punten", waarde: formatPunten(profiel.punten) },
+                {
+                  label: "Historische punten",
+                  waarde: formatPunten(profiel.historischePunten),
+                },
                 { label: "Winst %", waarde: `${profiel.winpercentage}%` },
                 { label: "180's", waarde: profiel.aantal180s },
                 { label: "Hoogste finish", waarde: profiel.hoogsteFinish || "—" },
                 { label: "Aanwezigheid", waarde: `${profiel.aanwezigheid}x` },
+                { label: "Poulepunten", waarde: formatPunten(profiel.poulepunten) },
                 { label: "Avondtitels", waarde: profiel.spelerVanDeAvondTitels },
                 { label: "Overwinningen", waarde: profiel.overwinningen },
-                { label: "Gespeeld", waarde: profiel.gespeeldeWedstrijden },
               ].map((item) => (
                 <div
                   key={item.label}

@@ -18,6 +18,7 @@ import {
   exportStandCsv,
   exportHistorieCsv,
 } from "@/lib/export/csv";
+import FinishBonusInstellingen from "@/components/FinishBonusInstellingen";
 import type { ZumpeDataBackup } from "@/types/competition";
 
 export default function InstellingenPage() {
@@ -274,6 +275,10 @@ export default function InstellingenPage() {
           </section>
         </ProtectedAction>
       </div>
+
+      <ProtectedAction>
+        <FinishBonusInstellingen />
+      </ProtectedAction>
 
       <BestuurLoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </div>

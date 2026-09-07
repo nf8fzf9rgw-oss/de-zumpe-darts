@@ -21,14 +21,8 @@ import {
   verplaatsSpeler,
   type WedstrijdUpdate,
 } from "@/lib/competition";
-import { logAuditActie } from "@/lib/audit-log";
-import { broadcastReload, initRealtimeSync } from "@/lib/realtime";
-import { hernoemSpelerInData } from "@/lib/storage";
-import { useUndoStack } from "@/context/useUndoStack";
-import { usePrintState } from "@/context/usePrintState";
 import {
   hernoemLid,
-  laadLeden,
   verwijderLid,
   voegLidToe,
 } from "@/lib/leden";
@@ -39,8 +33,13 @@ import {
   laadActiefSeizoen,
   seizoenLabel,
   slaActiefSeizoenOp,
+  STANDAARD_SEIZOEN_ID,
 } from "@/lib/seasons";
 import { createLocalSpeelavondRepository } from "@/lib/services/speelavond.service";
+import {
+  genereerWinnaarsVerliezersRonde,
+  pouleBordenVoltooid,
+} from "@/lib/knockout";
 import { berekenStand } from "@/lib/standings";
 import {
   berekenGrafieken,
@@ -53,10 +52,12 @@ import {
   formatDatum,
   formatDatumAlleen,
   genereerAanmeldToken,
+  hernoemSpelerInData,
   laadHistorie,
   laadSpeelavond,
   maakHuidigeDatum,
   maakLegeSpeelavond,
+  migreerOfficieleSpelersnamen,
   slaAanmeldSessieOp,
   slaSpeelavondOp,
   verwijderAanmeldSessie,
@@ -64,6 +65,10 @@ import {
   verwijderUitHistorie,
   voegToeAanHistorie,
 } from "@/lib/storage";
+import { logAuditActie } from "@/lib/audit-log";
+import { broadcastReload, initRealtimeSync } from "@/lib/realtime";
+import { useUndoStack } from "@/context/useUndoStack";
+import { usePrintState } from "@/context/usePrintState";
 import type {
   Bord,
   ClubRecords,
@@ -132,6 +137,7 @@ interface SpeelavondContextValue {
   notities: string;
   setNotities: (notities: string) => void;
   genereerCompetitieOpnieuw: (seed?: number) => void;
+  genereerKnockoutRonde: () => void;
 }
 
 const SpeelavondContext = createContext<SpeelavondContextValue | null>(null);
@@ -192,7 +198,7 @@ export function SpeelavondProvider({
   const [gastNaam, setGastNaam] = useState("");
   const [borden, setBorden] = useState<Bord[]>([]);
   const [laatsteOpslag, setLaatsteOpslag] = useState("");
-  const [actiefSeizoen, setActiefSeizoenState] = useState("");
+  const [actiefSeizoen, setActiefSeizoenState] = useState(STANDAARD_SEIZOEN_ID);
   const [aanmeldToken, setAanmeldToken] = useState<string | null>(null);
   const [isGeladen, setIsGeladen] = useState(false);
   const [historie, setHistorie] = useState<Speelavond[]>([]);
@@ -228,7 +234,7 @@ export function SpeelavondProvider({
     const opgeslagen = laadSpeelavond();
     const seizoen = laadActiefSeizoen();
     /* eslint-disable react-hooks/set-state-in-effect -- localStorage hydratie na client mount */
-    setLeden(laadLeden());
+    setLeden(migreerOfficieleSpelersnamen());
     setActiefSeizoenState(seizoen);
     if (opgeslagen) {
       const state = syncState(opgeslagen);
@@ -290,6 +296,7 @@ export function SpeelavondProvider({
 
   useEffect(() => {
     if (!isGeladen || !heeftTeVeelBorden(borden)) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- migratie oude 8-borden data
     setBorden([]);
     persist({ borden: [] });
     toast(
@@ -426,6 +433,34 @@ export function SpeelavondProvider({
     }
     genereerCompetitieOpnieuw();
   }, [borden.length, genereerCompetitieOpnieuw]);
+
+  const genereerKnockoutRonde = useCallback(async () => {
+    if (!pouleBordenVoltooid(borden)) {
+      toast(
+        "Rond eerst alle poulewedstrijden op de borden af.",
+        "error"
+      );
+      return;
+    }
+    const bevestigd = await confirmDialog({
+      title: "Winnaars- en verliezersronde maken?",
+      message:
+        "Spelers worden op poulepositie verdeeld. Bestaande knockout-borden worden vervangen. Je kunt dit ongedaan maken.",
+      confirmLabel: "Rondes maken",
+    });
+    if (!bevestigd) return;
+    const volgende = genereerWinnaarsVerliezersRonde(borden);
+    if (!volgende) {
+      toast("Kon geen winnaars-/verliezersronde maken.", "error");
+      return;
+    }
+    pushUndo({ type: "borden", borden });
+    setBorden(volgende);
+    persist({ borden: volgende });
+    logAuditActie("Knockout-rondes gegenereerd", `${volgende.length} borden`);
+    toast("Winnaars- en verliezersronde klaar.", "success");
+    broadcastReload();
+  }, [borden, persist, pushUndo]);
 
   const updateWedstrijd = useCallback(
     (bordNaam: string, wedstrijdId: string, updates: WedstrijdUpdate) => {
@@ -613,8 +648,8 @@ export function SpeelavondProvider({
   );
 
   const statistieken = useMemo(
-    () => berekenStatistieken(seizoenHistorie),
-    [seizoenHistorie]
+    () => berekenStatistieken(seizoenHistorie, actiefSeizoen),
+    [seizoenHistorie, actiefSeizoen]
   );
 
   const grafieken = useMemo(
@@ -623,13 +658,14 @@ export function SpeelavondProvider({
   );
 
   const stand = useMemo(
-    () => berekenStand(seizoenHistorie, borden),
-    [seizoenHistorie, borden]
+    () =>
+      berekenStand(seizoenHistorie, borden, actiefSeizoen, laatsteOpslag),
+    [seizoenHistorie, borden, actiefSeizoen, laatsteOpslag]
   );
 
   const clubRecords = useMemo(
-    () => berekenClubRecords(seizoenHistorie, borden),
-    [seizoenHistorie, borden]
+    () => berekenClubRecords(seizoenHistorie, borden, actiefSeizoen),
+    [seizoenHistorie, borden, actiefSeizoen]
   );
 
   const spelerVanDeAvond = useMemo(
@@ -711,6 +747,7 @@ export function SpeelavondProvider({
       notities,
       setNotities,
       genereerCompetitieOpnieuw,
+      genereerKnockoutRonde,
     }),
     [
       leden,
@@ -726,6 +763,7 @@ export function SpeelavondProvider({
       gastNaam,
       gasten,
       genereerCompetitieOpnieuw,
+      genereerKnockoutRonde,
       grafieken,
       handleVerplaatsSpeler,
       historie,
