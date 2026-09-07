@@ -8,6 +8,7 @@ export const STANDAARD_SEIZOEN_ID = "2025-2026";
 
 const SEIZOEN_KEY = "deZumpeActiefSeizoen";
 const SEIZOENEN_KEY = "deZumpeSeizoenen";
+const SEIZOENEN_RESET_KEY = "deZumpeSeizoenenReset";
 
 /**
  * Seizoenen die altijd bestaan en niet verwijderd kunnen worden.
@@ -27,7 +28,7 @@ export function startJaarVanSeizoenId(seizoenId: string): number | null {
 export function maakSeizoen(startJaar: number): Seizoen {
   return {
     id: `${startJaar}-${startJaar + 1}`,
-    label: `Seizoen ${startJaar}–${startJaar + 1}`,
+    label: `Seizoen ${startJaar}/${startJaar + 1}`,
     startMaand: SEIZOEN_START_MAAND,
     startJaar,
   };
@@ -35,6 +36,14 @@ export function maakSeizoen(startJaar: number): Seizoen {
 
 function leesStartJaren(): number[] {
   if (typeof window === "undefined") return [...BASIS_SEIZOEN_STARTJAREN];
+
+  // Oudere versies zetten seizoenen in de opslag die het bestuur nooit zelf
+  // heeft toegevoegd. Die lijst wordt eenmalig opgeschoond.
+  if (!localStorage.getItem(SEIZOENEN_RESET_KEY)) {
+    localStorage.removeItem(SEIZOENEN_KEY);
+    localStorage.setItem(SEIZOENEN_RESET_KEY, "1");
+    return [...BASIS_SEIZOEN_STARTJAREN];
+  }
 
   const opgeslagen = localStorage.getItem(SEIZOENEN_KEY);
   if (!opgeslagen) return [...BASIS_SEIZOEN_STARTJAREN];
