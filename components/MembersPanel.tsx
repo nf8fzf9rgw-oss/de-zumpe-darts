@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useSpeelavond } from "@/context/SpeelavondContext";
+import { haalHistorischeSpeler } from "@/lib/historische-tussenstand";
 
 interface MembersPanelProps {
   variant?: "default" | "desktop";
@@ -16,6 +17,7 @@ export default function MembersPanel({
     toggleLid,
     selecteerAlleLeden,
     deselecteerAlleLeden,
+    actiefSeizoen,
   } = useSpeelavond();
   const [zoekterm, setZoekterm] = useState("");
 
@@ -71,19 +73,32 @@ export default function MembersPanel({
       >
         {gefilterdeLeden.map((lid) => {
           const isAanwezig = aanwezigen.includes(lid);
+          const officieel = haalHistorischeSpeler(actiefSeizoen, lid);
           return (
             <button
               key={lid}
               type="button"
               onClick={() => toggleLid(lid)}
-              className={`flex min-h-11 w-full items-center justify-between rounded-xl px-4 py-3 text-left transition active:scale-[0.98] ${
+              className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition active:scale-[0.98] ${
                 isAanwezig
                   ? "bg-red-700 text-white shadow-lg shadow-red-900/30"
                   : "bg-zinc-900 text-zinc-200 hover:bg-zinc-800"
               }`}
             >
               <span>{lid}</span>
-              <span>{isAanwezig ? "☑" : "☐"}</span>
+              <span className="flex shrink-0 items-center gap-2">
+                {officieel && (
+                  <span
+                    className={`text-xs ${
+                      isAanwezig ? "text-white/70" : "text-zinc-500"
+                    }`}
+                    title="Positie op de officiële tussenstand"
+                  >
+                    #{officieel.positie}
+                  </span>
+                )}
+                <span>{isAanwezig ? "☑" : "☐"}</span>
+              </span>
             </button>
           );
         })}

@@ -1,3 +1,4 @@
+import { namenZijnGelijk } from "@/lib/namen";
 import type { HistorischeSpelerStand, HistorischeTussenstand } from "@/types/competition";
 
 /**
@@ -434,6 +435,16 @@ export function haalHistorischeTussenstand(
   seizoenId: string
 ): HistorischeTussenstand | null {
   return TUSSENSTANDEN.find((t) => t.seizoen === seizoenId) ?? null;
+}
+
+/** Officiële rij van één speler, of null als die niet op de foto staat. */
+export function haalHistorischeSpeler(
+  seizoenId: string,
+  naam: string
+): HistorischeSpelerStand | null {
+  const tussenstand = haalHistorischeTussenstand(seizoenId);
+  if (!tussenstand) return null;
+  return tussenstand.spelers.find((s) => namenZijnGelijk(s.naam, naam)) ?? null;
 }
 
 export function historischeSpelerAlsMap(

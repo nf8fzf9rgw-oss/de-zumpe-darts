@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import ProtectedAction from "@/components/ProtectedAction";
 import { formatPunten } from "@/lib/format";
+import { haalHistorischeSpeler } from "@/lib/historische-tussenstand";
 import { berekenSpelerProfiel } from "@/lib/standings";
 import { confirmDialog, toast } from "@/lib/ui-feedback";
 import { useSpeelavond } from "@/context/SpeelavondContext";
@@ -91,26 +92,36 @@ export default function PlayerProfilePanel() {
         </div>
 
         <div className="mt-4 max-h-[400px] space-y-2 overflow-y-auto">
-          {gefilterdeLeden.map((lid) => (
-            <button
-              key={lid}
-              type="button"
-              onClick={() => {
-                setGeselecteerd(lid);
-                setBewerkModus(false);
-              }}
-              className={`flex min-h-11 w-full items-center justify-between rounded-xl px-4 py-3 text-left ${
-                geselecteerd === lid
-                  ? "bg-red-700 text-white"
-                  : "bg-zinc-900 text-zinc-200 hover:bg-zinc-800"
-              }`}
-            >
-              <span>{lid}</span>
-              {profiel && geselecteerd === lid && profiel.positie > 0 && (
-                <span className="text-xs opacity-80">#{profiel.positie}</span>
-              )}
-            </button>
-          ))}
+          {gefilterdeLeden.map((lid) => {
+            const officieel = haalHistorischeSpeler(actiefSeizoen, lid);
+            return (
+              <button
+                key={lid}
+                type="button"
+                onClick={() => {
+                  setGeselecteerd(lid);
+                  setBewerkModus(false);
+                }}
+                className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left ${
+                  geselecteerd === lid
+                    ? "bg-red-700 text-white"
+                    : "bg-zinc-900 text-zinc-200 hover:bg-zinc-800"
+                }`}
+              >
+                <span>{lid}</span>
+                {officieel ? (
+                  <span className="shrink-0 text-xs opacity-80">
+                    #{officieel.positie} · {formatPunten(officieel.puntenTotaal)}{" "}
+                    pt
+                  </span>
+                ) : (
+                  <span className="shrink-0 rounded-full border border-zinc-700 px-2 py-0.5 text-[10px] uppercase tracking-wide text-zinc-500">
+                    nieuw
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </section>
 
@@ -128,6 +139,12 @@ export default function PlayerProfilePanel() {
                 <p className="mt-1 text-sm text-zinc-400">
                   Positie #{profiel.positie || "—"} · {formatPunten(profiel.punten)}{" "}
                   punten
+                  {profiel.officielePositie !== null && (
+                    <span className="text-zinc-500">
+                      {" "}
+                      · officieel #{profiel.officielePositie}
+                    </span>
+                  )}
                 </p>
               </div>
               <ProtectedAction>
@@ -202,16 +219,27 @@ export default function PlayerProfilePanel() {
 
             <div className="mt-6 grid grid-cols-2 gap-3">
               {[
-                { label: "Punten", waarde: formatPunten(profiel.punten) },
+                { label: "Punten totaal", waarde: formatPunten(profiel.punten) },
                 {
                   label: "Historische punten",
                   waarde: formatPunten(profiel.historischePunten),
                 },
                 { label: "Winst %", waarde: `${profiel.winpercentage}%` },
-                { label: "180's", waarde: profiel.aantal180s },
-                { label: "Hoogste finish", waarde: profiel.hoogsteFinish || "—" },
-                { label: "Aanwezigheid", waarde: `${profiel.aanwezigheid}x` },
-                { label: "Poulepunten", waarde: formatPunten(profiel.poulepunten) },
+                { label: "Aantal 180", waarde: profiel.aantal180s },
+                { label: "Hoogste uitgooi", waarde: profiel.hoogsteFinish || "—" },
+                { label: "Aanwezig", waarde: `${profiel.aanwezigheid}x` },
+                {
+                  label: "Aantal punten in poule",
+                  waarde: formatPunten(profiel.poulepunten),
+                },
+                {
+                  label: "Legs winnaarsronde (gew./verl.)",
+                  waarde: `${profiel.winnaarsrondeLegsGewonnen} / ${profiel.winnaarsrondeLegsVerloren}`,
+                },
+                {
+                  label: "Legs verliezersronde (gew./verl.)",
+                  waarde: `${profiel.verliezersrondeLegsGewonnen} / ${profiel.verliezersrondeLegsVerloren}`,
+                },
                 { label: "Avondtitels", waarde: profiel.spelerVanDeAvondTitels },
                 { label: "Overwinningen", waarde: profiel.overwinningen },
               ].map((item) => (
