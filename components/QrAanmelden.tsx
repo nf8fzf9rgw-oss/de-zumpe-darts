@@ -1,6 +1,7 @@
 "use client";
 
 import { useSpeelavond } from "@/context/SpeelavondContext";
+import SpelersTeller from "@/components/SpelersTeller";
 
 export default function QrAanmelden() {
   const {
@@ -9,6 +10,7 @@ export default function QrAanmelden() {
     startAanmelden,
     stopAanmelden,
     aanwezigen,
+    dashboardStats,
   } = useSpeelavond();
 
   if (!aanmeldToken) {
@@ -48,6 +50,12 @@ export default function QrAanmelden() {
           Stoppen
         </button>
       </div>
+
+      <SpelersTeller
+        aantal={dashboardStats.totaalSpelers}
+        label="Spelers vanavond"
+        className="mt-4"
+      />
 
       <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
         {/* eslint-disable-next-line @next/next/no-img-element */}

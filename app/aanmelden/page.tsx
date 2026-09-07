@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import SpelersTeller from "@/components/SpelersTeller";
 import { laadLeden } from "@/lib/leden";
 import {
   laadAanmeldSessie,
@@ -15,6 +16,7 @@ function AanmeldenInhoud() {
   const token = searchParams.get("t");
   const [leden, setLeden] = useState<string[]>([]);
   const [aanwezigen, setAanwezigen] = useState<string[]>([]);
+  const [gasten, setGasten] = useState<string[]>([]);
   const [geldig, setGeldig] = useState(false);
   const [naam, setNaam] = useState("");
 
@@ -28,6 +30,7 @@ function AanmeldenInhoud() {
     setGeldig(true);
     setLeden(laadLeden());
     setAanwezigen(avond?.aanwezigen ?? sessie.aanwezigen);
+    setGasten(avond?.gasten ?? []);
   }, [token]);
 
   useEffect(() => {
@@ -58,7 +61,9 @@ function AanmeldenInhoud() {
     if (!getrimd) return;
     const avond = laadSpeelavond();
     if (!avond || avond.gasten.includes(getrimd)) return;
-    slaSpeelavondOp({ ...avond, gasten: [...avond.gasten, getrimd] });
+    const nieuweGasten = [...avond.gasten, getrimd];
+    slaSpeelavondOp({ ...avond, gasten: nieuweGasten });
+    setGasten(nieuweGasten);
     setNaam("");
   };
 
@@ -85,6 +90,13 @@ function AanmeldenInhoud() {
         <h1 className="mt-2 text-2xl font-bold">Aanmelden</h1>
         <p className="mt-1 text-sm text-zinc-400">Tik je naam om aan te melden</p>
       </header>
+
+      <div className="mx-auto mb-4 max-w-md">
+        <SpelersTeller
+          aantal={aanwezigen.length + gasten.length}
+          label="Spelers vanavond"
+        />
+      </div>
 
       <div className="mx-auto max-w-md space-y-2">
         {leden.map((lid) => {

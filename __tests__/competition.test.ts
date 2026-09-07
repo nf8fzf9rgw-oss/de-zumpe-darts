@@ -28,18 +28,24 @@ describe("berekenBordVerdeling", () => {
     [10, [4, 3, 3]],
     [11, [4, 4, 3]],
     [12, [4, 4, 4]],
-    [13, [5, 4, 4]],
-    [14, [5, 5, 4]],
-    [15, [5, 5, 5]],
+    [13, [4, 3, 3, 3]],
+    [14, [4, 4, 3, 3]],
+    [15, [4, 4, 4, 3]],
     [16, [4, 4, 4, 4]],
-    [17, [5, 4, 4, 4]],
-    [18, [5, 5, 4, 4]],
-    [19, [5, 5, 5, 4]],
+    [17, [4, 4, 3, 3, 3]],
+    [18, [4, 4, 4, 3, 3]],
+    [19, [4, 4, 4, 4, 3]],
     [20, [4, 4, 4, 4, 4]],
-    [21, [5, 4, 4, 4, 4]],
-    [22, [5, 5, 4, 4, 4]],
-    [23, [5, 5, 5, 4, 4]],
-    [24, [5, 5, 5, 5, 4]],
+    [21, [4, 4, 4, 3, 3, 3]],
+    [22, [4, 4, 4, 4, 3, 3]],
+    [23, [4, 4, 4, 4, 4, 3]],
+    [24, [4, 4, 4, 4, 4, 4]],
+    [25, [5, 4, 4, 4, 4, 4]],
+    [26, [5, 5, 4, 4, 4, 4]],
+    [27, [5, 5, 5, 4, 4, 4]],
+    [28, [5, 5, 5, 5, 4, 4]],
+    [29, [5, 5, 5, 5, 5, 4]],
+    [30, [5, 5, 5, 5, 5, 5]],
   ];
 
   it.each(verwachteVerdelingen)(
@@ -49,24 +55,75 @@ describe("berekenBordVerdeling", () => {
     }
   );
 
-  it("verdeelt 25-35 spelers binnen limieten", () => {
-    for (let n = 25; n <= 35; n += 1) {
-      const verdeling = berekenBordVerdeling(n);
-      expect(verdeling).not.toBeNull();
-      expect(verdeling!.reduce((a, b) => a + b, 0)).toBe(n);
-      expect(verdeling!.length).toBeLessThanOrEqual(5);
-      expect(verdeling!.every((g) => g >= MIN_SPELERS_PER_BORD && g <= MAX_SPELERS_PER_BORD)).toBe(true);
+  it("zet nooit meer dan 5 spelers op een bord tot 30 spelers", () => {
+    for (let n = 3; n <= 30; n += 1) {
+      const verdeling = berekenBordVerdeling(n)!;
+      expect(verdeling.reduce((a, b) => a + b, 0)).toBe(n);
+      expect(verdeling.every((g) => g >= MIN_SPELERS_PER_BORD && g <= 5)).toBe(
+        true
+      );
+      expect(verdeling.length).toBeLessThanOrEqual(MAX_BORDEN_PER_AVOND);
+    }
+  });
+
+  it("opent Bord 6 pas vanaf 21 spelers", () => {
+    for (let n = 3; n <= 20; n += 1) {
+      expect(berekenBordVerdeling(n)!.length).toBeLessThanOrEqual(5);
+    }
+    for (let n = 21; n <= 30; n += 1) {
+      expect(berekenBordVerdeling(n)!.length).toBe(6);
+    }
+  });
+
+  it("houdt borden op maximaal 4 spelers tot alle 6 borden vol zijn", () => {
+    // Vanaf 6 spelers past iedereen in groepen van 3 of 4.
+    // (5 spelers kan niet: 3+2 laat een bord onder de ondergrens vallen.)
+    for (let n = 6; n <= 24; n += 1) {
+      expect(berekenBordVerdeling(n)!.every((g) => g <= 4)).toBe(true);
+    }
+    expect(berekenBordVerdeling(5)).toEqual([5]);
+    // Pas vanaf 25 komt de eerste 5 erbij, precies één per extra speler.
+    for (let n = 25; n <= 30; n += 1) {
+      expect(berekenBordVerdeling(n)!.filter((g) => g === 5)).toHaveLength(
+        n - 24
+      );
+    }
+  });
+
+  it("gebruikt het minimale aantal borden voor groepen van maximaal 4", () => {
+    for (let n = 6; n <= 24; n += 1) {
+      expect(berekenBordVerdeling(n)!.length).toBe(Math.ceil(n / 4));
+    }
+  });
+
+  it("is deterministisch", () => {
+    for (let n = 3; n <= 30; n += 1) {
+      expect(berekenBordVerdeling(n)).toEqual(berekenBordVerdeling(n));
+    }
+  });
+
+  it("valt terug op grotere borden boven 30 spelers", () => {
+    for (let n = 31; n <= MAX_SPELERS_PER_AVOND; n += 1) {
+      const verdeling = berekenBordVerdeling(n)!;
+      expect(verdeling.reduce((a, b) => a + b, 0)).toBe(n);
+      expect(verdeling.length).toBeLessThanOrEqual(MAX_BORDEN_PER_AVOND);
+      expect(
+        verdeling.every(
+          (g) => g >= MIN_SPELERS_PER_BORD && g <= MAX_SPELERS_PER_BORD
+        )
+      ).toBe(true);
     }
   });
 
   it("exporteert board-limieten", () => {
     expect(MIN_SPELERS_PER_BORD).toBe(3);
     expect(MAX_SPELERS_PER_BORD).toBe(7);
-    expect(MAX_SPELERS_PER_AVOND).toBe(35);
+    expect(MAX_BORDEN_PER_AVOND).toBe(6);
+    expect(MAX_SPELERS_PER_AVOND).toBe(42);
   });
 
-  it("weigert meer dan 35 spelers (5 borden × 7 spelers)", () => {
-    expect(berekenBordVerdeling(36)).toBeNull();
+  it("weigert meer dan 42 spelers (6 borden × 7 spelers)", () => {
+    expect(berekenBordVerdeling(43)).toBeNull();
   });
 
   it("weigert te weinig spelers", () => {

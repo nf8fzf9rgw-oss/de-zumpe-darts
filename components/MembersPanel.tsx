@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useSpeelavond } from "@/context/SpeelavondContext";
+import SpelersTeller from "@/components/SpelersTeller";
 
 interface MembersPanelProps {
   variant?: "default" | "desktop";
@@ -16,6 +17,7 @@ export default function MembersPanel({
     toggleLid,
     selecteerAlleLeden,
     deselecteerAlleLeden,
+    dashboardStats,
   } = useSpeelavond();
   const [zoekterm, setZoekterm] = useState("");
 
@@ -54,6 +56,12 @@ export default function MembersPanel({
           </button>
         </div>
       </div>
+
+      <SpelersTeller
+        aantal={dashboardStats.totaalSpelers}
+        label="Spelers vanavond"
+        className="mb-4"
+      />
 
       <input
         value={zoekterm}
