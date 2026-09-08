@@ -465,6 +465,7 @@ export function SpeelavondProvider({
 
   const handleVoegLidToe = useCallback((naam: string) => {
     setLeden(voegLidToe(naam, leden));
+    toast("✓ Speler toegevoegd", "success");
   }, [leden]);
 
   const handleHernoemLid = useCallback(
@@ -535,7 +536,7 @@ export function SpeelavondProvider({
       setBorden(nieuweBorden);
       persist({ borden: nieuweBorden });
       logAuditActie("Competitie gegenereerd", `${spelers.length} spelers, ${nieuweBorden.length} borden`);
-      toast("Competitie gegenereerd!", "success");
+      toast("✓ Competitie gegenereerd", "success");
     },
     [aanwezigen, actiefSeizoen, borden, gasten, persist, pushUndo]
   );
@@ -668,7 +669,7 @@ export function SpeelavondProvider({
     slaSpeelavondOp(avond);
     void repository.addToHistorie(avond);
     setHistorie(laadHistorie());
-    toast("Speelavond opgeslagen!", "success");
+    toast("✓ Speelavond opgeslagen", "success");
     logAuditActie("Speelavond opgeslagen", formatDatum(datum));
     broadcastReload();
   }, [aanwezigen, actiefSeizoen, aanmeldToken, borden, gasten, laatsteOpslag, notities]);

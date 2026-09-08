@@ -1,11 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
-  --zumpe-red: #b91c1c;
-  --zumpe-dark: #09090b;
+  --background: #050505;
+  --foreground: #fafafa;
+  --zumpe-red: #dc2626;
+  --zumpe-red-deep: #991b1b;
+  --zumpe-dark: #0a0a0b;
+  --zumpe-card: #111113;
+  --zumpe-card-raised: #18181b;
   --zumpe-gray: #27272a;
+  --zumpe-line: rgba(220, 38, 38, 0.18);
 }
 
 @theme inline {
@@ -16,9 +20,49 @@
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(circle at 50% -20%, rgba(220, 38, 38, 0.08), transparent 42%),
+    radial-gradient(circle at 50% 50%, transparent 58%, rgba(0, 0, 0, 0.55) 100%),
+    var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.stat-number {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+
+.scoreboard-stripe {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 10px,
+    rgba(220, 38, 38, 0.035) 10px,
+    rgba(220, 38, 38, 0.035) 11px
+  );
+}
+
+.dart-ring {
+  background-image:
+    radial-gradient(circle at center, transparent 62%, rgba(220, 38, 38, 0.08) 63%, transparent 64%),
+    radial-gradient(circle at center, transparent 78%, rgba(255, 255, 255, 0.04) 79%, transparent 80%);
+}
+
+@keyframes zumpe-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: zumpe-fade-up 0.22s ease-out;
 }
 
 ::-webkit-scrollbar {

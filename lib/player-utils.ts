@@ -33,6 +33,27 @@ export function vindBordVoorSpeler(
   );
 }
 
+export function vindBordenVoorSpeler(
+  borden: Bord[],
+  spelerNaam: string
+): Bord[] {
+  return borden.filter((b) =>
+    b.spelers.some((s) => namenZijnGelijk(s, spelerNaam))
+  );
+}
+
+export function pouleBordVoorSpeler(
+  borden: Bord[],
+  spelerNaam: string
+): Bord | null {
+  const gevonden = vindBordenVoorSpeler(borden, spelerNaam);
+  return (
+    gevonden.find((bord) => !bord.fase || bord.fase === "poule") ??
+    gevonden[0] ??
+    null
+  );
+}
+
 export function vindWedstrijdenVoorSpeler(
   borden: Bord[],
   spelerNaam: string

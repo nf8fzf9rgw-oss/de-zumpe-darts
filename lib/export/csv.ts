@@ -1,5 +1,31 @@
 import type { Speelavond, SpelerStand } from "@/types/competition";
 
+export function exportSpelersCsv(spelers: string[]): string {
+  const header = ["Naam"];
+  const rows = spelers.map((naam) => escapeCsv(naam));
+  return [header.join(","), ...rows].join("\n");
+}
+
+export function exportRecordsCsv(
+  records: {
+    meeste180s: { naam: string; label: string };
+    hoogsteFinish: { naam: string; label: string };
+    meesteOverwinningen: { naam: string; label: string };
+    hoogsteWinstpercentage: { naam: string; label: string };
+    langsteWinstreeks: { naam: string; label: string };
+  }
+): string {
+  const header = ["Record", "Speler", "Waarde"];
+  const rows = [
+    ["Meeste 180's", records.meeste180s.naam, records.meeste180s.label],
+    ["Hoogste finish", records.hoogsteFinish.naam, records.hoogsteFinish.label],
+    ["Meeste overwinningen", records.meesteOverwinningen.naam, records.meesteOverwinningen.label],
+    ["Hoogste winstpercentage", records.hoogsteWinstpercentage.naam, records.hoogsteWinstpercentage.label],
+    ["Langste winstreeks", records.langsteWinstreeks.naam, records.langsteWinstreeks.label],
+  ].map((rij) => rij.map(escapeCsv).join(","));
+  return [header.join(","), ...rows].join("\n");
+}
+
 function escapeCsv(value: string | number): string {
   const str = String(value);
   if (str.includes(",") || str.includes('"') || str.includes("\n")) {

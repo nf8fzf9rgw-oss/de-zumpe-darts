@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import MatchResultEntry from "@/components/MatchResultEntry";
 import MobileScoreEntry from "@/components/player/MobileScoreEntry";
 import { useSpeelavond } from "@/context/SpeelavondContext";
+import { mijnPoulePad } from "@/lib/wedstrijd-overzicht";
 import type { Bord, BordStatus, Wedstrijd } from "@/types/competition";
 
 interface CompetitionBoardProps {
@@ -126,11 +128,13 @@ export default function CompetitionBoard({
           </h4>
           <ul className="space-y-1.5 lg:space-y-2">
             {bord.spelers.map((speler) => (
-              <li
-                key={speler}
-                className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-sm text-white lg:px-4 lg:py-2"
-              >
-                {speler}
+              <li key={speler}>
+                <Link
+                  href={mijnPoulePad(speler)}
+                  className="block min-h-11 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-sm text-white transition hover:border-red-700 hover:text-red-100 lg:px-4 lg:py-2"
+                >
+                  {speler}
+                </Link>
               </li>
             ))}
           </ul>

@@ -67,7 +67,7 @@ export default function MobileScoreEntry({
       gespeeld,
     });
     if (navigator.vibrate) navigator.vibrate(30);
-    toast("Uitslag opgeslagen!", "success");
+    toast("✓ Uitslag opgeslagen", "success");
   };
 
   const voornaam1 = wedstrijd.speler1.split(" ")[0];

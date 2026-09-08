@@ -1,12 +1,21 @@
 "use client";
 
 import type { Wedstrijd } from "@/types/competition";
+import {
+  wedstrijdPrestatieRegels,
+  wedstrijdUitslagTekst,
+  wedstrijdWeergaveStatus,
+} from "@/lib/wedstrijd-overzicht";
+import { namenZijnGelijk } from "@/lib/namen";
 
 interface MatchCardProps {
   wedstrijd: Wedstrijd;
   bordNaam: string;
   onOpen?: () => void;
   compact?: boolean;
+  volgnummer?: number;
+  perspectiefNaam?: string;
+  onSpelerKlik?: (naam: string) => void;
 }
 
 export default function MatchCard({
@@ -14,65 +23,129 @@ export default function MatchCard({
   bordNaam,
   onOpen,
   compact = false,
+  volgnummer,
+  perspectiefNaam,
+  onSpelerKlik,
 }: MatchCardProps) {
-  const statusIcon = wedstrijd.gespeeld ? "✔" : "⏳";
-  const statusLabel = wedstrijd.gespeeld ? "Gespeeld" : "Nog spelen";
-  const scoreTekst =
-    wedstrijd.gespeeld && wedstrijd.winnaar
-      ? `${wedstrijd.score1} – ${wedstrijd.score2}`
-      : null;
+  const status = wedstrijdWeergaveStatus(wedstrijd, perspectiefNaam);
+  const uitslag = wedstrijdUitslagTekst(wedstrijd);
+  const prestaties = wedstrijdPrestatieRegels(wedstrijd);
+  const randClass =
+    status.key === "gewonnen" || status.key === "gespeeld"
+      ? "border-green-900/60 bg-green-950/15"
+      : status.key === "verloren"
+        ? "border-red-900/50 bg-red-950/15"
+        : status.key === "bezig"
+          ? "border-red-600/70 bg-red-950/25 scoreboard-stripe"
+          : "border-zinc-800 bg-zinc-900 hover:border-red-800/50";
 
-  const Wrapper = onOpen ? "button" : "div";
+  const renderNaam = (naam: string, groot = false) => {
+    const isPerspectief =
+      Boolean(perspectiefNaam) && namenZijnGelijk(naam, perspectiefNaam ?? "");
+    const classes = `${groot ? "text-base font-bold lg:text-lg" : "font-semibold"} ${
+      isPerspectief ? "text-white" : "text-zinc-100"
+    } ${onSpelerKlik ? "cursor-pointer hover:text-red-300" : ""}`;
+
+    if (!onSpelerKlik) {
+      return <span className={classes}>{naam}</span>;
+    }
+
+    return (
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onSpelerKlik(naam);
+        }}
+        className={classes}
+      >
+        {naam}
+      </button>
+    );
+  };
 
   return (
-    <Wrapper
-      type={onOpen ? "button" : undefined}
-      onClick={onOpen}
-      className={`w-full rounded-xl border text-left transition ${
-        wedstrijd.gespeeld
-          ? "border-green-900/50 bg-green-950/20"
-          : "border-zinc-800 bg-zinc-900 hover:border-red-800/40"
-      } ${onOpen ? "min-h-12 cursor-pointer active:scale-[0.99]" : ""} ${
+    <article
+      className={`w-full rounded-xl border text-left transition ${randClass} ${
         compact ? "p-3" : "p-4"
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <p className={`font-semibold text-white ${compact ? "text-sm" : "text-base"}`}>
-            {wedstrijd.speler1}
-            <span className="mx-1.5 font-normal text-zinc-500">vs</span>
-            {wedstrijd.speler2}
-          </p>
-          <p className="mt-0.5 text-xs text-zinc-500">{bordNaam}</p>
-        </div>
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+          {volgnummer != null ? `Wedstrijd ${volgnummer}` : "Wedstrijd"}
+        </p>
         <span
-          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-            wedstrijd.gespeeld
-              ? "bg-green-900/50 text-green-300"
-              : "bg-amber-900/40 text-amber-300"
-          }`}
-          title={statusLabel}
+          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${status.badgeClass}`}
+          title={status.label}
         >
-          {statusIcon} {statusLabel}
+          {status.icoon} {status.label}
         </span>
       </div>
 
-      {scoreTekst && (
-        <p className="mt-2 text-sm font-bold text-green-400">
-          {scoreTekst}
-          {wedstrijd.winnaar && (
-            <span className="ml-2 text-xs font-normal text-zinc-400">
-              · Winnaar: {wedstrijd.winnaar.split(" ")[0]}
-            </span>
-          )}
+      {compact ? (
+        <p className="mt-1.5 font-semibold">
+          {renderNaam(wedstrijd.speler1)}
+          <span className="mx-1.5 font-normal text-zinc-500">vs</span>
+          {renderNaam(wedstrijd.speler2)}
+        </p>
+      ) : (
+        <div className="mt-2 space-y-0.5">
+          {renderNaam(wedstrijd.speler1, true)}
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            vs
+          </p>
+          {renderNaam(wedstrijd.speler2, true)}
+        </div>
+      )}
+
+      <p className="mt-1 text-xs text-zinc-500">{bordNaam}</p>
+
+      {uitslag && compact && (
+        <p
+          className={`mt-2 text-sm font-bold ${
+            status.key === "verloren" ? "text-red-300" : "text-green-400"
+          }`}
+        >
+          {uitslag}
         </p>
       )}
 
-      {onOpen && !wedstrijd.gespeeld && (
-        <p className="mt-2 text-xs font-semibold text-red-400">
-          Tik om uitslag in te voeren →
-        </p>
+      {uitslag && !compact && (
+        <>
+          {!wedstrijd.bye && (
+            <p
+              className={`stat-number mt-2 text-xl font-bold lg:text-2xl ${
+                status.key === "verloren" ? "text-red-300" : "text-white"
+              }`}
+            >
+              {wedstrijd.score1} — {wedstrijd.score2}
+            </p>
+          )}
+          <p className="mt-0.5 text-xs text-zinc-400">{uitslag}</p>
+        </>
       )}
-    </Wrapper>
+
+      {prestaties.length > 0 && (
+        <ul className="mt-2 space-y-0.5">
+          {prestaties.map((regel) => (
+            <li key={regel} className="text-xs text-zinc-300">
+              {regel}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {onOpen && (
+        <button
+          type="button"
+          onClick={onOpen}
+          className="mt-2 min-h-11 w-full rounded-lg text-left text-xs font-semibold text-red-400 hover:text-red-300"
+        >
+          {wedstrijd.gespeeld
+            ? "Uitslag bekijken of aanpassen →"
+            : "Uitslag invoeren →"}
+        </button>
+      )}
+    </article>
   );
 }

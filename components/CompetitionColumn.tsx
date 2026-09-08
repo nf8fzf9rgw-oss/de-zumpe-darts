@@ -12,7 +12,7 @@ export default function CompetitionColumn() {
       <div className="mb-4 flex flex-wrap items-start justify-between gap-4 lg:mb-6">
         <div>
           <h3 className="text-lg font-bold text-white lg:text-xl">
-            Competitie Borden
+            Wedstrijden
           </h3>
           <p className="mt-1 text-sm text-zinc-400">
             {dashboardStats.aantalBorden} borden ·{" "}

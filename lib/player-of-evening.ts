@@ -101,3 +101,60 @@ export function berekenAvondScores(borden: Bord[]): SpelerVanDeAvondScore[] {
   });
   return Array.from(scores.values()).sort((a, b) => b.totaal - a.totaal);
 }
+
+export interface AvondHighlight {
+  meeste180s: { naam: string; aantal: number } | null;
+  hoogsteFinish: { naam: string; finish: number } | null;
+}
+
+export function berekenAvondHighlights(borden: Bord[]): AvondHighlight {
+  const aantal180 = new Map<string, number>();
+  let hoogsteFinish = 0;
+  let hoogsteFinishNaam: string | null = null;
+
+  borden.forEach((bord) => {
+    bord.wedstrijden.forEach((wedstrijd) => {
+      if (!wedstrijd.gespeeld) return;
+
+      const naam1 = canoniekeSpelerNaam(wedstrijd.speler1);
+      const naam2 = canoniekeSpelerNaam(wedstrijd.speler2);
+
+      if (!isByeSpeler(wedstrijd.speler1) && wedstrijd.aantal180Speler1 > 0) {
+        aantal180.set(naam1, (aantal180.get(naam1) ?? 0) + wedstrijd.aantal180Speler1);
+      }
+      if (!isByeSpeler(wedstrijd.speler2) && wedstrijd.aantal180Speler2 > 0) {
+        aantal180.set(naam2, (aantal180.get(naam2) ?? 0) + wedstrijd.aantal180Speler2);
+      }
+
+      if (
+        wedstrijd.hoogsteFinishSpeler1 &&
+        wedstrijd.hoogsteFinishSpeler1 > hoogsteFinish
+      ) {
+        hoogsteFinish = wedstrijd.hoogsteFinishSpeler1;
+        hoogsteFinishNaam = naam1;
+      }
+      if (
+        wedstrijd.hoogsteFinishSpeler2 &&
+        wedstrijd.hoogsteFinishSpeler2 > hoogsteFinish
+      ) {
+        hoogsteFinish = wedstrijd.hoogsteFinishSpeler2;
+        hoogsteFinishNaam = naam2;
+      }
+    });
+  });
+
+  let meeste180s: AvondHighlight["meeste180s"] = null;
+  aantal180.forEach((aantal, naam) => {
+    if (!meeste180s || aantal > meeste180s.aantal) {
+      meeste180s = { naam, aantal };
+    }
+  });
+
+  return {
+    meeste180s,
+    hoogsteFinish:
+      hoogsteFinishNaam && hoogsteFinish > 0
+        ? { naam: hoogsteFinishNaam, finish: hoogsteFinish }
+        : null,
+  };
+}

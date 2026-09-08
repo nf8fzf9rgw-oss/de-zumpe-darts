@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import type { SpelerStand } from "@/types/competition";
 import { useSpeelavond } from "@/context/SpeelavondContext";
 import { useAuth } from "@/context/AuthContext";
-import { formatPunten } from "@/lib/format";
+import { formatPunten, ranglijstMedaille } from "@/lib/format";
 import { haalHistorischeTussenstand } from "@/lib/historische-tussenstand";
+import { mijnPoulePad } from "@/lib/wedstrijd-overzicht";
 
 interface StandingsTableProps {
   stand?: SpelerStand[];
@@ -60,22 +62,25 @@ export default function StandingsTable({
     return (
       <div className="space-y-2">
         {stand.map((rij) => (
-          <div
+          <Link
             key={rij.naam}
-            className={`flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 ${
+            href={mijnPoulePad(rij.naam)}
+            className={`flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 hover:border-red-800/60 ${
               highlightNaam === rij.naam ? "border-red-700 bg-red-950/20" : ""
             }`}
           >
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-700 text-xs font-bold text-white">
-                {rij.positie}
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="w-7 text-center text-sm font-bold">
+                {ranglijstMedaille(rij.positie)}
               </span>
-              <span className="text-sm font-semibold text-white">{rij.naam}</span>
+              <span className="truncate text-sm font-semibold text-white">
+                {rij.naam}
+              </span>
             </div>
-            <span className="font-bold text-red-400">
+            <span className="stat-number font-bold text-red-400">
               {formatPunten(rij.punten)} pt
             </span>
-          </div>
+          </Link>
         ))}
       </div>
     );
@@ -104,88 +109,29 @@ export default function StandingsTable({
 
       <div className="space-y-2 lg:hidden">
         {stand.map((rij) => (
-          <div
+          <Link
             key={rij.naam}
-            className={`rounded-xl border border-zinc-800 bg-zinc-900 p-3 ${
+            href={mijnPoulePad(rij.naam)}
+            className={`block rounded-xl border border-zinc-800 bg-zinc-900 p-3 transition hover:border-red-800/60 ${
               highlightNaam === rij.naam ? "border-red-700" : ""
-            }`}
+            } ${rij.positie <= 3 ? "bg-zinc-950" : ""}`}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-700 text-sm font-bold text-white">
-                  {rij.positie}
-                </span>
-                <span className="font-semibold text-white">{rij.naam}</span>
-              </div>
-              <span className="text-lg font-bold text-red-400">
-                {formatPunten(rij.punten)}
-              </span>
-            </div>
-
-            <dl className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
-              <div className="rounded-lg bg-zinc-950 px-2 py-1.5">
-                <dt className="text-[10px] uppercase tracking-wide text-zinc-500">
-                  Aanwezig
-                </dt>
-                <dd className="font-semibold text-zinc-200">{rij.aanwezig}</dd>
-              </div>
-              <div className="rounded-lg bg-zinc-950 px-2 py-1.5">
-                <dt className="text-[10px] uppercase tracking-wide text-zinc-500">
-                  Poulept
-                </dt>
-                <dd className="font-semibold text-emerald-400">
-                  {formatPunten(rij.poulepunten)}
-                </dd>
-              </div>
-              <div className="rounded-lg bg-zinc-950 px-2 py-1.5">
-                <dt className="text-[10px] uppercase tracking-wide text-zinc-500">
-                  180&apos;s
-                </dt>
-                <dd className="font-semibold text-amber-400">
-                  {rij.aantal180s}
-                </dd>
-              </div>
-              <div className="rounded-lg bg-zinc-950 px-2 py-1.5">
-                <dt className="text-[10px] uppercase tracking-wide text-zinc-500">
-                  Legs winn.
-                </dt>
-                <dd className="font-semibold text-sky-300">
-                  {rij.winnaarsrondeLegsGewonnen}
-                  <span className="text-zinc-500">
-                    /{rij.winnaarsrondeLegsVerloren}
-                  </span>
-                </dd>
-              </div>
-              <div className="rounded-lg bg-zinc-950 px-2 py-1.5">
-                <dt className="text-[10px] uppercase tracking-wide text-zinc-500">
-                  Legs verl.
-                </dt>
-                <dd className="font-semibold text-violet-300">
-                  {rij.verliezersrondeLegsGewonnen}
-                  <span className="text-zinc-500">
-                    /{rij.verliezersrondeLegsVerloren}
-                  </span>
-                </dd>
-              </div>
-              <div className="rounded-lg bg-zinc-950 px-2 py-1.5">
-                <dt
-                  className="text-[10px] uppercase tracking-wide text-zinc-500"
-                  title={KOLOM_TITELS.hoogsteFinish}
-                >
-                  Uitgooi
-                </dt>
-                <dd className="font-semibold text-orange-400">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-base font-bold text-white">
+                  {ranglijstMedaille(rij.positie)} {rij.naam}
+                </p>
+                <p className="stat-number mt-1 text-2xl font-bold text-red-500">
+                  {formatPunten(rij.punten)}{" "}
+                  <span className="text-sm font-semibold text-zinc-400">punten</span>
+                </p>
+                <p className="mt-1 text-xs text-zinc-400">
+                  {rij.gewonnen} wins · {rij.aantal180s} × 180 · HF{" "}
                   {rij.hoogsteFinish > 0 ? rij.hoogsteFinish : "—"}
-                </dd>
+                </p>
               </div>
-            </dl>
-
-            {toonBestuurskolommen && rij.nieuwePunten > 0 && (
-              <p className="mt-2 text-[11px] text-zinc-500">
-                Waarvan {formatPunten(rij.nieuwePunten)} pt na de tussenstand
-              </p>
-            )}
-          </div>
+            </div>
+          </Link>
         ))}
       </div>
 
@@ -285,17 +231,22 @@ export default function StandingsTable({
               >
                 <td className="px-3 py-2 lg:px-4 lg:py-3">
                   <span
-                    className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold lg:h-8 lg:w-8 lg:text-sm ${
+                    className={`inline-flex h-7 min-w-7 items-center justify-center rounded-full px-1 text-xs font-bold lg:h-8 lg:text-sm ${
                       rij.positie <= 3
                         ? "bg-red-700 text-white"
                         : "bg-zinc-800 text-zinc-300"
                     }`}
                   >
-                    {rij.positie}
+                    {ranglijstMedaille(rij.positie)}
                   </span>
                 </td>
                 <td className="px-3 py-2 font-semibold text-white lg:px-4 lg:py-3">
-                  {rij.naam}
+                  <Link
+                    href={mijnPoulePad(rij.naam)}
+                    className="hover:text-red-300 hover:underline"
+                  >
+                    {rij.naam}
+                  </Link>
                   {highlightNaam === rij.naam && (
                     <span className="ml-1 text-xs text-red-400">(jij)</span>
                   )}

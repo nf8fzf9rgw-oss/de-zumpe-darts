@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import PlayerCard from "@/components/player/PlayerCard";
 import MatchCard from "@/components/player/MatchCard";
 import MobileScoreEntry from "@/components/player/MobileScoreEntry";
@@ -14,18 +15,26 @@ import {
   vindWedstrijdenVoorSpeler,
 } from "@/lib/player-utils";
 import type { SpelerWedstrijdInfo } from "@/lib/player-utils";
+import { mijnPoulePad } from "@/lib/wedstrijd-overzicht";
 
 export default function PlayerSearchBar() {
   const { leden, gasten, borden, updateWedstrijd } = useSpeelavond();
-  const [zoekterm, setZoekterm] = useState(() => laadOpgeslagenSpelerNaam());
-  const [geselecteerd, setGeselecteerd] = useState<string | null>(() => {
-    const opgeslagen = laadOpgeslagenSpelerNaam();
-    return opgeslagen || null;
-  });
+  const [zoekterm, setZoekterm] = useState("");
+  const [geselecteerd, setGeselecteerd] = useState<string | null>(null);
   const [openWedstrijd, setOpenWedstrijd] = useState<SpelerWedstrijdInfo | null>(
     null
   );
   const [toonSuggesties, setToonSuggesties] = useState(false);
+
+  useEffect(() => {
+    const opgeslagen = laadOpgeslagenSpelerNaam();
+    /* eslint-disable react-hooks/set-state-in-effect -- localStorage hydratie na mount */
+    if (opgeslagen) {
+      setZoekterm(opgeslagen);
+      setGeselecteerd(opgeslagen);
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
 
   const alleSpelers = useMemo(
     () => verzamelAlleSpelers(leden, gasten, borden),
@@ -50,7 +59,7 @@ export default function PlayerSearchBar() {
   };
 
   return (
-    <section className="relative rounded-2xl border border-red-900/30 bg-gradient-to-br from-red-950/30 to-zinc-950 p-4 shadow-xl lg:p-6">
+    <section className="relative rounded-2xl border border-zinc-800 bg-zinc-950 p-4 lg:p-6">
       <h2 className="text-lg font-bold text-white lg:text-xl">
         Vind mijn wedstrijden
       </h2>
@@ -106,6 +115,13 @@ export default function PlayerSearchBar() {
             highlight
           />
 
+          <Link
+            href={mijnPoulePad(geselecteerd)}
+            className="flex min-h-11 items-center justify-center rounded-xl bg-red-700 text-sm font-bold text-white hover:bg-red-600"
+          >
+            Open in Mijn Poule →
+          </Link>
+
           {wedstrijden.length > 0 ? (
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
@@ -118,11 +134,8 @@ export default function PlayerSearchBar() {
                   wedstrijd={wedstrijd}
                   bordNaam={bordNaam}
                   compact
-                  onOpen={
-                    !wedstrijd.gespeeld
-                      ? () => setOpenWedstrijd({ bordNaam, wedstrijd })
-                      : undefined
-                  }
+                  perspectiefNaam={geselecteerd}
+                  onOpen={() => setOpenWedstrijd({ bordNaam, wedstrijd })}
                 />
               ))}
             </div>
