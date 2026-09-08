@@ -193,6 +193,8 @@ export interface SpelerVanDeAvondScore {
   bonus180: number;
   bonusFinish: number;
   totaal: number;
+  aantal180s: number;
+  hoogsteFinish: number;
 }
 
 export interface GrafiekDataPunt {

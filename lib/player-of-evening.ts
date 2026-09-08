@@ -26,19 +26,29 @@ function verwerkWedstrijdAvond(
 
   if (s1) {
     s1.bonus180 += bereken180Bonus(wedstrijd.aantal180Speler1);
+    s1.aantal180s += wedstrijd.aantal180Speler1;
     if (wedstrijd.hoogsteFinishSpeler1) {
       s1.bonusFinish += berekenFinishBonus(
         wedstrijd.hoogsteFinishSpeler1,
         finishTabel
       );
+      s1.hoogsteFinish = Math.max(
+        s1.hoogsteFinish,
+        wedstrijd.hoogsteFinishSpeler1
+      );
     }
   }
   if (s2) {
     s2.bonus180 += bereken180Bonus(wedstrijd.aantal180Speler2);
+    s2.aantal180s += wedstrijd.aantal180Speler2;
     if (wedstrijd.hoogsteFinishSpeler2) {
       s2.bonusFinish += berekenFinishBonus(
         wedstrijd.hoogsteFinishSpeler2,
         finishTabel
+      );
+      s2.hoogsteFinish = Math.max(
+        s2.hoogsteFinish,
+        wedstrijd.hoogsteFinishSpeler2
       );
     }
   }
@@ -71,6 +81,8 @@ function leegScore(naam: string): SpelerVanDeAvondScore {
     bonus180: 0,
     bonusFinish: 0,
     totaal: 0,
+    aantal180s: 0,
+    hoogsteFinish: 0,
   };
 }
 

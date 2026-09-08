@@ -23,6 +23,7 @@ import {
   type WedstrijdUpdate,
 } from "@/lib/competition";
 import {
+  CLUB_LEDEN_DEFAULT,
   hernoemLid,
   laadLeden,
   verwijderLid,
@@ -30,6 +31,7 @@ import {
 } from "@/lib/leden";
 import { namenZijnGelijk } from "@/lib/namen";
 import { berekenSpelerVanDeAvond } from "@/lib/player-of-evening";
+import { wisOpgeslagenSpelerKoppeling } from "@/lib/player-utils";
 import { berekenClubRecords } from "@/lib/records";
 import { avondIsVol, pasAvondLimietToe } from "@/lib/avond-limiet";
 import {
@@ -208,7 +210,7 @@ export function SpeelavondProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [leden, setLeden] = useState<string[]>([]);
+  const [leden, setLeden] = useState<string[]>([...CLUB_LEDEN_DEFAULT]);
   const [aanwezigen, setAanwezigen] = useState<string[]>([]);
   const [gasten, setGasten] = useState<string[]>([]);
   const [gastNaam, setGastNaam] = useState("");
@@ -250,30 +252,38 @@ export function SpeelavondProvider({
   }, []);
 
   useEffect(() => {
-    const opgeslagen = laadSpeelavond();
-    const seizoen = laadActiefSeizoen();
     /* eslint-disable react-hooks/set-state-in-effect -- localStorage hydratie na client mount */
-    setLeden(migreerOfficieleSpelersnamen());
-    setSeizoenen(laadSeizoenen());
-    setActiefSeizoenState(seizoen);
-    if (opgeslagen) {
-      const state = syncState(opgeslagen);
-      setAanwezigen(state.aanwezigen);
-      setGasten(state.gasten);
-      setBorden(state.borden);
-      setLaatsteOpslag(state.laatsteOpslag);
-      setAanmeldToken(state.aanmeldToken);
-      if (state.seizoen) setActiefSeizoenState(state.seizoen);
-      setNotitiesState(state.notities);
-    }
-    setHistorie(laadHistorie());
-    setAanmeldBaseUrl(window.location.origin);
-    setIsGeladen(true);
-    if (consumeBordenMigratieWaarschuwing()) {
-      toast(
-        `Oude competitie gevonden — genereer opnieuw (max ${MAX_BORDEN_PER_AVOND} borden)`,
-        "info"
-      );
+    try {
+      const opgeslagen = laadSpeelavond();
+      const seizoen = laadActiefSeizoen();
+      try {
+        setLeden(migreerOfficieleSpelersnamen());
+      } catch {
+        setLeden(laadLeden());
+      }
+      setSeizoenen(laadSeizoenen());
+      setActiefSeizoenState(seizoen);
+      if (opgeslagen) {
+        const state = syncState(opgeslagen);
+        setAanwezigen(state.aanwezigen);
+        setGasten(state.gasten);
+        setBorden(state.borden);
+        setLaatsteOpslag(state.laatsteOpslag);
+        setAanmeldToken(state.aanmeldToken);
+        if (state.seizoen) setActiefSeizoenState(state.seizoen);
+        setNotitiesState(state.notities);
+      }
+      setHistorie(laadHistorie());
+      setAanmeldBaseUrl(window.location.origin);
+      wisOpgeslagenSpelerKoppeling();
+      if (consumeBordenMigratieWaarschuwing()) {
+        toast(
+          `Oude competitie gevonden — genereer opnieuw (max ${MAX_BORDEN_PER_AVOND} borden)`,
+          "info"
+        );
+      }
+    } finally {
+      setIsGeladen(true);
     }
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);

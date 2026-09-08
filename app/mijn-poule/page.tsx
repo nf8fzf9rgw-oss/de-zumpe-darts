@@ -51,6 +51,7 @@ function MijnPouleInhoud() {
     seizoenHistorie,
     actiefSeizoen,
     laatsteOpslag,
+    stand,
   } = useSpeelavond();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -65,8 +66,14 @@ function MijnPouleInhoud() {
   );
 
   const alleSpelers = useMemo(
-    () => verzamelAlleSpelers(leden, gasten, borden),
-    [leden, gasten, borden]
+    () =>
+      verzamelAlleSpelers(
+        leden,
+        gasten,
+        borden,
+        stand.map((rij) => rij.naam)
+      ),
+    [leden, gasten, borden, stand]
   );
 
   const suggesties = useMemo(
@@ -135,9 +142,11 @@ function MijnPouleInhoud() {
     <div className="space-y-4 md:space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-white lg:text-2xl">Mijn Poule</h2>
+          <h2 className="text-xl font-bold text-white lg:text-2xl">
+            Spelerprofiel
+          </h2>
           <p className="text-sm text-zinc-400">
-            Klik op een speler en zie direct bord, poule en wedstrijden.
+            Zoek een speler en zie bord, poule en wedstrijden.
           </p>
         </div>
         <Link
@@ -163,7 +172,7 @@ function MijnPouleInhoud() {
             }}
             onFocus={() => setToonSuggesties(true)}
             onBlur={() => setTimeout(() => setToonSuggesties(false), 150)}
-            placeholder="Typ je naam..."
+            placeholder="🔍 Zoek speler..."
             className="min-h-12 w-full rounded-xl border border-zinc-700 bg-black px-4 text-white focus:border-red-600 focus:outline-none"
             autoComplete="off"
           />

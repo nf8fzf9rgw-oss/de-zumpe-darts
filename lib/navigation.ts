@@ -9,80 +9,47 @@ export interface NavItem {
 
 /** Mobiele bottom nav — speler-first */
 export const MOBILE_NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "Home", shortLabel: "Home", icon: "🏠", mobile: true },
+  { href: "/", label: "Home", shortLabel: "Home", icon: "⌂", mobile: true },
   {
-    href: "/mijn-poule",
-    label: "Mijn Poule",
-    shortLabel: "Mijn Poule",
+    href: "/competitie",
+    label: "Wedstrijden",
+    shortLabel: "Wedstrijden",
     icon: "🎯",
     mobile: true,
   },
   {
     href: "/stand",
-    label: "Ranglijst",
-    shortLabel: "Ranglijst",
+    label: "Stand",
+    shortLabel: "Stand",
     icon: "🏆",
     mobile: true,
   },
   {
-    href: "/statistieken",
-    label: "Statistieken",
-    shortLabel: "Statistieken",
-    icon: "📊",
+    href: "/leden",
+    label: "Spelers",
+    shortLabel: "Spelers",
+    icon: "👤",
     mobile: true,
   },
   {
     href: "/instellingen",
     label: "Meer",
     shortLabel: "Meer",
-    icon: "⚙",
+    icon: "☰",
     mobile: true,
   },
 ];
 
-/** Desktop sidebar — zichtbaar voor alle gebruikers */
-export const PLAYER_NAV_ITEMS: NavItem[] = [
-  ...MOBILE_NAV_ITEMS.filter((i) => i.href !== "/instellingen"),
-  {
-    href: "/competitie",
-    label: "Competitie",
-    shortLabel: "Competitie",
-    icon: "🎯",
-  },
-  {
-    href: "/hall-of-fame",
-    label: "Hall of Fame",
-    shortLabel: "HoF",
-    icon: "🥇",
-  },
-  {
-    href: "/speelavonden",
-    label: "Speelavonden",
-    shortLabel: "Avonden",
-    icon: "📅",
-  },
-  {
-    href: "/instellingen",
-    label: "Meer",
-    shortLabel: "Meer",
-    icon: "⚙",
-  },
-];
+/** Desktop sidebar — dezelfde hoofdnavigatie als mobiel */
+export const PLAYER_NAV_ITEMS: NavItem[] = MOBILE_NAV_ITEMS;
 
-/** Extra desktop items — alleen bestuur */
+/** Extra desktop items — alleen wedstrijdleiding */
 export const BESTUUR_NAV_ITEMS: NavItem[] = [
   {
     href: "/beheer",
     label: "Beheer",
     shortLabel: "Beheer",
     icon: "🛠",
-    bestuurOnly: true,
-  },
-  {
-    href: "/leden",
-    label: "Leden",
-    shortLabel: "Leden",
-    icon: "👥",
     bestuurOnly: true,
   },
 ];

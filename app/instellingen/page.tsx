@@ -85,18 +85,18 @@ export default function InstellingenPage() {
         <div>
           <h2 className="text-2xl font-bold text-white">Meer</h2>
           <p className="mt-2 text-sm text-zinc-400">
-            Instellingen, navigatie en account.
+            Extra pagina&apos;s, delen en instellingen voor wedstrijdleiding.
           </p>
         </div>
         <SeasonSelector />
       </div>
 
       <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 lg:p-6">
-        <h3 className="text-lg font-bold text-white">Account</h3>
+        <h3 className="text-lg font-bold text-white">Wedstrijdleiding</h3>
         <p className="mt-1 text-sm text-zinc-400">
           {isBestuur
-            ? "Je bent ingelogd als bestuur met volledige beheertoegang."
-            : "Log in als bestuur voor wedstrijdleiding en beheer."}
+            ? "Je werkt nu als wedstrijdleiding met volledige beheertoegang."
+            : "Bezoekers gebruiken de site zonder account. Wedstrijdleiding opent extra beheer."}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {isBestuur ? (

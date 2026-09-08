@@ -7,10 +7,10 @@ export default function StandPage() {
     <div className="space-y-4 md:space-y-6 lg:space-y-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white lg:text-3xl">Ranglijst</h2>
+          <h2 className="text-xl font-bold text-white lg:text-3xl">Stand</h2>
           <p className="mt-2 text-sm text-zinc-400 lg:text-base">
-            Seizoensstand met punten, wins, 180&apos;s en hoogste finish. Tik op een
-            naam voor het spelerprofiel.
+            Ranglijst met punten, aanwezigheid, 180&apos;s en hoogste finish.
+            Tik op een naam voor het spelerprofiel.
           </p>
         </div>
         <SeasonSelector />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import BestuurLoginModal from "@/components/BestuurLoginModal";
 import { useAuth } from "@/context/AuthContext";
 import { useSpeelavond } from "@/context/SpeelavondContext";
@@ -12,12 +13,7 @@ export default function Header() {
   const { isBestuur, logoutBestuur } = useAuth();
   const [loginOpen, setLoginOpen] = useState(false);
   const avondStatus = avondWeergaveStatus(borden);
-
-  const vandaag = new Date().toLocaleDateString("nl-NL", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  const isLive = avondStatus.key === "live";
 
   return (
     <>
@@ -28,20 +24,29 @@ export default function Header() {
               <h1 className="truncate text-base font-bold tracking-tight text-white md:text-lg">
                 🎯 De Zumpe
               </h1>
-              <p className="hidden text-[11px] font-semibold uppercase tracking-[0.18em] text-red-500 sm:block">
-                Vrijdagavond Competitie
+              <p className="hidden text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400 sm:block">
+                Vrijdagavondcompetitie
               </p>
             </div>
             <p className="mt-0.5 truncate text-[11px] capitalize text-zinc-400 md:text-xs">
-              {speelDatumLabel || vandaag}
+              {speelDatumLabel || "Vrijdagavondcompetitie"}
               <span className="mx-1.5 text-zinc-700">·</span>
               {dashboardStats.totaalSpelers} spelers
-              <span className="mx-1.5 text-zinc-700">·</span>
-              {avondStatus.icoon} {avondStatus.label}
             </p>
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/competitie"
+              className={`inline-flex min-h-10 items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide ${
+                isLive
+                  ? "live-pulse bg-red-700 text-white"
+                  : "border border-zinc-700 bg-zinc-900 text-zinc-300"
+              }`}
+            >
+              {avondStatus.icoon} {avondStatus.label}
+            </Link>
+
             <div className="hidden text-right sm:block">
               <p className="text-[10px] uppercase tracking-wider text-zinc-500">
                 {isBestuur ? "Wedstrijdleiding" : "Laatste opslag"}
@@ -63,7 +68,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => setLoginOpen(true)}
-                className="min-h-10 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-500 sm:px-4"
+                className="min-h-10 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-900 sm:px-4"
               >
                 Wedstrijdleiding
               </button>

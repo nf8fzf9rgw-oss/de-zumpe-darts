@@ -219,29 +219,20 @@ export default function PlayerProfilePanel() {
 
             <div className="mt-6 grid grid-cols-2 gap-3">
               {[
-                { label: "Punten totaal", waarde: formatPunten(profiel.punten) },
+                { label: "Positie", waarde: profiel.positie ? `#${profiel.positie}` : "—" },
+                { label: "Punten", waarde: formatPunten(profiel.punten) },
+                { label: "Wedstrijden", waarde: profiel.gespeeldeWedstrijden },
                 {
-                  label: "Historische punten",
-                  waarde: formatPunten(profiel.historischePunten),
+                  label: "Winst / verlies",
+                  waarde: `${profiel.overwinningen} / ${profiel.verliezen}`,
                 },
-                { label: "Winst %", waarde: `${profiel.winpercentage}%` },
+                {
+                  label: "Legs",
+                  waarde: `${profiel.legsVoor} – ${profiel.legsTegen}`,
+                },
                 { label: "Aantal 180", waarde: profiel.aantal180s },
-                { label: "Hoogste uitgooi", waarde: profiel.hoogsteFinish || "—" },
-                { label: "Aanwezig", waarde: `${profiel.aanwezigheid}x` },
-                {
-                  label: "Aantal punten in poule",
-                  waarde: formatPunten(profiel.poulepunten),
-                },
-                {
-                  label: "Legs winnaarsronde (gew./verl.)",
-                  waarde: `${profiel.winnaarsrondeLegsGewonnen} / ${profiel.winnaarsrondeLegsVerloren}`,
-                },
-                {
-                  label: "Legs verliezersronde (gew./verl.)",
-                  waarde: `${profiel.verliezersrondeLegsGewonnen} / ${profiel.verliezersrondeLegsVerloren}`,
-                },
-                { label: "Avondtitels", waarde: profiel.spelerVanDeAvondTitels },
-                { label: "Overwinningen", waarde: profiel.overwinningen },
+                { label: "Hoogste finish", waarde: profiel.hoogsteFinish || "—" },
+                { label: "Aanwezigheid", waarde: `${profiel.aanwezigheid}x` },
               ].map((item) => (
                 <div
                   key={item.label}

@@ -49,12 +49,12 @@ export default function Sidebar() {
   return (
     <aside className="no-print fixed left-0 top-0 z-40 hidden h-screen w-64 flex-col border-r border-zinc-800 bg-zinc-950 lg:flex">
       <div className="border-b border-zinc-800 px-5 py-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-red-500">
-          🎯 De Zumpe
-        </p>
-        <h1 className="mt-1 text-lg font-bold leading-tight text-white">
-          Vrijdagavond Competitie
-        </h1>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
+            🎯 De Zumpe
+          </p>
+          <h1 className="mt-1 text-lg font-bold leading-tight text-white">
+            Vrijdagavondcompetitie
+          </h1>
         {isBestuur && (
           <span className="mt-2 inline-block rounded-full border border-red-800/70 bg-red-950/50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-300">
             Wedstrijdleiding

@@ -66,13 +66,7 @@ export function formatDatumKort(datum: string): string {
 }
 
 export function formatDatumAlleen(datum: string): string {
-  if (!datum)
-    return new Date().toLocaleDateString("nl-NL", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+  if (!datum) return "";
   const parsed = new Date(datum);
   if (Number.isNaN(parsed.getTime())) return datum;
   return parsed.toLocaleDateString("nl-NL", {

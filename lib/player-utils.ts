@@ -12,10 +12,13 @@ export interface SpelerWedstrijdInfo {
 export function verzamelAlleSpelers(
   leden: string[],
   gasten: string[],
-  borden: Bord[]
+  borden: Bord[],
+  extraNamen: string[] = []
 ): string[] {
   const set = new Set<string>();
-  [...leden, ...gasten].forEach((naam) => set.add(canoniekeSpelerNaam(naam)));
+  [...leden, ...gasten, ...extraNamen].forEach((naam) =>
+    set.add(canoniekeSpelerNaam(naam))
+  );
   borden.forEach((bord) =>
     bord.spelers.forEach((s) => set.add(canoniekeSpelerNaam(s)))
   );
@@ -116,18 +119,34 @@ export function komendeWedstrijden(
  * localStorage of een opgeslagen naam mag nooit automatisch een speler koppelen.
  * Alleen een expliciete URL-parameter telt als bewuste keuze.
  */
-export function initiëleSpelerSelectie(urlSpeler?: string | null): string {
+export function initiëleSpelerSelectie(
+  urlSpeler?: string | null,
+  _opgeslagenNaam?: string | null
+): string {
+  void _opgeslagenNaam;
   return urlSpeler?.trim() ?? "";
+}
+
+export function wisOpgeslagenSpelerKoppeling(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(SPELER_NAAM_KEY);
+    window.sessionStorage.removeItem(SPELER_NAAM_KEY);
+  } catch {
+    /* oude koppeling was niet leesbaar */
+  }
 }
 
 /** Bewust altijd leeg: bezoekers starten zonder gekoppelde speler. */
 export function laadOpgeslagenSpelerNaam(): string {
+  wisOpgeslagenSpelerKoppeling();
   return "";
 }
 
 /** Geen persistente spelerskoppeling; selectie blijft sessie- en URL-gebonden. */
 export function slaSpelerNaamOp(naam: string): void {
   void naam;
+  wisOpgeslagenSpelerKoppeling();
 }
 
 export function filterSpelersOpZoekterm(
@@ -135,8 +154,8 @@ export function filterSpelersOpZoekterm(
   zoekterm: string
 ): string[] {
   const q = zoekterm.trim().toLowerCase();
-  if (!q) return spelers.slice(0, 8);
+  if (!q) return [];
   return spelers
     .filter((s) => s.toLowerCase().includes(q))
-    .slice(0, 8);
+    .slice(0, 12);
 }

@@ -7,11 +7,9 @@ export default function LedenPage() {
   return (
     <div className="space-y-4 md:space-y-6 lg:space-y-8">
       <div>
-        <h2 className="text-xl font-bold text-white lg:text-3xl">
-          Leden & Gasten
-        </h2>
+        <h2 className="text-xl font-bold text-white lg:text-3xl">Spelers</h2>
         <p className="mt-2 text-sm text-zinc-400 lg:text-base">
-          Bekijk spelerprofielen en beheer leden (bestuur).
+          Publieke spelerprofielen van de competitie. Geen account nodig.
         </p>
       </div>
 

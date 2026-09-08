@@ -1,4 +1,6 @@
 import QuickActions from "@/components/QuickActions";
+import LaatsteUitslagen from "@/components/LaatsteUitslagen";
+import LiveBordOverzicht from "@/components/LiveBordOverzicht";
 import WedstrijdSchema from "@/components/WedstrijdSchema";
 import DartboardAccent from "@/components/ui/DartboardAccent";
 
@@ -10,10 +12,10 @@ export default function CompetitiePage() {
           <DartboardAccent size="md" />
           <div>
             <h2 className="text-xl font-bold text-white lg:text-3xl">
-              Competitie
+              Wedstrijden
             </h2>
             <p className="mt-1 text-sm text-zinc-400 lg:text-base">
-              Wie speelt op welk bord, en welke wedstrijden er nog openstaan.
+              LIVE-overzicht per bord, plus het volledige schema.
             </p>
           </div>
         </div>
@@ -26,6 +28,8 @@ export default function CompetitiePage() {
         <QuickActions />
       </div>
 
+      <LiveBordOverzicht />
+      <LaatsteUitslagen />
       <WedstrijdSchema />
     </div>
   );

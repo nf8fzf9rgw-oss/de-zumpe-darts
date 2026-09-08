@@ -1,5 +1,11 @@
-import type { Speelavond, SpelerStand } from "@/types/competition";
+import type { Bord, Speelavond, SpelerStand } from "@/types/competition";
 import { formatPunten } from "@/lib/format";
+import {
+  laatsteUitslagenPerBord,
+  liveWedstrijdenPerBord,
+  uitslagRegel,
+} from "@/lib/live";
+import { avondWeergaveStatus } from "@/lib/wedstrijd-overzicht";
 
 export function maakRanglijstBericht(
   stand: SpelerStand[],
@@ -23,26 +29,74 @@ export function maakSpelerVanDeAvondBericht(
   return `⭐ Speler van de avond — De Zumpe\n${seizoenLabel}\n\n${speler} is vanavond de beste speler! 🎯🏆`;
 }
 
-export function maakUitslagBericht(avond: Speelavond): string {
-  const datum = new Date(avond.datum).toLocaleDateString("nl-NL", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-  const spelers = avond.aanwezigen.length + avond.gasten.length;
-  const wedstrijden = avond.borden.reduce((t, b) => t + b.wedstrijden.length, 0);
-  const gespeeld = avond.borden.reduce(
-    (t, b) => t + b.wedstrijden.filter((w) => w.gespeeld).length,
-    0
-  );
+export function uitslagenWebsiteUrl(origin?: string): string {
+  const basis = (origin ?? "").replace(/\/$/, "");
+  return basis ? `${basis}/competitie` : "/competitie";
+}
 
-  let bericht = `🎯 Uitslag De Zumpe — ${datum}\n\n`;
-  bericht += `👥 ${spelers} spelers · ${avond.borden.length} borden\n`;
-  bericht += `🏆 ${gespeeld}/${wedstrijden} wedstrijden gespeeld\n`;
-  if (avond.spelerVanDeAvond) {
-    bericht += `\n⭐ Speler van de avond: ${avond.spelerVanDeAvond}`;
+export function maakLaatsteUitslagenBericht(
+  borden: Bord[],
+  opties: {
+    websiteUrl?: string;
+    spelerVanDeAvond?: string | null;
+    nu?: Date;
+  } = {}
+): string {
+  const avondStatus = avondWeergaveStatus(borden, opties.nu);
+  const liveKaarten = liveWedstrijdenPerBord(borden);
+  const uitslagen = laatsteUitslagenPerBord(borden);
+  const regels: string[] = ["🎯 DE ZUMPE", ""];
+
+  if (avondStatus.key === "live") {
+    regels.push("🔴 LIVE — VRIJDAGAVOND", "");
+  } else if (avondStatus.key === "afgerond") {
+    regels.push("🟢 SPEELAVOND AFGEROND", "");
   }
-  return bericht;
+
+  if (liveKaarten.length > 0) {
+    regels.push("🔴 LIVE");
+    liveKaarten.forEach((kaart) => {
+      if (!kaart.wedstrijd) return;
+      regels.push(`🎯 ${kaart.bord.naam}`);
+      regels.push(
+        `${kaart.wedstrijd.speler1} ${kaart.wedstrijd.score1} - ${kaart.wedstrijd.score2} ${kaart.wedstrijd.speler2}`
+      );
+      regels.push("LIVE");
+      regels.push("");
+    });
+  }
+
+  if (uitslagen.length > 0) {
+    regels.push("🏆 Laatste uitslagen", "");
+    uitslagen.forEach((uitslag) => {
+      regels.push(`🎯 ${uitslag.bordNaam}`);
+      regels.push(uitslagRegel(uitslag.wedstrijd).replace(" – ", " - "));
+      regels.push("");
+    });
+  }
+
+  if (opties.spelerVanDeAvond) {
+    regels.push(`🏆 Speler van de avond: ${opties.spelerVanDeAvond}`, "");
+  }
+
+  if (uitslagen.length === 0 && liveKaarten.length === 0) {
+    regels.push("Nog geen uitslagen vanavond.", "");
+  }
+
+  regels.push("Bekijk alle uitslagen:");
+  regels.push(uitslagenWebsiteUrl(opties.websiteUrl));
+
+  return regels.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+export function maakUitslagBericht(
+  avond: Speelavond,
+  websiteUrl?: string
+): string {
+  return maakLaatsteUitslagenBericht(avond.borden, {
+    websiteUrl,
+    spelerVanDeAvond: avond.spelerVanDeAvond,
+  });
 }
 
 export function deelViaWhatsApp(bericht: string): void {

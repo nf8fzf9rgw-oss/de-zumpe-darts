@@ -35,7 +35,7 @@ describe("wedstrijdWeergaveStatus", () => {
   it("toont nog te spelen voor een open wedstrijd", () => {
     const status = wedstrijdWeergaveStatus(maakWedstrijd("Rocco", "Ronnie"));
     expect(status.key).toBe("nog_te_spelen");
-    expect(status.label).toBe("Nog te spelen");
+    expect(status.label).toBe("WACHT");
   });
 
   it("toont bezig wanneer er al een score is maar nog niet gespeeld", () => {
@@ -64,7 +64,7 @@ describe("wedstrijdWeergaveStatus", () => {
       "verloren"
     );
     expect(wedstrijdWeergaveStatus(wedstrijd).key).toBe("gespeeld");
-    expect(wedstrijdWeergaveStatus(wedstrijd).label).toBe("Afgerond");
+    expect(wedstrijdWeergaveStatus(wedstrijd).label).toBe("GEREED");
   });
 });
 
@@ -169,15 +169,18 @@ describe("avond- en prestatieweergave", () => {
   it("toont avondstatus op basis van wedstrijden", () => {
     const openWedstrijd = maakWedstrijd("Jan", "Piet");
     const pouleBord = bord("Bord 1", ["Jan", "Piet"], [openWedstrijd]);
+    const dinsdag = new Date("2026-09-08T12:00:00");
+    const vrijdag = new Date("2026-09-11T12:00:00");
 
-    expect(avondWeergaveStatus([]).key).toBe("niet_gestart");
-    expect(avondWeergaveStatus([pouleBord]).key).toBe("actief");
+    expect(avondWeergaveStatus([], dinsdag).key).toBe("geen_speelavond");
+    expect(avondWeergaveStatus([], vrijdag).key).toBe("wacht_op_start");
+    expect(avondWeergaveStatus([pouleBord]).key).toBe("live");
 
     const bezig: Bord = {
       ...pouleBord,
       wedstrijden: [{ ...openWedstrijd, score1: 1 }],
     };
-    expect(avondWeergaveStatus([bezig]).key).toBe("bezig");
+    expect(avondWeergaveStatus([bezig]).key).toBe("live");
 
     const afgerond: Bord = {
       ...pouleBord,

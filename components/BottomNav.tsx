@@ -25,7 +25,7 @@ export default function BottomNav() {
               }`}
             >
               <span className="text-xl">{item.icon}</span>
-              <span className="truncate text-[9px] font-semibold sm:text-[10px]">
+              <span className="truncate text-[10px] font-semibold">
                 {item.shortLabel}
               </span>
             </Link>

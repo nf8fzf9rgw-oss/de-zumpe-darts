@@ -103,7 +103,7 @@ export function wedstrijdWeergaveStatus(
     }
     return {
       key: "gespeeld",
-      label: "Afgerond",
+      label: "GEREED",
       icoon: "🟢",
       badgeClass: "bg-zinc-800 text-zinc-300",
     };
@@ -112,7 +112,7 @@ export function wedstrijdWeergaveStatus(
   if (wedstrijdIsBezig(wedstrijd)) {
     return {
       key: "bezig",
-      label: "Bezig",
+      label: "LIVE",
       icoon: "🔴",
       badgeClass: "bg-red-900/50 text-red-200",
     };
@@ -120,8 +120,8 @@ export function wedstrijdWeergaveStatus(
 
   return {
     key: "nog_te_spelen",
-    label: "Nog te spelen",
-    icoon: "🟡",
+    label: "WACHT",
+    icoon: "⚪",
     badgeClass: "bg-zinc-800 text-zinc-300",
   };
 }
@@ -150,9 +150,9 @@ export function wedstrijdPrestatieRegels(wedstrijd: Wedstrijd): string[] {
 }
 
 export type AvondWeergaveStatus =
-  | "niet_gestart"
-  | "actief"
-  | "bezig"
+  | "geen_speelavond"
+  | "wacht_op_start"
+  | "live"
   | "afgerond";
 
 export interface AvondStatusWeergave {
@@ -161,24 +161,27 @@ export interface AvondStatusWeergave {
   icoon: string;
 }
 
-export function avondWeergaveStatus(borden: Bord[]): AvondStatusWeergave {
+export function isVandaagVrijdag(nu = new Date()): boolean {
+  return nu.getDay() === 5;
+}
+
+export function avondWeergaveStatus(
+  borden: Bord[],
+  nu = new Date()
+): AvondStatusWeergave {
   if (borden.length === 0) {
-    return { key: "niet_gestart", label: "Nog niet gestart", icoon: "⚪" };
+    if (isVandaagVrijdag(nu)) {
+      return { key: "wacht_op_start", label: "WACHT OP START", icoon: "🟡" };
+    }
+    return { key: "geen_speelavond", label: "GEEN SPEELAVOND", icoon: "⚪" };
   }
 
   const wedstrijden = borden.flatMap((bord) => bord.wedstrijden);
-  if (wedstrijden.length === 0) {
-    return { key: "actief", label: "Avond actief", icoon: "🟡" };
-  }
-
   const gespeeld = wedstrijden.filter((wedstrijd) => wedstrijd.gespeeld).length;
-  if (gespeeld === wedstrijden.length) {
-    return { key: "afgerond", label: "Avond afgerond", icoon: "🟢" };
+  if (wedstrijden.length > 0 && gespeeld === wedstrijden.length) {
+    return { key: "afgerond", label: "AFGEROND", icoon: "🟢" };
   }
-  if (wedstrijden.some((wedstrijd) => wedstrijdIsBezig(wedstrijd))) {
-    return { key: "bezig", label: "Wedstrijden bezig", icoon: "🔴" };
-  }
-  return { key: "actief", label: "Avond actief", icoon: "🟡" };
+  return { key: "live", label: "LIVE", icoon: "🔴" };
 }
 
 export function groepeerBordenInRondes(borden: Bord[]): BordRondes {
@@ -190,7 +193,9 @@ export function groepeerBordenInRondes(borden: Bord[]): BordRondes {
 }
 
 export function actieveBordNamen(borden: Bord[]): string[] {
-  return borden.map((bord) => bord.naam);
+  return borden
+    .filter((bord) => bord.spelers.length > 0 || bord.wedstrijden.length > 0)
+    .map((bord) => bord.naam);
 }
 
 function spelerMatchtQuery(naam: string, query: string): boolean {

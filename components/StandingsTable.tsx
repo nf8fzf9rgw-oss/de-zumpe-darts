@@ -116,21 +116,17 @@ export default function StandingsTable({
               highlightNaam === rij.naam ? "border-red-700" : ""
             } ${rij.positie <= 3 ? "bg-zinc-950" : ""}`}
           >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate text-base font-bold text-white">
-                  {ranglijstMedaille(rij.positie)} {rij.naam}
-                </p>
-                <p className="stat-number mt-1 text-2xl font-bold text-red-500">
-                  {formatPunten(rij.punten)}{" "}
-                  <span className="text-sm font-semibold text-zinc-400">punten</span>
-                </p>
-                <p className="mt-1 text-xs text-zinc-400">
-                  {rij.gewonnen} wins · {rij.aantal180s} × 180 · HF{" "}
-                  {rij.hoogsteFinish > 0 ? rij.hoogsteFinish : "—"}
-                </p>
-              </div>
-            </div>
+            <p className="truncate text-base font-bold text-white">
+              #{rij.positie} {rij.naam}
+            </p>
+            <p className="stat-number mt-1 text-2xl font-bold text-red-500">
+              {formatPunten(rij.punten)}{" "}
+              <span className="text-sm font-semibold text-zinc-400">punten</span>
+            </p>
+            <p className="mt-1 text-xs text-zinc-400">
+              {rij.aanwezig} aanwezig · {rij.aantal180s} × 180 · HF{" "}
+              {rij.hoogsteFinish > 0 ? rij.hoogsteFinish : "—"}
+            </p>
           </Link>
         ))}
       </div>

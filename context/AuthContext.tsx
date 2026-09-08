@@ -51,11 +51,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isGeladen, setIsGeladen] = useState(false);
 
   useEffect(() => {
-    const state = laadAuthState();
-    /* eslint-disable react-hooks/set-state-in-effect -- localStorage hydratie na client mount */
-    setRol(state.rol);
-    setIsGeladen(true);
-    /* eslint-enable react-hooks/set-state-in-effect */
+    try {
+      const state = laadAuthState();
+      /* eslint-disable react-hooks/set-state-in-effect -- localStorage hydratie na client mount */
+      setRol(state.rol);
+    } finally {
+      setIsGeladen(true);
+      /* eslint-enable react-hooks/set-state-in-effect */
+    }
   }, []);
 
   const loginBestuur = useCallback((code: string): boolean => {

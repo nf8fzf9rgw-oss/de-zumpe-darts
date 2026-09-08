@@ -3,6 +3,7 @@ import {
   initiëleSpelerSelectie,
   laadOpgeslagenSpelerNaam,
   slaSpelerNaamOp,
+  filterSpelersOpZoekterm,
 } from "@/lib/player-utils";
 import { CLUB_LEDEN_DEFAULT } from "@/lib/leden";
 
@@ -20,6 +21,7 @@ describe("initiëleSpelerSelectie", () => {
     expect(CLUB_LEDEN_DEFAULT).toContain(ROCCO);
     expect(initiëleSpelerSelectie(undefined)).toBe("");
     expect(initiëleSpelerSelectie("")).toBe("");
+    expect(filterSpelersOpZoekterm([...CLUB_LEDEN_DEFAULT], "")).toEqual([]);
   });
 
   it("selecteert Rocco wel bij een expliciete URL-keuze", () => {
@@ -29,6 +31,14 @@ describe("initiëleSpelerSelectie", () => {
 
   it("selecteert een andere speler bij een expliciete URL-keuze", () => {
     expect(initiëleSpelerSelectie(EDDY)).toBe(EDDY);
+  });
+
+  it("vindt Rocco alleen wanneer er bewust gezocht wordt", () => {
+    const treffers = filterSpelersOpZoekterm([...CLUB_LEDEN_DEFAULT], "Rocco");
+    expect(treffers).toEqual([ROCCO]);
+    expect(filterSpelersOpZoekterm([...CLUB_LEDEN_DEFAULT], "Eddy")).toEqual([
+      EDDY,
+    ]);
   });
 
   it("valt bij herladen niet terug op een opgeslagen standaardspeler", () => {

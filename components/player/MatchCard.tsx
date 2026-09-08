@@ -81,11 +81,19 @@ export default function MatchCard({
       </div>
 
       {compact ? (
-        <p className="mt-1.5 font-semibold">
-          {renderNaam(wedstrijd.speler1)}
-          <span className="mx-1.5 font-normal text-zinc-500">vs</span>
-          {renderNaam(wedstrijd.speler2)}
-        </p>
+        <div className="mt-2">
+          <p className="font-semibold">
+            {renderNaam(wedstrijd.speler1)}
+          </p>
+          <p
+            className={`stat-number my-1 text-2xl font-bold ${
+              status.key === "bezig" ? "text-red-500" : "text-white"
+            }`}
+          >
+            {wedstrijd.score1} — {wedstrijd.score2}
+          </p>
+          <p className="font-semibold">{renderNaam(wedstrijd.speler2)}</p>
+        </div>
       ) : (
         <div className="mt-2 space-y-0.5">
           {renderNaam(wedstrijd.speler1, true)}
@@ -97,16 +105,6 @@ export default function MatchCard({
       )}
 
       <p className="mt-1 text-xs text-zinc-500">{bordNaam}</p>
-
-      {uitslag && compact && (
-        <p
-          className={`mt-2 text-sm font-bold ${
-            status.key === "gewonnen" ? "text-red-400" : "text-zinc-300"
-          }`}
-        >
-          {uitslag}
-        </p>
-      )}
 
       {uitslag && !compact && (
         <>
