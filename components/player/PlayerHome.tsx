@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import MatchCard from "@/components/player/MatchCard";
 import PlayerSearchBar from "@/components/player/PlayerSearchBar";
@@ -11,10 +10,7 @@ import { useSpeelavond } from "@/context/SpeelavondContext";
 import { formatPunten, ranglijstMedaille } from "@/lib/format";
 import { mijnPoulePad } from "@/lib/wedstrijd-overzicht";
 import { berekenAvondHighlights } from "@/lib/player-of-evening";
-import {
-  komendeWedstrijden,
-  laadOpgeslagenSpelerNaam,
-} from "@/lib/player-utils";
+import { komendeWedstrijden } from "@/lib/player-utils";
 
 export default function PlayerHome() {
   const {
@@ -27,15 +23,7 @@ export default function PlayerHome() {
     borden,
   } = useSpeelavond();
 
-  const [opgeslagenSpeler, setOpgeslagenSpeler] = useState("");
-
-  useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect -- localStorage hydratie na mount */
-    setOpgeslagenSpeler(laadOpgeslagenSpelerNaam());
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, []);
-
-  const komende = komendeWedstrijden(borden, opgeslagenSpeler || null, 5);
+  const komende = komendeWedstrijden(borden, null, 5);
   const highlights = berekenAvondHighlights(borden);
   const topStand = stand.slice(0, 5);
 

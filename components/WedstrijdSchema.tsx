@@ -1,11 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import BordSchemaKaart from "@/components/BordSchemaKaart";
 import { useSpeelavond } from "@/context/SpeelavondContext";
-import {
-  laadOpgeslagenSpelerNaam,
-} from "@/lib/player-utils";
 import {
   actieveBordNamen,
   filterBordenVoorSchema,
@@ -23,26 +20,12 @@ export default function WedstrijdSchema({
   startBord = "",
 }: WedstrijdSchemaProps) {
   const { borden } = useSpeelavond();
-  const [eigenNaam, setEigenNaam] = useState("");
+  const eigenNaam = startSpeler.trim();
   const [alleenMijnWedstrijden, setAlleenMijnWedstrijden] = useState(false);
   const [bordFilter, setBordFilter] = useState<string | null>(
     startBord || null
   );
   const [zoekterm, setZoekterm] = useState(startSpeler);
-
-  useEffect(() => {
-    const opgeslagen = laadOpgeslagenSpelerNaam();
-    /* eslint-disable react-hooks/set-state-in-effect -- localStorage hydratie na mount */
-    setEigenNaam(opgeslagen);
-    if (
-      startSpeler &&
-      opgeslagen &&
-      startSpeler.toLowerCase() === opgeslagen.toLowerCase()
-    ) {
-      setAlleenMijnWedstrijden(true);
-    }
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, [startSpeler]);
 
   const bordNamen = useMemo(() => actieveBordNamen(borden), [borden]);
 

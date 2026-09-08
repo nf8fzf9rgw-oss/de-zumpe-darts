@@ -16,9 +16,8 @@ import { berekenSpelerProfiel } from "@/lib/standings";
 import {
   berekenBordStand,
   filterSpelersOpZoekterm,
-  laadOpgeslagenSpelerNaam,
+  initiëleSpelerSelectie,
   pouleBordVoorSpeler,
-  slaSpelerNaamOp,
   verzamelAlleSpelers,
   vindBordenVoorSpeler,
   vindWedstrijdenVoorSpeler,
@@ -76,26 +75,16 @@ function MijnPouleInhoud() {
   );
 
   useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect -- localStorage hydratie na mount */
-    setEigenNaam(laadOpgeslagenSpelerNaam());
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, []);
-
-  useEffect(() => {
-    const opgeslagen = laadOpgeslagenSpelerNaam();
+    const startNaam = initiëleSpelerSelectie(spelerParam);
     /* eslint-disable react-hooks/set-state-in-effect -- URL-parameter naar weergavestaat */
-    if (spelerParam) {
-      const match =
-        alleSpelers.find((naam) => namenZijnGelijk(naam, spelerParam)) ??
-        spelerParam;
-      setActieveNaam(match);
-      setZoekterm(match);
+    if (!startNaam) {
+      setActieveNaam("");
       return;
     }
-    if (opgeslagen) {
-      setActieveNaam((huidig) => huidig || opgeslagen);
-      setZoekterm((huidig) => huidig || opgeslagen);
-    }
+    const match =
+      alleSpelers.find((naam) => namenZijnGelijk(naam, startNaam)) ?? startNaam;
+    setActieveNaam(match);
+    setZoekterm(match);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [spelerParam, alleSpelers]);
 
@@ -132,7 +121,6 @@ function MijnPouleInhoud() {
     setOpenWedstrijd(null);
     if (alsEigen) {
       setEigenNaam(naam);
-      slaSpelerNaamOp(naam);
     }
     router.replace(mijnPoulePad(naam), { scroll: false });
   };

@@ -111,13 +111,23 @@ export function komendeWedstrijden(
   return lijst.slice(0, limiet);
 }
 
-export function laadOpgeslagenSpelerNaam(): string {
-  if (typeof window === "undefined") return "";
-  return localStorage.getItem(SPELER_NAAM_KEY) ?? "";
+/**
+ * Startselectie voor een bezoeker.
+ * localStorage of een opgeslagen naam mag nooit automatisch een speler koppelen.
+ * Alleen een expliciete URL-parameter telt als bewuste keuze.
+ */
+export function initiëleSpelerSelectie(urlSpeler?: string | null): string {
+  return urlSpeler?.trim() ?? "";
 }
 
+/** Bewust altijd leeg: bezoekers starten zonder gekoppelde speler. */
+export function laadOpgeslagenSpelerNaam(): string {
+  return "";
+}
+
+/** Geen persistente spelerskoppeling; selectie blijft sessie- en URL-gebonden. */
 export function slaSpelerNaamOp(naam: string): void {
-  localStorage.setItem(SPELER_NAAM_KEY, naam);
+  void naam;
 }
 
 export function filterSpelersOpZoekterm(

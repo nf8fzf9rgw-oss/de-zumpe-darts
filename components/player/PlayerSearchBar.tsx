@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import PlayerCard from "@/components/player/PlayerCard";
 import MatchCard from "@/components/player/MatchCard";
@@ -8,8 +8,6 @@ import MobileScoreEntry from "@/components/player/MobileScoreEntry";
 import { useSpeelavond } from "@/context/SpeelavondContext";
 import {
   filterSpelersOpZoekterm,
-  laadOpgeslagenSpelerNaam,
-  slaSpelerNaamOp,
   verzamelAlleSpelers,
   vindBordVoorSpeler,
   vindWedstrijdenVoorSpeler,
@@ -25,16 +23,6 @@ export default function PlayerSearchBar() {
     null
   );
   const [toonSuggesties, setToonSuggesties] = useState(false);
-
-  useEffect(() => {
-    const opgeslagen = laadOpgeslagenSpelerNaam();
-    /* eslint-disable react-hooks/set-state-in-effect -- localStorage hydratie na mount */
-    if (opgeslagen) {
-      setZoekterm(opgeslagen);
-      setGeselecteerd(opgeslagen);
-    }
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, []);
 
   const alleSpelers = useMemo(
     () => verzamelAlleSpelers(leden, gasten, borden),
@@ -54,7 +42,6 @@ export default function PlayerSearchBar() {
   const selecteerSpeler = (naam: string) => {
     setGeselecteerd(naam);
     setZoekterm(naam);
-    slaSpelerNaamOp(naam);
     setToonSuggesties(false);
   };
 
