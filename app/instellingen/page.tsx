@@ -17,7 +17,17 @@ import {
   downloadCsv,
   exportStandCsv,
   exportHistorieCsv,
+  exportSpelersCsv,
+  exportRecordsCsv,
 } from "@/lib/export/csv";
+import {
+  downloadExcelHtml,
+  printHtmlAlsPdf,
+  recordsNaarTabelHtml,
+  speelavondenNaarTabelHtml,
+  spelersNaarTabelHtml,
+  standNaarTabelHtml,
+} from "@/lib/export/excel";
 import FinishBonusInstellingen from "@/components/FinishBonusInstellingen";
 import type { ZumpeDataBackup } from "@/types/competition";
 
@@ -32,6 +42,8 @@ export default function InstellingenPage() {
     actiefSeizoenLabel,
     stand,
     historie,
+    clubRecords,
+    leden,
   } = useSpeelavond();
   const { isBestuur, logoutBestuur } = useAuth();
   const [loginOpen, setLoginOpen] = useState(false);
@@ -153,7 +165,7 @@ export default function InstellingenPage() {
           className="min-h-[88px] rounded-2xl border border-zinc-800 bg-zinc-950 p-5 transition hover:border-red-800"
         >
           <span className="text-2xl">🎯</span>
-          <p className="mt-2 font-bold text-white">Wedstrijden</p>
+          <p className="mt-2 font-bold text-white">Competitie</p>
           <p className="text-sm text-zinc-400">Alle borden</p>
         </Link>
         <Link
@@ -231,7 +243,94 @@ export default function InstellingenPage() {
                 }
                 className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
               >
-                Export historie (CSV)
+                Export speelavonden (CSV)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  downloadCsv(exportSpelersCsv(leden), "spelers.csv")
+                }
+                className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
+              >
+                Export spelers (CSV)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  downloadCsv(exportRecordsCsv(clubRecords), "records.csv")
+                }
+                className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
+              >
+                Export records (CSV)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  downloadExcelHtml(
+                    standNaarTabelHtml(stand, actiefSeizoenLabel),
+                    `ranglijst-${actiefSeizoenLabel}.xls`
+                  )
+                }
+                className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
+              >
+                Export ranglijst (Excel)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  downloadExcelHtml(
+                    speelavondenNaarTabelHtml(historie),
+                    "speelavonden.xls"
+                  )
+                }
+                className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
+              >
+                Export speelavonden (Excel)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  downloadExcelHtml(spelersNaarTabelHtml(leden), "spelers.xls")
+                }
+                className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
+              >
+                Export spelers (Excel)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  downloadExcelHtml(
+                    recordsNaarTabelHtml(clubRecords, actiefSeizoenLabel),
+                    `records-${actiefSeizoenLabel}.xls`
+                  )
+                }
+                className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
+              >
+                Export records (Excel)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  printHtmlAlsPdf(
+                    standNaarTabelHtml(stand, actiefSeizoenLabel),
+                    `Ranglijst ${actiefSeizoenLabel}`
+                  )
+                }
+                className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
+              >
+                Export ranglijst (PDF)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  printHtmlAlsPdf(
+                    recordsNaarTabelHtml(clubRecords, actiefSeizoenLabel),
+                    `Records ${actiefSeizoenLabel}`
+                  )
+                }
+                className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
+              >
+                Export records (PDF)
               </button>
             </div>
           </ProtectedAction>
@@ -252,7 +351,7 @@ export default function InstellingenPage() {
                 type="button"
                 onClick={openPrintPreview}
                 disabled={borden.length === 0}
-                className="min-h-11 w-full rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
+                className="min-h-11 w-full rounded-xl bg-zinc-700 px-4 py-3 font-semibold text-white hover:bg-zinc-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
               >
                 Print preview
               </button>

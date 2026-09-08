@@ -45,8 +45,8 @@ export const PLAYER_NAV_ITEMS: NavItem[] = [
   ...MOBILE_NAV_ITEMS.filter((i) => i.href !== "/instellingen"),
   {
     href: "/competitie",
-    label: "Wedstrijden",
-    shortLabel: "Wedstrijden",
+    label: "Competitie",
+    shortLabel: "Competitie",
     icon: "🎯",
   },
   {

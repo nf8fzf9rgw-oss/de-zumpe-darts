@@ -2,6 +2,7 @@
 
 import type { Wedstrijd } from "@/types/competition";
 import {
+  wedstrijdPrestatieRegels,
   wedstrijdUitslagTekst,
   wedstrijdWeergaveStatus,
 } from "@/lib/wedstrijd-overzicht";
@@ -28,21 +29,22 @@ export default function MatchCard({
 }: MatchCardProps) {
   const status = wedstrijdWeergaveStatus(wedstrijd, perspectiefNaam);
   const uitslag = wedstrijdUitslagTekst(wedstrijd);
+  const prestaties = wedstrijdPrestatieRegels(wedstrijd);
   const randClass =
     status.key === "gewonnen" || status.key === "gespeeld"
-      ? "border-green-900/50 bg-green-950/20"
+      ? "border-green-900/60 bg-green-950/15"
       : status.key === "verloren"
-        ? "border-red-900/40 bg-red-950/10"
+        ? "border-red-900/50 bg-red-950/15"
         : status.key === "bezig"
-          ? "border-red-800/60 bg-red-950/20"
-          : "border-zinc-800 bg-zinc-900 hover:border-red-800/40";
+          ? "border-red-600/70 bg-red-950/25 scoreboard-stripe"
+          : "border-zinc-800 bg-zinc-900 hover:border-red-800/50";
 
-  const renderNaam = (naam: string) => {
+  const renderNaam = (naam: string, groot = false) => {
     const isPerspectief =
       Boolean(perspectiefNaam) && namenZijnGelijk(naam, perspectiefNaam ?? "");
-    const classes = `rounded-md px-0.5 ${
-      isPerspectief ? "font-bold text-white" : "text-white"
-    } ${onSpelerKlik ? "cursor-pointer hover:text-red-300 hover:underline" : ""}`;
+    const classes = `${groot ? "text-base font-bold lg:text-lg" : "font-semibold"} ${
+      isPerspectief ? "text-white" : "text-zinc-100"
+    } ${onSpelerKlik ? "cursor-pointer hover:text-red-300" : ""}`;
 
     if (!onSpelerKlik) {
       return <span className={classes}>{naam}</span>;
@@ -69,21 +71,9 @@ export default function MatchCard({
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          {volgnummer != null && (
-            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-              Wedstrijd {volgnummer}
-            </p>
-          )}
-          <p
-            className={`font-semibold ${compact ? "text-sm" : "text-base"}`}
-          >
-            {renderNaam(wedstrijd.speler1)}
-            <span className="mx-1.5 font-normal text-zinc-500">vs</span>
-            {renderNaam(wedstrijd.speler2)}
-          </p>
-          <p className="mt-0.5 text-xs text-zinc-500">{bordNaam}</p>
-        </div>
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+          {volgnummer != null ? `Wedstrijd ${volgnummer}` : "Wedstrijd"}
+        </p>
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${status.badgeClass}`}
           title={status.label}
@@ -92,7 +82,25 @@ export default function MatchCard({
         </span>
       </div>
 
-      {uitslag && (
+      {compact ? (
+        <p className="mt-1.5 font-semibold">
+          {renderNaam(wedstrijd.speler1)}
+          <span className="mx-1.5 font-normal text-zinc-500">vs</span>
+          {renderNaam(wedstrijd.speler2)}
+        </p>
+      ) : (
+        <div className="mt-2 space-y-0.5">
+          {renderNaam(wedstrijd.speler1, true)}
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            vs
+          </p>
+          {renderNaam(wedstrijd.speler2, true)}
+        </div>
+      )}
+
+      <p className="mt-1 text-xs text-zinc-500">{bordNaam}</p>
+
+      {uitslag && compact && (
         <p
           className={`mt-2 text-sm font-bold ${
             status.key === "verloren" ? "text-red-300" : "text-green-400"
@@ -102,6 +110,31 @@ export default function MatchCard({
         </p>
       )}
 
+      {uitslag && !compact && (
+        <>
+          {!wedstrijd.bye && (
+            <p
+              className={`stat-number mt-2 text-xl font-bold lg:text-2xl ${
+                status.key === "verloren" ? "text-red-300" : "text-white"
+              }`}
+            >
+              {wedstrijd.score1} — {wedstrijd.score2}
+            </p>
+          )}
+          <p className="mt-0.5 text-xs text-zinc-400">{uitslag}</p>
+        </>
+      )}
+
+      {prestaties.length > 0 && (
+        <ul className="mt-2 space-y-0.5">
+          {prestaties.map((regel) => (
+            <li key={regel} className="text-xs text-zinc-300">
+              {regel}
+            </li>
+          ))}
+        </ul>
+      )}
+
       {onOpen && (
         <button
           type="button"
@@ -109,8 +142,8 @@ export default function MatchCard({
           className="mt-2 min-h-11 w-full rounded-lg text-left text-xs font-semibold text-red-400 hover:text-red-300"
         >
           {wedstrijd.gespeeld
-            ? "Tik om uitslag te bekijken of aan te passen →"
-            : "Tik om uitslag in te voeren →"}
+            ? "Uitslag bekijken of aanpassen →"
+            : "Uitslag invoeren →"}
         </button>
       )}
     </article>

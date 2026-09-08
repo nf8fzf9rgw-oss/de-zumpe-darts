@@ -74,15 +74,15 @@ export default function WedstrijdSchema({
 
   if (borden.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-zinc-700 bg-zinc-950 px-6 py-16 text-center lg:rounded-2xl">
-        <p className="text-3xl lg:text-4xl">🎯</p>
-        <p className="mt-3 text-base font-semibold text-white lg:mt-4 lg:text-lg">
-          Nog geen competitie gegenereerd
-        </p>
-        <p className="mt-2 text-xs text-zinc-400 lg:text-sm">
-          Selecteer leden en gasten, en genereer daarna de competitie.
-        </p>
-      </div>
+        <div className="rounded-xl border border-dashed border-zinc-700 bg-zinc-950 px-6 py-16 text-center lg:rounded-2xl">
+          <p className="text-3xl lg:text-4xl">🎯</p>
+          <p className="mt-3 text-base font-semibold text-white lg:mt-4 lg:text-lg">
+            Er zijn vanavond nog geen wedstrijden.
+          </p>
+          <p className="mt-2 text-xs text-zinc-400 lg:text-sm">
+            Selecteer leden en gasten, en genereer daarna de competitie.
+          </p>
+        </div>
     );
   }
 

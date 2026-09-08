@@ -103,7 +103,7 @@ export function wedstrijdWeergaveStatus(
     }
     return {
       key: "gespeeld",
-      label: "Gespeeld",
+      label: "Afgerond",
       icoon: "🟢",
       badgeClass: "bg-green-900/50 text-green-300",
     };
@@ -130,6 +130,55 @@ export function wedstrijdUitslagTekst(wedstrijd: Wedstrijd): string | null {
   if (!wedstrijd.gespeeld) return null;
   if (wedstrijd.bye) return `${wedstrijd.speler1} — bye`;
   return `${wedstrijd.speler1} ${wedstrijd.score1} – ${wedstrijd.score2} ${wedstrijd.speler2}`;
+}
+
+export function wedstrijdPrestatieRegels(wedstrijd: Wedstrijd): string[] {
+  const regels: string[] = [];
+  if (wedstrijd.aantal180Speler1 > 0) {
+    regels.push(`🎯 ${wedstrijd.speler1} — ${wedstrijd.aantal180Speler1} × 180`);
+  }
+  if (wedstrijd.aantal180Speler2 > 0) {
+    regels.push(`🎯 ${wedstrijd.speler2} — ${wedstrijd.aantal180Speler2} × 180`);
+  }
+  if (wedstrijd.hoogsteFinishSpeler1 && wedstrijd.hoogsteFinishSpeler1 >= 100) {
+    regels.push(`💯 ${wedstrijd.speler1} — ${wedstrijd.hoogsteFinishSpeler1}`);
+  }
+  if (wedstrijd.hoogsteFinishSpeler2 && wedstrijd.hoogsteFinishSpeler2 >= 100) {
+    regels.push(`💯 ${wedstrijd.speler2} — ${wedstrijd.hoogsteFinishSpeler2}`);
+  }
+  return regels;
+}
+
+export type AvondWeergaveStatus =
+  | "niet_gestart"
+  | "actief"
+  | "bezig"
+  | "afgerond";
+
+export interface AvondStatusWeergave {
+  key: AvondWeergaveStatus;
+  label: string;
+  icoon: string;
+}
+
+export function avondWeergaveStatus(borden: Bord[]): AvondStatusWeergave {
+  if (borden.length === 0) {
+    return { key: "niet_gestart", label: "Nog niet gestart", icoon: "⚪" };
+  }
+
+  const wedstrijden = borden.flatMap((bord) => bord.wedstrijden);
+  if (wedstrijden.length === 0) {
+    return { key: "actief", label: "Avond actief", icoon: "🟡" };
+  }
+
+  const gespeeld = wedstrijden.filter((wedstrijd) => wedstrijd.gespeeld).length;
+  if (gespeeld === wedstrijden.length) {
+    return { key: "afgerond", label: "Avond afgerond", icoon: "🟢" };
+  }
+  if (wedstrijden.some((wedstrijd) => wedstrijdIsBezig(wedstrijd))) {
+    return { key: "bezig", label: "Wedstrijden bezig", icoon: "🔴" };
+  }
+  return { key: "actief", label: "Avond actief", icoon: "🟡" };
 }
 
 export function groepeerBordenInRondes(borden: Bord[]): BordRondes {

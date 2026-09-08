@@ -2,14 +2,17 @@ import { describe, expect, it } from "vitest";
 import { maakWedstrijd } from "@/lib/competition";
 import {
   actieveBordNamen,
+  avondWeergaveStatus,
   filterBordenVoorSchema,
   groepeerBordenInRondes,
   mijnPoulePad,
   tegenstanderVan,
   wedstrijdHeeftSpeler,
+  wedstrijdPrestatieRegels,
   wedstrijdUitslagTekst,
   wedstrijdWeergaveStatus,
 } from "@/lib/wedstrijd-overzicht";
+import { berekenAvondHighlights } from "@/lib/player-of-evening";
 import { pouleBordVoorSpeler, vindBordenVoorSpeler } from "@/lib/player-utils";
 import type { Bord, Wedstrijd } from "@/types/competition";
 
@@ -61,6 +64,7 @@ describe("wedstrijdWeergaveStatus", () => {
       "verloren"
     );
     expect(wedstrijdWeergaveStatus(wedstrijd).key).toBe("gespeeld");
+    expect(wedstrijdWeergaveStatus(wedstrijd).label).toBe("Afgerond");
   });
 });
 
@@ -158,5 +162,68 @@ describe("bordoverzicht", () => {
       "Winnaarsronde",
     ]);
     expect(pouleBordVoorSpeler(borden, "Jan")?.naam).toBe("Bord 1");
+  });
+});
+
+describe("avond- en prestatieweergave", () => {
+  it("toont avondstatus op basis van wedstrijden", () => {
+    const openWedstrijd = maakWedstrijd("Jan", "Piet");
+    const pouleBord = bord("Bord 1", ["Jan", "Piet"], [openWedstrijd]);
+
+    expect(avondWeergaveStatus([]).key).toBe("niet_gestart");
+    expect(avondWeergaveStatus([pouleBord]).key).toBe("actief");
+
+    const bezig: Bord = {
+      ...pouleBord,
+      wedstrijden: [{ ...openWedstrijd, score1: 1 }],
+    };
+    expect(avondWeergaveStatus([bezig]).key).toBe("bezig");
+
+    const afgerond: Bord = {
+      ...pouleBord,
+      wedstrijden: [
+        {
+          ...openWedstrijd,
+          gespeeld: true,
+          score1: 3,
+          score2: 1,
+          winnaar: "Jan",
+        },
+      ],
+    };
+    expect(avondWeergaveStatus([afgerond]).key).toBe("afgerond");
+  });
+
+  it("toont 180's en hoge finishes van een wedstrijd", () => {
+    const wedstrijd: Wedstrijd = {
+      ...maakWedstrijd("Jan", "Piet"),
+      gespeeld: true,
+      aantal180Speler1: 2,
+      aantal180Speler2: 1,
+      hoogsteFinishSpeler1: 121,
+      hoogsteFinishSpeler2: 104,
+    };
+    expect(wedstrijdPrestatieRegels(wedstrijd)).toEqual([
+      "🎯 Jan — 2 × 180",
+      "🎯 Piet — 1 × 180",
+      "💯 Jan — 121",
+      "💯 Piet — 104",
+    ]);
+  });
+
+  it("berekent meeste 180's en hoogste finish van de avond", () => {
+    const avondBord = bord("Bord 1", ["Jan", "Piet"], [
+      {
+        ...maakWedstrijd("Jan", "Piet"),
+        gespeeld: true,
+        aantal180Speler1: 2,
+        aantal180Speler2: 1,
+        hoogsteFinishSpeler1: 121,
+        hoogsteFinishSpeler2: 170,
+      },
+    ]);
+    const highlights = berekenAvondHighlights([avondBord]);
+    expect(highlights.meeste180s).toEqual({ naam: "Jan", aantal: 2 });
+    expect(highlights.hoogsteFinish).toEqual({ naam: "Piet", finish: 170 });
   });
 });

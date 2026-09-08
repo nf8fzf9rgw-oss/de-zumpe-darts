@@ -39,14 +39,14 @@ export default function BordSchemaKaart({
       <button
         type="button"
         onClick={() => setOpen((huidig) => !huidig)}
-        className="flex w-full items-start justify-between gap-3 border-b border-zinc-800 bg-gradient-to-r from-red-900/40 to-black px-4 py-3 text-left lg:cursor-default lg:pointer-events-none"
+        className="flex w-full items-start justify-between gap-3 border-b border-zinc-800 bg-zinc-950 px-4 py-3 text-left scoreboard-stripe lg:cursor-default lg:pointer-events-none"
         aria-expanded={open}
       >
         <div>
-          <h3 className="text-lg font-bold text-white">{bord.naam}</h3>
+          <h3 className="text-lg font-bold text-white">🎯 {bord.naam}</h3>
           <p className="mt-0.5 text-xs text-zinc-400">
             {bord.spelers.length} spelers · {gespeeld}/{bord.wedstrijden.length}{" "}
-            gespeeld
+            afgerond
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -76,16 +76,16 @@ export default function BordSchemaKaart({
                   <li key={speler}>
                     <Link
                       href={mijnPoulePad(speler)}
-                      className={`flex min-h-11 cursor-pointer items-center rounded-lg border px-3 py-1.5 text-sm transition hover:border-red-700 hover:text-white ${
+                      className={`flex min-h-11 cursor-pointer items-center justify-between rounded-lg border px-3 py-1.5 text-sm transition hover:border-red-700 hover:text-white ${
                         isHighlight
                           ? "border-red-600 bg-red-950/40 font-bold text-white"
                           : "border-zinc-800 bg-zinc-900 text-zinc-200"
                       }`}
                     >
-                      <span className="mr-2 text-zinc-500" aria-hidden>
-                        👤
+                      <span>{speler}</span>
+                      <span className="text-zinc-500" aria-hidden>
+                        →
                       </span>
-                      {speler}
                     </Link>
                   </li>
                 );

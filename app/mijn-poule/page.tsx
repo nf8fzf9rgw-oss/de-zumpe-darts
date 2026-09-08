@@ -3,14 +3,16 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import HeadToHeadCard from "@/components/HeadToHeadCard";
 import MatchCard from "@/components/player/MatchCard";
 import MobileScoreEntry from "@/components/player/MobileScoreEntry";
-import PlayerCard from "@/components/player/PlayerCard";
 import PouleSpelerLijst from "@/components/player/PouleSpelerLijst";
+import SpelerStatsGrid from "@/components/player/SpelerStatsGrid";
 import StandingsTable from "@/components/StandingsTable";
-import DartboardAccent from "@/components/ui/DartboardAccent";
+import EmptyState from "@/components/ui/EmptyState";
 import { useSpeelavond } from "@/context/SpeelavondContext";
 import { namenZijnGelijk } from "@/lib/namen";
+import { berekenSpelerProfiel } from "@/lib/standings";
 import {
   berekenBordStand,
   filterSpelersOpZoekterm,
@@ -42,7 +44,15 @@ export default function MijnPoulePage() {
 }
 
 function MijnPouleInhoud() {
-  const { leden, gasten, borden, updateWedstrijd } = useSpeelavond();
+  const {
+    leden,
+    gasten,
+    borden,
+    updateWedstrijd,
+    seizoenHistorie,
+    actiefSeizoen,
+    laatsteOpslag,
+  } = useSpeelavond();
   const router = useRouter();
   const searchParams = useSearchParams();
   const spelerParam = searchParams.get(MIJN_POULE_SPELER_PARAM)?.trim() ?? "";
@@ -102,6 +112,18 @@ function MijnPouleInhoud() {
   const extraRondes = alleBordenSpeler
     .filter((bord) => bord.naam !== pouleBord?.naam)
     .map((bord) => bord.naam);
+  const profiel = actieveNaam
+    ? berekenSpelerProfiel(
+        actieveNaam,
+        seizoenHistorie,
+        borden,
+        actiefSeizoen,
+        laatsteOpslag
+      )
+    : null;
+  const pouleTegenstanders = pouleBord
+    ? pouleBord.spelers.filter((naam) => !namenZijnGelijk(naam, actieveNaam))
+    : [];
 
   const toonSpeler = (naam: string, alsEigen: boolean) => {
     setActieveNaam(naam);
@@ -124,16 +146,11 @@ function MijnPouleInhoud() {
   return (
     <div className="space-y-4 md:space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <DartboardAccent size="md" />
-          <div>
-            <h2 className="text-xl font-bold text-white lg:text-2xl">
-              Mijn Poule
-            </h2>
-            <p className="text-sm text-zinc-400">
-              Klik op een speler en zie direct bord, poule en wedstrijden.
-            </p>
-          </div>
+        <div>
+          <h2 className="text-xl font-bold text-white lg:text-2xl">Mijn Poule</h2>
+          <p className="text-sm text-zinc-400">
+            Klik op een speler en zie direct bord, poule en wedstrijden.
+          </p>
         </div>
         <Link
           href="/competitie"
@@ -182,13 +199,11 @@ function MijnPouleInhoud() {
       </section>
 
       {!actieveNaam && (
-        <div className="rounded-2xl border border-dashed border-zinc-700 px-6 py-12 text-center">
-          <p className="text-4xl">🎯</p>
-          <p className="mt-3 font-semibold text-white">Kies je naam</p>
-          <p className="mt-1 text-sm text-zinc-400">
-            Je poule en wedstrijden verschijnen hier.
-          </p>
-        </div>
+        <EmptyState
+          icon="🎯"
+          titel="Kies je naam"
+          tekst="Je bord, poule en wedstrijden verschijnen hier."
+        />
       )}
 
       {actieveNaam && !pouleBord && (
@@ -204,7 +219,33 @@ function MijnPouleInhoud() {
 
       {actieveNaam && pouleBord && (
         <>
-          <PlayerCard naam={actieveNaam} subtekst={subtekst} highlight />
+          <section className="rounded-2xl border border-red-800/40 bg-red-950/20 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-red-500">
+              🎯 {actieveNaam}
+            </p>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-white">
+              {pouleBord.naam}
+            </p>
+            <p className="mt-1 text-sm text-zinc-400">{subtekst}</p>
+          </section>
+
+          {profiel && (
+            <section className="space-y-3">
+              <SpelerStatsGrid profiel={profiel} />
+              {profiel.badges.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {profiel.badges.map((badge) => (
+                    <span
+                      key={badge}
+                      className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs font-semibold text-zinc-300"
+                    >
+                      {badge}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
 
           <PouleSpelerLijst
             spelers={pouleBord.spelers}
@@ -241,6 +282,21 @@ function MijnPouleInhoud() {
               )}
             </div>
           </section>
+
+          {pouleTegenstanders.length > 0 && (
+            <section className="space-y-2">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-500">
+                Onderlinge statistieken
+              </h3>
+              {pouleTegenstanders.map((tegenstander) => (
+                <HeadToHeadCard
+                  key={tegenstander}
+                  spelerA={actieveNaam}
+                  spelerB={tegenstander}
+                />
+              ))}
+            </section>
+          )}
 
           {pouleStand.length > 0 && (
             <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">

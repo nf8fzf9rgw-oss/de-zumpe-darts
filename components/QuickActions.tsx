@@ -57,7 +57,7 @@ function QuickActionsButtons({
       className:
         borden.length === 0
           ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
-          : "bg-blue-700 hover:bg-blue-600 text-white",
+          : "border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-white",
     },
     {
       label: "Nieuwe Speelavond",

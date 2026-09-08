@@ -10,11 +10,10 @@ export default function CompetitiePage() {
           <DartboardAccent size="md" />
           <div>
             <h2 className="text-xl font-bold text-white lg:text-3xl">
-              Wedstrijden
+              Competitie
             </h2>
             <p className="mt-1 text-sm text-zinc-400 lg:text-base">
-              Centraal overzicht van alle borden, spelers en wedstrijden van de
-              vrijdagavondcompetitie.
+              Wie speelt op welk bord, en welke wedstrijden er nog openstaan.
             </p>
           </div>
         </div>
