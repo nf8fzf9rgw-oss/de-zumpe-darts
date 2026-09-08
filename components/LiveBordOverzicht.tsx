@@ -1,15 +1,20 @@
 "use client";
 
 import { liveBordKaarten, scoreRegel } from "@/lib/live";
-import { avondWeergaveStatus } from "@/lib/wedstrijd-overzicht";
+import { useAvondWeergave } from "@/hooks/useAvondWeergave";
 import { useSpeelavond } from "@/context/SpeelavondContext";
 
 export default function LiveBordOverzicht() {
   const { borden } = useSpeelavond();
-  const avondStatus = avondWeergaveStatus(borden);
+  const { status: avondStatus, toonLiveBorden } = useAvondWeergave();
   const kaarten = liveBordKaarten(borden);
 
-  if (kaarten.length === 0 || avondStatus.key === "geen_speelavond") {
+  if (
+    kaarten.length === 0 ||
+    !toonLiveBorden ||
+    avondStatus.key === "geen_speelavond" ||
+    avondStatus.key === "geen_actieve_speelavond"
+  ) {
     return null;
   }
 

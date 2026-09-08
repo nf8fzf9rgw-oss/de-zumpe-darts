@@ -341,6 +341,8 @@ export function normaliseerSpeelavond(avond: Speelavond): Speelavond {
     aanmeldToken: avond.aanmeldToken ?? null,
     versie: avond.versie ?? 1,
     notities: avond.notities ?? "",
+    gestartOp: avond.gestartOp,
+    openbareEindtijd: avond.openbareEindtijd,
     borden,
   };
 }

@@ -1,3 +1,8 @@
+import {
+  amsterdamWeekday,
+  isOpenbarePeriodeActief,
+  type OpenbaarVenster,
+} from "@/lib/avond-status";
 import { isPouleBord } from "@/lib/knockout";
 import { namenZijnGelijk } from "@/lib/namen";
 import type { Bord, Wedstrijd } from "@/types/competition";
@@ -151,9 +156,15 @@ export function wedstrijdPrestatieRegels(wedstrijd: Wedstrijd): string[] {
 
 export type AvondWeergaveStatus =
   | "geen_speelavond"
+  | "geen_actieve_speelavond"
   | "wacht_op_start"
   | "live"
   | "afgerond";
+
+export interface AvondStatusOpties extends OpenbaarVenster {
+  nu?: Date;
+  isBestuur?: boolean;
+}
 
 export interface AvondStatusWeergave {
   key: AvondWeergaveStatus;
@@ -161,27 +172,58 @@ export interface AvondStatusWeergave {
   icoon: string;
 }
 
-export function isVandaagVrijdag(nu = new Date()): boolean {
-  return nu.getDay() === 5;
-}
+const GEEN_ACTIEVE: AvondStatusWeergave = {
+  key: "geen_actieve_speelavond",
+  label: "GEEN ACTIEVE SPEELAVOND",
+  icoon: "⚪",
+};
 
-export function avondWeergaveStatus(
-  borden: Bord[],
-  nu = new Date()
-): AvondStatusWeergave {
-  if (borden.length === 0) {
-    if (isVandaagVrijdag(nu)) {
-      return { key: "wacht_op_start", label: "WACHT OP START", icoon: "🟡" };
-    }
-    return { key: "geen_speelavond", label: "GEEN SPEELAVOND", icoon: "⚪" };
-  }
+const GEEN_SPEELAVOND: AvondStatusWeergave = {
+  key: "geen_speelavond",
+  label: "GEEN SPEELAVOND",
+  icoon: "⚪",
+};
 
+function matchAvondStatus(borden: Bord[]): AvondStatusWeergave {
   const wedstrijden = borden.flatMap((bord) => bord.wedstrijden);
   const gespeeld = wedstrijden.filter((wedstrijd) => wedstrijd.gespeeld).length;
   if (wedstrijden.length > 0 && gespeeld === wedstrijden.length) {
     return { key: "afgerond", label: "AFGEROND", icoon: "🟢" };
   }
   return { key: "live", label: "LIVE", icoon: "🔴" };
+}
+
+export function isVandaagVrijdag(nu = new Date()): boolean {
+  return amsterdamWeekday(nu) === 5;
+}
+
+export function avondWeergaveStatus(
+  borden: Bord[],
+  opties: Date | AvondStatusOpties = {}
+): AvondStatusWeergave {
+  const parsed: AvondStatusOpties =
+    opties instanceof Date ? { nu: opties } : opties;
+  const nu = parsed.nu ?? new Date();
+  const venster: OpenbaarVenster = {
+    gestartOp: parsed.gestartOp,
+    openbareEindtijd: parsed.openbareEindtijd,
+    datum: parsed.datum,
+    borden,
+  };
+  const openbaarActief = isOpenbarePeriodeActief(venster, nu);
+
+  if (borden.length === 0) {
+    if (isVandaagVrijdag(nu)) {
+      return { key: "wacht_op_start", label: "WACHT OP START", icoon: "🟡" };
+    }
+    return GEEN_SPEELAVOND;
+  }
+
+  if (!openbaarActief && !parsed.isBestuur) {
+    return GEEN_ACTIEVE;
+  }
+
+  return matchAvondStatus(borden);
 }
 
 export function groepeerBordenInRondes(borden: Bord[]): BordRondes {

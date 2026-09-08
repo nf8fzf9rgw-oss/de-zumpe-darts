@@ -57,6 +57,13 @@ import {
 } from "@/lib/statistics";
 import { confirmDialog, toast } from "@/lib/ui-feedback";
 import {
+  heeftSpeelavondGegevens,
+  isOpenbarePeriodeActief,
+  moetNieuweOpenbareSessieStarten,
+  nieuwOpenbaarVenster,
+  zorgVoorOpenbaarVenster,
+} from "@/lib/avond-status";
+import {
   consumeBordenMigratieWaarschuwing,
   formatDatum,
   formatDatumAlleen,
@@ -152,6 +159,9 @@ interface SpeelavondContextValue {
   setNotities: (notities: string) => void;
   genereerCompetitieOpnieuw: (seed?: number) => void;
   genereerKnockoutRonde: () => void;
+  gestartOp: string;
+  openbareEindtijd: string;
+  isOpenbaarActief: boolean;
 }
 
 const SpeelavondContext = createContext<SpeelavondContextValue | null>(null);
@@ -178,6 +188,8 @@ function syncState(avond: Speelavond) {
     seizoen: genormaliseerd.seizoen,
     aanmeldToken: genormaliseerd.aanmeldToken,
     notities: genormaliseerd.notities ?? "",
+    gestartOp: genormaliseerd.gestartOp ?? "",
+    openbareEindtijd: genormaliseerd.openbareEindtijd ?? "",
   };
 }
 
@@ -190,19 +202,25 @@ function bouwAvond(
     borden: Bord[];
     aanmeldToken: string | null;
     notities?: string;
+    gestartOp?: string;
+    openbareEindtijd?: string;
   }
 ): Speelavond {
   const spelerVanDeAvond = berekenSpelerVanDeAvond(state.borden);
-  return normaliseerSpeelavond({
-    datum: state.datum,
-    seizoen: state.seizoen,
-    aanwezigen: state.aanwezigen,
-    gasten: state.gasten,
-    borden: state.borden,
-    spelerVanDeAvond,
-    aanmeldToken: state.aanmeldToken,
-    notities: state.notities,
-  });
+  return zorgVoorOpenbaarVenster(
+    normaliseerSpeelavond({
+      datum: state.datum,
+      seizoen: state.seizoen,
+      aanwezigen: state.aanwezigen,
+      gasten: state.gasten,
+      borden: state.borden,
+      spelerVanDeAvond,
+      aanmeldToken: state.aanmeldToken,
+      notities: state.notities,
+      gestartOp: state.gestartOp || undefined,
+      openbareEindtijd: state.openbareEindtijd || undefined,
+    })
+  );
 }
 
 export function SpeelavondProvider({
@@ -222,6 +240,9 @@ export function SpeelavondProvider({
   const [isGeladen, setIsGeladen] = useState(false);
   const [historie, setHistorie] = useState<Speelavond[]>([]);
   const [notities, setNotitiesState] = useState("");
+  const [gestartOp, setGestartOp] = useState("");
+  const [openbareEindtijd, setOpenbareEindtijd] = useState("");
+  const [nu, setNu] = useState(() => new Date());
   const [aanmeldBaseUrl, setAanmeldBaseUrl] = useState("");
   const { push: pushUndo, undo: popUndo, canUndo } = useUndoStack();
   const {
@@ -244,6 +265,8 @@ export function SpeelavondProvider({
       setLaatsteOpslag(state.laatsteOpslag);
       setAanmeldToken(state.aanmeldToken);
       setNotitiesState(state.notities);
+      setGestartOp(state.gestartOp);
+      setOpenbareEindtijd(state.openbareEindtijd);
       if (state.seizoen) setActiefSeizoenState(state.seizoen);
     }
     setLeden(laadLeden());
@@ -272,6 +295,8 @@ export function SpeelavondProvider({
         setAanmeldToken(state.aanmeldToken);
         if (state.seizoen) setActiefSeizoenState(state.seizoen);
         setNotitiesState(state.notities);
+        setGestartOp(state.gestartOp);
+        setOpenbareEindtijd(state.openbareEindtijd);
       }
       setHistorie(laadHistorie());
       setAanmeldBaseUrl(window.location.origin);
@@ -298,6 +323,11 @@ export function SpeelavondProvider({
     return () => window.removeEventListener("focus", syncVanStorage);
   }, [reloadFromStorage]);
 
+  useEffect(() => {
+    const id = window.setInterval(() => setNu(new Date()), 15_000);
+    return () => window.clearInterval(id);
+  }, []);
+
   const persist = useCallback(
     (updates: Partial<Speelavond>) => {
       const huidig = bouwAvond({
@@ -308,9 +338,18 @@ export function SpeelavondProvider({
         borden,
         aanmeldToken,
         notities,
+        gestartOp,
+        openbareEindtijd,
         ...updates,
       });
       slaSpeelavondOp(huidig);
+      if (huidig.gestartOp) setGestartOp(huidig.gestartOp);
+      if (huidig.openbareEindtijd) setOpenbareEindtijd(huidig.openbareEindtijd);
+      if (huidig.datum) setLaatsteOpslag(huidig.datum);
+      if (huidig.borden.length > 0 && huidig.datum) {
+        voegToeAanHistorie(huidig);
+        setHistorie(laadHistorie());
+      }
       if (huidig.aanmeldToken) {
         slaAanmeldSessieOp({
           token: huidig.aanmeldToken,
@@ -321,7 +360,17 @@ export function SpeelavondProvider({
       }
       return huidig;
     },
-    [aanwezigen, actiefSeizoen, aanmeldToken, borden, gasten, laatsteOpslag, notities]
+    [
+      aanwezigen,
+      actiefSeizoen,
+      aanmeldToken,
+      borden,
+      gasten,
+      gestartOp,
+      laatsteOpslag,
+      notities,
+      openbareEindtijd,
+    ]
   );
 
   useEffect(() => {
@@ -523,8 +572,47 @@ export function SpeelavondProvider({
     [aanwezigen, borden, gasten, leden, persist]
   );
 
+  const bouwHuidigeAvond = useCallback(
+    () =>
+      bouwAvond({
+        datum: laatsteOpslag || maakHuidigeDatum(),
+        seizoen: actiefSeizoen,
+        aanwezigen,
+        gasten,
+        borden,
+        aanmeldToken,
+        notities,
+        gestartOp,
+        openbareEindtijd,
+      }),
+    [
+      aanwezigen,
+      actiefSeizoen,
+      aanmeldToken,
+      borden,
+      gasten,
+      gestartOp,
+      laatsteOpslag,
+      notities,
+      openbareEindtijd,
+    ]
+  );
+
+  const archiveerHuidigeAvond = useCallback(() => {
+    const huidig = bouwHuidigeAvond();
+    if (!heeftSpeelavondGegevens(huidig)) return;
+    voegToeAanHistorie({
+      ...huidig,
+      datum: huidig.datum || maakHuidigeDatum(),
+    });
+    setHistorie(laadHistorie());
+  }, [bouwHuidigeAvond]);
+
   const genereerCompetitieOpnieuw = useCallback(
-    (seed?: number) => {
+    (
+      seed?: number,
+      venster?: { datum: string; gestartOp: string; openbareEindtijd: string }
+    ) => {
       const spelers = [...aanwezigen, ...gasten];
       if (spelers.length < 3) {
         toast("Minimaal 3 spelers nodig voor een competitie.", "error");
@@ -540,11 +628,19 @@ export function SpeelavondProvider({
         toast("Kon geen geldige bordverdeling maken voor dit aantal spelers.", "error");
         return;
       }
-      if (borden.length > 0) {
+      if (borden.length > 0 && !venster) {
         pushUndo({ type: "borden", borden });
       }
+      if (venster) {
+        setLaatsteOpslag(venster.datum);
+        setGestartOp(venster.gestartOp);
+        setOpenbareEindtijd(venster.openbareEindtijd);
+      }
       setBorden(nieuweBorden);
-      persist({ borden: nieuweBorden });
+      persist({
+        borden: nieuweBorden,
+        ...(venster ?? {}),
+      });
       logAuditActie("Competitie gegenereerd", `${spelers.length} spelers, ${nieuweBorden.length} borden`);
       toast("✓ Competitie gegenereerd", "success");
     },
@@ -552,18 +648,43 @@ export function SpeelavondProvider({
   );
 
   const genereerCompetitieAvond = useCallback(async () => {
+    const venster = {
+      gestartOp,
+      openbareEindtijd,
+      datum: laatsteOpslag,
+      borden,
+    };
+    if (moetNieuweOpenbareSessieStarten(venster)) {
+      const bevestigd = await confirmDialog({
+        title: "Nieuwe speelavond starten?",
+        message:
+          "De vorige speelavond blijft volledig bewaard. Er wordt een nieuwe actieve speelavond gemaakt. Niets wordt verwijderd of overschreven.",
+        confirmLabel: "Nieuwe avond starten",
+      });
+      if (!bevestigd) return;
+      archiveerHuidigeAvond();
+      genereerCompetitieOpnieuw(undefined, nieuwOpenbaarVenster());
+      return;
+    }
     if (borden.length > 0) {
       const bevestigd = await confirmDialog({
         title: "Competitie opnieuw genereren?",
         message:
-          "Bestaande borden en uitslagen worden overschreven. Je kunt dit ongedaan maken.",
+          "Bestaande borden en uitslagen van deze actieve speelavond worden overschreven. Je kunt dit ongedaan maken. Eerdere speelavonden blijven bewaard.",
         confirmLabel: "Opnieuw genereren",
         destructive: true,
       });
       if (!bevestigd) return;
     }
     genereerCompetitieOpnieuw();
-  }, [borden.length, genereerCompetitieOpnieuw]);
+  }, [
+    archiveerHuidigeAvond,
+    borden,
+    genereerCompetitieOpnieuw,
+    gestartOp,
+    laatsteOpslag,
+    openbareEindtijd,
+  ]);
 
   const genereerKnockoutRonde = useCallback(async () => {
     if (!pouleBordenVoltooid(borden)) {
@@ -665,59 +786,40 @@ export function SpeelavondProvider({
   );
 
   const opslaan = useCallback(() => {
-    const datum = laatsteOpslag || maakHuidigeDatum();
-    const avond = bouwAvond({
-      datum,
-      seizoen: actiefSeizoen,
-      aanwezigen,
-      gasten,
-      borden,
-      aanmeldToken,
-      notities,
-    });
-    setLaatsteOpslag(datum);
+    const avond = bouwHuidigeAvond();
+    setLaatsteOpslag(avond.datum);
+    if (avond.gestartOp) setGestartOp(avond.gestartOp);
+    if (avond.openbareEindtijd) setOpenbareEindtijd(avond.openbareEindtijd);
     slaSpeelavondOp(avond);
     void repository.addToHistorie(avond);
     setHistorie(laadHistorie());
     toast("✓ Speelavond opgeslagen", "success");
-    logAuditActie("Speelavond opgeslagen", formatDatum(datum));
+    logAuditActie("Speelavond opgeslagen", formatDatum(avond.datum));
     broadcastReload();
-  }, [aanwezigen, actiefSeizoen, aanmeldToken, borden, gasten, laatsteOpslag, notities]);
+  }, [bouwHuidigeAvond]);
 
   const nieuweAvond = useCallback(async () => {
     const bevestigd = await confirmDialog({
       title: "Nieuwe speelavond",
-      message: "Weet je zeker dat je een nieuwe speelavond wilt starten?",
+      message:
+        "De huidige speelavond blijft volledig bewaard. Daarna start een nieuwe actieve speelavond. Er wordt niets verwijderd.",
       confirmLabel: "Nieuwe avond starten",
-      destructive: true,
     });
     if (!bevestigd) return;
-    if (aanwezigen.length > 0 || gasten.length > 0 || borden.length > 0) {
-      const huidig = bouwAvond({
-        datum: laatsteOpslag || maakHuidigeDatum(),
-        seizoen: actiefSeizoen,
-        aanwezigen,
-        gasten,
-        borden,
-        aanmeldToken,
-        notities,
-      });
-      if (borden.length > 0) {
-        void repository.addToHistorie(huidig);
-        setHistorie(laadHistorie());
-      }
-    }
+    archiveerHuidigeAvond();
     const leeg = maakLegeSpeelavond(actiefSeizoen);
     setAanwezigen(leeg.aanwezigen);
     setGasten(leeg.gasten);
     setGastNaam("");
     setBorden(leeg.borden);
     setLaatsteOpslag(leeg.datum);
+    setGestartOp("");
+    setOpenbareEindtijd("");
     setAanmeldToken(null);
     setNotitiesState("");
     verwijderSpeelavond();
     verwijderAanmeldSessie();
-  }, [aanwezigen, actiefSeizoen, aanmeldToken, borden, gasten, laatsteOpslag, notities]);
+  }, [actiefSeizoen, archiveerHuidigeAvond]);
 
   const startAanmelden = useCallback(() => {
     const token = genereerAanmeldToken();
@@ -742,7 +844,9 @@ export function SpeelavondProvider({
     setLaatsteOpslag(state.laatsteOpslag);
     setAanmeldToken(state.aanmeldToken);
     setNotitiesState(state.notities);
-    slaSpeelavondOp(genormaliseerd);
+    setGestartOp(state.gestartOp);
+    setOpenbareEindtijd(state.openbareEindtijd);
+    slaSpeelavondOp(zorgVoorOpenbaarVenster(genormaliseerd));
     if (heeftTeVeelBorden(raw.borden)) {
       toast(
         `Oude avond had te veel borden — genereer opnieuw (max ${MAX_BORDEN_PER_AVOND})`,
@@ -830,10 +934,26 @@ export function SpeelavondProvider({
         borden,
         aanmeldToken,
         notities,
+        gestartOp,
+        openbareEindtijd,
       }),
-    [aanwezigen, actiefSeizoen, aanmeldToken, borden, gasten, laatsteOpslag, notities]
+    [
+      aanwezigen,
+      actiefSeizoen,
+      aanmeldToken,
+      borden,
+      gasten,
+      gestartOp,
+      laatsteOpslag,
+      notities,
+      openbareEindtijd,
+    ]
   );
 
+  const isOpenbaarActief = isOpenbarePeriodeActief(
+    { gestartOp, openbareEindtijd, datum: laatsteOpslag, borden },
+    nu
+  );
   const avondVoorPrint = printAvond ?? huidigeAvondVoorPrint;
   const aanmeldUrl = aanmeldToken
     ? `${aanmeldBaseUrl}/aanmelden?t=${aanmeldToken}`
@@ -899,6 +1019,9 @@ export function SpeelavondProvider({
       setNotities,
       genereerCompetitieOpnieuw,
       genereerKnockoutRonde,
+      gestartOp,
+      openbareEindtijd,
+      isOpenbaarActief,
     }),
     [
       leden,
@@ -919,6 +1042,9 @@ export function SpeelavondProvider({
       handleVerplaatsSpeler,
       historie,
       isGeladen,
+      isOpenbaarActief,
+      gestartOp,
+      openbareEindtijd,
       laatsteOpslag,
       notities,
       printPreviewOpen,

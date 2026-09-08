@@ -8,13 +8,13 @@ import PlayerSearchBar from "@/components/player/PlayerSearchBar";
 import SpelerVanDeAvondBanner from "@/components/SpelerVanDeAvondBanner";
 import EmptyState from "@/components/ui/EmptyState";
 import { useSpeelavond } from "@/context/SpeelavondContext";
+import { useAvondWeergave } from "@/hooks/useAvondWeergave";
 import { formatPunten, ranglijstMedaille } from "@/lib/format";
-import { avondWeergaveStatus, mijnPoulePad } from "@/lib/wedstrijd-overzicht";
+import { mijnPoulePad } from "@/lib/wedstrijd-overzicht";
 
 export default function PlayerHome() {
-  const { stand, komendeSpeelavond, speelDatumLabel, borden } =
-    useSpeelavond();
-  const avondStatus = avondWeergaveStatus(borden);
+  const { stand, komendeSpeelavond, speelDatumLabel } = useSpeelavond();
+  const { status: avondStatus, toonLiveBorden } = useAvondWeergave();
   const topStand = stand.slice(0, 5);
 
   return (
@@ -33,7 +33,7 @@ export default function PlayerHome() {
 
       <AvondStatusBanner />
 
-      {avondStatus.key === "live" && <LiveBordOverzicht />}
+      {toonLiveBorden && avondStatus.key === "live" && <LiveBordOverzicht />}
 
       <PlayerSearchBar />
 

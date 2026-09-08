@@ -1,6 +1,7 @@
 "use client";
 
 import { useSpeelavond } from "@/context/SpeelavondContext";
+import { bestuurBeheerLabels } from "@/lib/avond-status";
 import { MAX_SPELERS_PER_AVOND } from "@/lib/competition";
 
 export default function SpeelavondPanel() {
@@ -10,7 +11,17 @@ export default function SpeelavondPanel() {
     laatsteOpslagLabel,
     dashboardStats,
     speelDatumLabel,
+    gestartOp,
+    openbareEindtijd,
+    laatsteOpslag,
+    borden,
   } = useSpeelavond();
+  const beheer = bestuurBeheerLabels({
+    gestartOp,
+    openbareEindtijd,
+    datum: laatsteOpslag,
+    borden,
+  });
 
   const items = [
     { label: "Aanwezige leden", value: aanwezigen.length, icon: "👥" },
@@ -49,6 +60,12 @@ export default function SpeelavondPanel() {
         <p className="mt-1 text-sm text-zinc-400">
           Live overzicht voor wedstrijdleiding
         </p>
+        {borden.length > 0 && (
+          <p className="mt-2 text-xs text-zinc-500">
+            Status openbaar: {beheer.openbaar} · Gegevens: {beheer.gegevens} ·
+            Bestuur: {beheer.bestuur}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">

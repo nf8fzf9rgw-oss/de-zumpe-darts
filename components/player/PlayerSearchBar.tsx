@@ -8,10 +8,12 @@ import {
   verzamelAlleSpelers,
 } from "@/lib/player-utils";
 import { waarMoetIkSpelen } from "@/lib/live";
+import { useAvondWeergave } from "@/hooks/useAvondWeergave";
 import { mijnPoulePad } from "@/lib/wedstrijd-overzicht";
 
 export default function PlayerSearchBar() {
   const { leden, gasten, borden, stand } = useSpeelavond();
+  const { toonWaarMoetIkSpelen } = useAvondWeergave();
   const [zoekterm, setZoekterm] = useState("");
   const [geselecteerd, setGeselecteerd] = useState<string | null>(null);
   const [toonSuggesties, setToonSuggesties] = useState(false);
@@ -82,7 +84,14 @@ export default function PlayerSearchBar() {
         )}
       </div>
 
-      {geselecteerd && info && (
+      {geselecteerd && !toonWaarMoetIkSpelen && (
+        <p className="mt-4 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-zinc-400">
+          Er is nu geen actieve speelavond. {geselecteerd} blijft gewoon in de
+          competitie staan.
+        </p>
+      )}
+
+      {geselecteerd && toonWaarMoetIkSpelen && info && (
         <article className="mt-4 rounded-2xl border border-red-800/50 bg-red-950/20 p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-red-400">
             {geselecteerd}
@@ -110,7 +119,7 @@ export default function PlayerSearchBar() {
         </article>
       )}
 
-      {geselecteerd && !info && (
+      {geselecteerd && toonWaarMoetIkSpelen && !info && (
         <p className="mt-4 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-zinc-400">
           {geselecteerd} is vanavond nog niet ingedeeld op een bord.
         </p>

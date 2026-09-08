@@ -5,14 +5,14 @@ import Link from "next/link";
 import BestuurLoginModal from "@/components/BestuurLoginModal";
 import { useAuth } from "@/context/AuthContext";
 import { useSpeelavond } from "@/context/SpeelavondContext";
-import { avondWeergaveStatus } from "@/lib/wedstrijd-overzicht";
+import { useAvondWeergave } from "@/hooks/useAvondWeergave";
 
 export default function Header() {
-  const { laatsteOpslagLabel, dashboardStats, borden, speelDatumLabel } =
+  const { laatsteOpslagLabel, dashboardStats, speelDatumLabel } =
     useSpeelavond();
   const { isBestuur, logoutBestuur } = useAuth();
   const [loginOpen, setLoginOpen] = useState(false);
-  const avondStatus = avondWeergaveStatus(borden);
+  const { status: avondStatus } = useAvondWeergave();
   const isLive = avondStatus.key === "live";
 
   return (

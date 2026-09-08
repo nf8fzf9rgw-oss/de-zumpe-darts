@@ -1,0 +1,20 @@
+---
+description: Speelavond-status is een weergavereegel; zaterdag 07:00 mag nooit data wissen.
+alwaysApply: true
+---
+
+# Automatische afsluiting zaterdag 07:00 — geen data verwijderen
+
+De eindtijd zaterdag 07:00 (Europe/Amsterdam) verandert **alleen de openbare actieve status**.
+
+- Vrijdag gestart → LIVE tot zaterdag 07:00
+- Zaterdag 03:00 → gegevens blijven, LIVE blijft zichtbaar
+- Zaterdag 07:00 → LIVE verdwijnt voor bezoekers/leden
+- Bezoekers zien daarna **geen actieve speelavond**
+- Bestuur kan de speelavond daarna nog openen, bekijken en uitslagen corrigeren
+
+NOOIT records verwijderen, overschrijven of onbruikbaar maken omdat het 07:00 is.
+NOOIT een nieuwe vrijdagavond de vorige avond laten wissen.
+Nieuwe speelavond = nieuwe starttijd, eindtijd, borden en scores. Vorige avond blijft bewaard.
+
+Onderscheid: **openbare status** vs **bewaarde speelavondgegevens**. Zie `lib/avond-status.ts`.

@@ -6,7 +6,8 @@ import { deelViaWhatsApp, maakLaatsteUitslagenBericht } from "@/lib/whatsapp";
 import { useSpeelavond } from "@/context/SpeelavondContext";
 
 export default function LaatsteUitslagen() {
-  const { borden, spelerVanDeAvond } = useSpeelavond();
+  const { borden, spelerVanDeAvond, gestartOp, openbareEindtijd, laatsteOpslag } =
+    useSpeelavond();
   const [feedback, setFeedback] = useState("");
   const uitslagen = laatsteUitslagenPerBord(borden);
 
@@ -16,6 +17,9 @@ export default function LaatsteUitslagen() {
     const bericht = maakLaatsteUitslagenBericht(borden, {
       websiteUrl: window.location.origin,
       spelerVanDeAvond,
+      gestartOp,
+      openbareEindtijd,
+      datum: laatsteOpslag,
     });
     deelViaWhatsApp(bericht);
     setFeedback("WhatsApp geopend met de laatste uitslagen");

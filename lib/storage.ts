@@ -108,6 +108,7 @@ export function slaSpeelavondOp(avond: Speelavond): void {
   localStorage.setItem(SPEELAVOND_KEY, JSON.stringify(normaliseerSpeelavond(avond)));
 }
 
+/** Leegt alleen de huidige werkplek. Historie blijft altijd bewaard. */
 export function verwijderSpeelavond(): void {
   localStorage.removeItem(SPEELAVOND_KEY);
 }
@@ -247,6 +248,8 @@ export function maakLegeSpeelavond(seizoen?: string): Speelavond {
     spelerVanDeAvond: null,
     aanmeldToken: null,
     versie: SPEELAVOND_DATA_VERSIE,
+    gestartOp: undefined,
+    openbareEindtijd: undefined,
   };
 }
 

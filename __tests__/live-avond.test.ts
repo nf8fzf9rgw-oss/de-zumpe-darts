@@ -171,6 +171,23 @@ describe("WhatsApp laatste uitslagen", () => {
     expect(tekst).toContain("https://dezumpe.example/competitie");
   });
 
+  it("toont na zaterdag 07:00 geen LIVE meer in de deeltekst", () => {
+    const borden = [
+      bord("Bord 1", ["John Wolsheumer", "Nico Pas"], [
+        { ...maakWedstrijd("John Wolsheumer", "Nico Pas"), score1: 2, score2: 1 },
+      ]),
+    ];
+    const tekst = maakLaatsteUitslagenBericht(borden, {
+      websiteUrl: "https://dezumpe.example",
+      gestartOp: "2026-09-11T18:00:00.000Z",
+      openbareEindtijd: "2026-09-12T05:00:00.000Z",
+      nu: new Date("2026-09-12T05:01:00.000Z"),
+    });
+
+    expect(tekst).not.toContain("🔴 LIVE");
+    expect(tekst).toContain("Bekijk alle uitslagen:");
+  });
+
   it("toont LIVE voor een wedstrijd die bezig is", () => {
     const borden = [
       bord("Bord 1", ["John Wolsheumer", "Nico Pas"], [

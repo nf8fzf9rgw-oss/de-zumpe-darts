@@ -38,6 +38,10 @@ export interface Speelavond {
   aanmeldToken: string | null;
   notities?: string;
   versie?: number;
+  /** Moment waarop deze speelavond is gestart. Wijzigt niet bij latere correcties. */
+  gestartOp?: string;
+  /** Zaterdag 07:00 (Europe/Amsterdam) — alleen de openbare LIVE-status. */
+  openbareEindtijd?: string;
 }
 
 export interface AuditLogEntry {

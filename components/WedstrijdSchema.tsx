@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import BordSchemaKaart from "@/components/BordSchemaKaart";
+import { useAvondWeergave } from "@/hooks/useAvondWeergave";
 import { useSpeelavond } from "@/context/SpeelavondContext";
 import {
   actieveBordNamen,
@@ -20,6 +21,7 @@ export default function WedstrijdSchema({
   startBord = "",
 }: WedstrijdSchemaProps) {
   const { borden } = useSpeelavond();
+  const { toonLiveBorden } = useAvondWeergave();
   const eigenNaam = startSpeler.trim();
   const [alleenMijnWedstrijden, setAlleenMijnWedstrijden] = useState(false);
   const [bordFilter, setBordFilter] = useState<string | null>(
@@ -66,6 +68,21 @@ export default function WedstrijdSchema({
             Selecteer leden en gasten, en genereer daarna de competitie.
           </p>
         </div>
+    );
+  }
+
+  if (!toonLiveBorden) {
+    return (
+      <div className="rounded-xl border border-dashed border-zinc-700 bg-zinc-950 px-6 py-16 text-center lg:rounded-2xl">
+        <p className="text-3xl lg:text-4xl">⚪</p>
+        <p className="mt-3 text-base font-semibold text-white lg:mt-4 lg:text-lg">
+          Geen actieve speelavond
+        </p>
+        <p className="mt-2 text-xs text-zinc-400 lg:text-sm">
+          De wedstrijden van vrijdagavond blijven bewaard. Bekijk de laatste
+          uitslagen of de stand.
+        </p>
+      </div>
     );
   }
 

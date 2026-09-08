@@ -40,10 +40,21 @@ export function maakLaatsteUitslagenBericht(
     websiteUrl?: string;
     spelerVanDeAvond?: string | null;
     nu?: Date;
+    gestartOp?: string | null;
+    openbareEindtijd?: string | null;
+    datum?: string | null;
+    isBestuur?: boolean;
   } = {}
 ): string {
-  const avondStatus = avondWeergaveStatus(borden, opties.nu);
-  const liveKaarten = liveWedstrijdenPerBord(borden);
+  const avondStatus = avondWeergaveStatus(borden, {
+    nu: opties.nu,
+    gestartOp: opties.gestartOp,
+    openbareEindtijd: opties.openbareEindtijd,
+    datum: opties.datum,
+    isBestuur: opties.isBestuur,
+  });
+  const liveKaarten =
+    avondStatus.key === "live" ? liveWedstrijdenPerBord(borden) : [];
   const uitslagen = laatsteUitslagenPerBord(borden);
   const regels: string[] = ["🎯 DE ZUMPE", ""];
 

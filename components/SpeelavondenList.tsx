@@ -1,6 +1,7 @@
 "use client";
 
 import ProtectedAction from "@/components/ProtectedAction";
+import { bestuurBeheerLabels } from "@/lib/avond-status";
 import { telAvondStats } from "@/lib/standings";
 import { formatDatum } from "@/lib/storage";
 import { useSpeelavond } from "@/context/SpeelavondContext";
@@ -34,6 +35,7 @@ export default function SpeelavondenList() {
     <div className="space-y-4">
       {gesorteerd.map((avond) => {
         const stats = telAvondStats(avond);
+        const beheer = bestuurBeheerLabels(avond);
         return (
           <article
             key={avond.datum}
@@ -44,6 +46,10 @@ export default function SpeelavondenList() {
                 <h3 className="text-lg font-bold text-white">
                   {formatDatum(avond.datum)}
                 </h3>
+                <p className="mt-1 text-xs text-zinc-500">
+                  Status openbaar: {beheer.openbaar} · Gegevens:{" "}
+                  {beheer.gegevens} · Bestuur: {beheer.bestuur}
+                </p>
                 <div className="mt-3 flex flex-wrap gap-3 text-sm text-zinc-400">
                   <span>👥 {stats.aantalSpelers} spelers</span>
                   <span>🧑 {stats.aantalGasten} gasten</span>
