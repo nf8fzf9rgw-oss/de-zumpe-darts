@@ -1,8 +1,9 @@
 "use client";
 
-import { liveBordKaarten, scoreRegel } from "@/lib/live";
+import TellerRegel from "@/components/TellerRegel";
 import { useAvondWeergave } from "@/hooks/useAvondWeergave";
 import { useSpeelavond } from "@/context/SpeelavondContext";
+import { liveBordKaarten, volgendeWedstrijdOpBord, scoreRegel } from "@/lib/live";
 
 export default function LiveBordOverzicht() {
   const { borden } = useSpeelavond();
@@ -33,6 +34,7 @@ export default function LiveBordOverzicht() {
         {kaarten.map((kaart) => {
           const { bord, status, wedstrijd } = kaart;
           const live = status.key === "live";
+          const daarna = volgendeWedstrijdOpBord(bord);
 
           return (
             <article
@@ -60,6 +62,11 @@ export default function LiveBordOverzicht() {
 
               {wedstrijd ? (
                 <div className="mt-4 text-center">
+                  {!wedstrijd.gespeeld && (
+                    <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-red-400">
+                      🔴 NU AAN DE BEURT
+                    </p>
+                  )}
                   <p className="text-lg font-bold text-white lg:text-xl">
                     {wedstrijd.speler1}
                   </p>
@@ -73,6 +80,13 @@ export default function LiveBordOverzicht() {
                   <p className="text-lg font-bold text-white lg:text-xl">
                     {wedstrijd.speler2}
                   </p>
+                  <TellerRegel wedstrijd={wedstrijd} />
+                  {daarna && (
+                    <p className="mt-3 text-xs text-zinc-400">
+                      Daarna: {daarna.speler1} vs {daarna.speler2}
+                      {daarna.teller ? ` · Teller: ${daarna.teller}` : ""}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <p className="mt-4 text-center text-sm text-zinc-500">

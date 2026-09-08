@@ -35,7 +35,7 @@ describe("wedstrijdWeergaveStatus", () => {
   it("toont nog te spelen voor een open wedstrijd", () => {
     const status = wedstrijdWeergaveStatus(maakWedstrijd("Rocco", "Ronnie"));
     expect(status.key).toBe("nog_te_spelen");
-    expect(status.label).toBe("WACHT");
+    expect(status.label).toBe("Wachten");
   });
 
   it("toont bezig wanneer er al een score is maar nog niet gespeeld", () => {
@@ -64,7 +64,7 @@ describe("wedstrijdWeergaveStatus", () => {
       "verloren"
     );
     expect(wedstrijdWeergaveStatus(wedstrijd).key).toBe("gespeeld");
-    expect(wedstrijdWeergaveStatus(wedstrijd).label).toBe("GEREED");
+    expect(wedstrijdWeergaveStatus(wedstrijd).label).toBe("Afgerond");
   });
 });
 

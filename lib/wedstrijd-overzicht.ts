@@ -108,7 +108,7 @@ export function wedstrijdWeergaveStatus(
     }
     return {
       key: "gespeeld",
-      label: "GEREED",
+      label: "Afgerond",
       icoon: "🟢",
       badgeClass: "bg-zinc-800 text-zinc-300",
     };
@@ -125,7 +125,7 @@ export function wedstrijdWeergaveStatus(
 
   return {
     key: "nog_te_spelen",
-    label: "WACHT",
+    label: "Wachten",
     icoon: "⚪",
     badgeClass: "bg-zinc-800 text-zinc-300",
   };

@@ -66,6 +66,7 @@ export default function CompetitionBoard({
             compact={compact}
             onUpdate={() => {}}
             readOnly
+            spelers={bord.spelers}
           />
         </div>
       );
@@ -79,6 +80,7 @@ export default function CompetitionBoard({
         onUpdate={(updates) =>
           updateWedstrijd(bord.naam, wedstrijd.id, updates)
         }
+        spelers={bord.spelers}
       />
     );
   };
@@ -150,12 +152,14 @@ export default function CompetitionBoard({
             </div>
           ) : (
             <ul className="space-y-1.5 lg:space-y-2">
-              {bord.wedstrijden.map((wedstrijd) => (
+              {bord.wedstrijden.map((wedstrijd, index) => (
                 <li
                   key={wedstrijd.id}
                   className="rounded-lg border border-zinc-700 bg-black px-3 py-1.5 text-xs text-zinc-200 lg:px-4 lg:py-2 lg:text-sm"
                 >
-                  {wedstrijd.speler1} vs {wedstrijd.speler2}
+                  {wedstrijd.volgnummer ?? index + 1}. {wedstrijd.speler1} vs{" "}
+                  {wedstrijd.speler2}
+                  {wedstrijd.teller ? ` · Teller: ${wedstrijd.teller}` : ""}
                 </li>
               ))}
             </ul>

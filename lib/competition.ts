@@ -1,4 +1,9 @@
 import { namenZijnGelijk } from "@/lib/namen";
+import {
+  herstelTellerIndienOngeldig,
+  herstelTijdslotTellers,
+  planPouleWedstrijden,
+} from "@/lib/wedstrijd-planning";
 import type {
   Bord,
   BordStatus,
@@ -38,6 +43,7 @@ export function maakWedstrijd(speler1: string, speler2: string): Wedstrijd {
     hoogsteFinishSpeler1: null,
     hoogsteFinishSpeler2: null,
     bye: false,
+    teller: null,
   };
 }
 
@@ -209,13 +215,14 @@ export function genereerCompetitie(
   const freq = bouwTegenstanderFrequentie(historie);
   const groepen = verdeelSpelersSlim(spelers, verdeling, freq, seed);
 
-  return groepen.map((groep, index) => ({
+  const borden = groepen.map((groep, index) => ({
     naam: `Bord ${index + 1}`,
     spelers: groep,
-    wedstrijden: genereerRoundRobin(groep),
+    wedstrijden: planPouleWedstrijden(groep),
     status: "wachtend" as BordStatus,
     fase: "poule" as const,
   }));
+  return herstelTijdslotTellers(borden);
 }
 
 export function telWedstrijden(borden: Bord[]): number {
@@ -259,6 +266,9 @@ export type WedstrijdUpdate = Partial<
     | "aantal180Speler2"
     | "hoogsteFinishSpeler1"
     | "hoogsteFinishSpeler2"
+    | "teller"
+    | "speler1"
+    | "speler2"
   >
 >;
 
@@ -267,25 +277,41 @@ export function updateWedstrijdInBord(
   wedstrijdId: string,
   updates: WedstrijdUpdate
 ): Bord {
-  const wedstrijden = bord.wedstrijden.map((wedstrijd) => {
+  const wedstrijden = bord.wedstrijden.map((wedstrijd, index) => {
     if (wedstrijd.id !== wedstrijdId) return wedstrijd;
 
+    const speler1 = updates.speler1 ?? wedstrijd.speler1;
+    const speler2 = updates.speler2 ?? wedstrijd.speler2;
     const score1 = updates.score1 ?? wedstrijd.score1;
     const score2 = updates.score2 ?? wedstrijd.score2;
     const gespeeld = updates.gespeeld ?? wedstrijd.gespeeld;
     const uitslag = gespeeld
-      ? bepaalWinnaar(wedstrijd.speler1, wedstrijd.speler2, score1, score2)
+      ? bepaalWinnaar(speler1, speler2, score1, score2)
       : { winnaar: null, gelijkspel: false };
 
-    return {
+    const bijgewerkt: Wedstrijd = {
       ...wedstrijd,
       ...updates,
+      speler1,
+      speler2,
       score1,
       score2,
       gespeeld,
       winnaar: uitslag.winnaar,
       gelijkspel: uitslag.gelijkspel,
+      id:
+        updates.speler1 || updates.speler2
+          ? maakWedstrijdId(speler1, speler2)
+          : wedstrijd.id,
     };
+
+    return herstelTellerIndienOngeldig(
+      bijgewerkt,
+      bord.spelers,
+      bord.wedstrijden.slice(0, index),
+      [],
+      bord.wedstrijden[index + 1]
+    );
   });
 
   const bijgewerkt = { ...bord, wedstrijden };
@@ -309,8 +335,13 @@ export function normaliseerBord(bord: Bord): Bord {
       hoogsteFinishSpeler1: basis.hoogsteFinishSpeler1 ?? null,
       hoogsteFinishSpeler2: basis.hoogsteFinishSpeler2 ?? null,
       bye: basis.bye ?? false,
+      teller: basis.teller ?? null,
+      volgnummer: basis.volgnummer ?? undefined,
     };
-  });
+  }).map((wedstrijd, index) => ({
+    ...wedstrijd,
+    volgnummer: wedstrijd.volgnummer ?? index + 1,
+  }));
   return {
     ...bord,
     wedstrijden,
@@ -320,7 +351,7 @@ export function normaliseerBord(bord: Bord): Bord {
 }
 
 export function normaliseerBorden(borden: Bord[]): Bord[] {
-  return borden.map(normaliseerBord);
+  return herstelTijdslotTellers(borden.map(normaliseerBord));
 }
 
 export function heeftTeVeelBorden(borden: Bord[] | undefined): boolean {
@@ -434,7 +465,17 @@ export function verplaatsSpeler(
       return zonderSpeler(bord, speler);
     }
     if (bord.naam === naarBord) {
-      const extra = bord.spelers.map((andere) => maakWedstrijd(andere, speler));
+      const nieuweSpelers = [...bord.spelers, speler];
+      const extra: Wedstrijd[] = [];
+      bord.spelers.forEach((andere) => {
+        extra.push(
+          herstelTellerIndienOngeldig(
+            maakWedstrijd(andere, speler),
+            nieuweSpelers,
+            [...bord.wedstrijden, ...extra]
+          )
+        );
+      });
       const bijgewerkt = {
         ...bord,
         spelers: [...bord.spelers, speler],
@@ -459,5 +500,7 @@ export function resetWedstrijd(wedstrijd: Wedstrijd): Wedstrijd {
     hoogsteFinishSpeler1: null,
     hoogsteFinishSpeler2: null,
     bye: wedstrijd.bye ?? false,
+    teller: wedstrijd.teller ?? null,
+    volgnummer: wedstrijd.volgnummer,
   };
 }

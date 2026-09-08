@@ -16,6 +16,8 @@ export interface Wedstrijd {
   hoogsteFinishSpeler1: number | null;
   hoogsteFinishSpeler2: number | null;
   bye?: boolean;
+  teller?: string | null;
+  volgnummer?: number;
 }
 
 export interface Bord {

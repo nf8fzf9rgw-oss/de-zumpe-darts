@@ -87,7 +87,7 @@ describe("gebruikte borden", () => {
 });
 
 describe("live status en laatste uitslagen", () => {
-  it("onderscheidt LIVE, GEREED en WACHT per bord", () => {
+  it("onderscheidt LIVE, Afgerond en Wachten per bord", () => {
     const borden = [
       bord("Bord 1", ["John Wolsheumer", "Nico Pas"], [
         { ...maakWedstrijd("John Wolsheumer", "Nico Pas"), score1: 3, score2: 1 },
@@ -104,9 +104,9 @@ describe("live status en laatste uitslagen", () => {
     expect(kaarten[0].status.key).toBe("live");
     expect(kaarten[0].status.label).toBe("LIVE");
     expect(kaarten[1].status.key).toBe("gereed");
-    expect(kaarten[1].status.label).toBe("GEREED");
+    expect(kaarten[1].status.label).toBe("Afgerond");
     expect(kaarten[2].status.key).toBe("wacht");
-    expect(kaarten[2].status.label).toBe("WACHT");
+    expect(kaarten[2].status.label).toBe("Wachten");
   });
 
   it("toont alleen gespeelde wedstrijden als laatste uitslag", () => {

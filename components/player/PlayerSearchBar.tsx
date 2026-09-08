@@ -100,8 +100,15 @@ export default function PlayerSearchBar() {
             {info.bordNaam}
           </p>
           <p className="mt-2 text-base text-zinc-200">
-            Tegen {info.tegenstander}
+            {info.rol === "tellen"
+              ? "Jij telt deze wedstrijd"
+              : `Tegen ${info.tegenstander}`}
           </p>
+          {info.wedstrijd.teller && info.rol === "spelen" && (
+            <p className="mt-1 text-sm text-zinc-400">
+              🧑‍⚖️ Teller: {info.wedstrijd.teller}
+            </p>
+          )}
           <p className="stat-number mt-2 text-3xl font-bold text-white">
             {info.wedstrijd.score1} — {info.wedstrijd.score2}
           </p>

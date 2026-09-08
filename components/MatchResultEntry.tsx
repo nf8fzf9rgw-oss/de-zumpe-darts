@@ -1,5 +1,6 @@
 "use client";
 
+import TellerRegel from "@/components/TellerRegel";
 import { formatWedstrijd } from "@/lib/competition";
 import { isGeldigeFinish } from "@/lib/scoring";
 import type { Wedstrijd } from "@/types/competition";
@@ -10,6 +11,7 @@ interface MatchResultEntryProps {
   onUpdate: (updates: WedstrijdUpdate) => void;
   compact?: boolean;
   readOnly?: boolean;
+  spelers?: string[];
 }
 
 export default function MatchResultEntry({
@@ -17,6 +19,7 @@ export default function MatchResultEntry({
   onUpdate,
   compact = false,
   readOnly = false,
+  spelers = [],
 }: MatchResultEntryProps) {
   const handleScore = (veld: "score1" | "score2", waarde: string) => {
     const nummer = Math.max(0, Math.min(9, parseInt(waarde, 10) || 0));
@@ -65,6 +68,14 @@ export default function MatchResultEntry({
           Gespeeld
         </label>
       </div>
+
+      <TellerRegel
+        wedstrijd={wedstrijd}
+        kandidaten={spelers}
+        onWijzig={
+          readOnly ? undefined : (teller) => onUpdate({ teller })
+        }
+      />
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">

@@ -104,6 +104,12 @@ export default function MatchCard({
         </div>
       )}
 
+      {wedstrijd.teller && (
+        <p className="mt-2 text-xs text-zinc-300">
+          🧑‍⚖️ Teller: <span className="font-semibold text-white">{wedstrijd.teller}</span>
+        </p>
+      )}
+
       <p className="mt-1 text-xs text-zinc-500">{bordNaam}</p>
 
       {uitslag && !compact && (

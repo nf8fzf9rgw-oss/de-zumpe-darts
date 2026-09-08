@@ -5,8 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MatchCard from "@/components/player/MatchCard";
 import MobileScoreEntry from "@/components/player/MobileScoreEntry";
+import ProtectedAction from "@/components/ProtectedAction";
+import TellerRegel from "@/components/TellerRegel";
 import { useSpeelavond } from "@/context/SpeelavondContext";
+import { huidigeWedstrijdOpBord } from "@/lib/live";
 import { namenZijnGelijk } from "@/lib/namen";
+import { planningWaarschuwingen } from "@/lib/wedstrijd-planning";
 import { mijnPoulePad } from "@/lib/wedstrijd-overzicht";
 import type { Bord, Wedstrijd } from "@/types/competition";
 import type { SpelerWedstrijdInfo } from "@/lib/player-utils";
@@ -29,6 +33,8 @@ export default function BordSchemaKaart({
     null
   );
   const gespeeld = bord.wedstrijden.filter((wedstrijd) => wedstrijd.gespeeld).length;
+  const huidige = huidigeWedstrijdOpBord(bord);
+  const waarschuwingen = planningWaarschuwingen(bord.wedstrijden);
 
   const openUitslag = (wedstrijd: Wedstrijd) => {
     setOpenWedstrijd({ bordNaam: bord.naam, wedstrijd });
@@ -100,20 +106,82 @@ export default function BordSchemaKaart({
             {bord.wedstrijden.length === 0 ? (
               <p className="text-sm text-zinc-500">Nog geen wedstrijden.</p>
             ) : (
-              <div className="space-y-2">
-                {bord.wedstrijden.map((wedstrijd, index) => (
-                  <MatchCard
-                    key={wedstrijd.id}
-                    wedstrijd={wedstrijd}
-                    bordNaam={bord.naam}
-                    compact
-                    volgnummer={index + 1}
-                    perspectiefNaam={highlightNaam}
-                    onSpelerKlik={(naam) => router.push(mijnPoulePad(naam))}
-                    onOpen={() => openUitslag(wedstrijd)}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="mb-3 overflow-x-auto rounded-xl border border-zinc-800">
+                  <table className="min-w-full text-left text-xs text-zinc-300">
+                    <thead className="bg-zinc-900 text-[10px] uppercase tracking-wider text-zinc-500">
+                      <tr>
+                        <th className="px-3 py-2 font-semibold">#</th>
+                        <th className="px-3 py-2 font-semibold">Wedstrijd</th>
+                        <th className="px-3 py-2 font-semibold">Teller</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bord.wedstrijden.map((wedstrijd, index) => (
+                        <tr
+                          key={`overzicht-${wedstrijd.id}`}
+                          className="border-t border-zinc-800"
+                        >
+                          <td className="px-3 py-1.5 tabular-nums text-zinc-500">
+                            {wedstrijd.volgnummer ?? index + 1}
+                          </td>
+                          <td className="px-3 py-1.5 text-white">
+                            {wedstrijd.speler1} – {wedstrijd.speler2}
+                          </td>
+                          <td className="px-3 py-1.5">
+                            {wedstrijd.teller ?? "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="space-y-2">
+                  {bord.wedstrijden.map((wedstrijd, index) => {
+                    const isNu =
+                      huidige != null &&
+                      !huidige.gespeeld &&
+                      wedstrijd.id === huidige.id;
+                    return (
+                      <div key={wedstrijd.id}>
+                        {isNu && (
+                          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.16em] text-red-400">
+                            🔴 NU AAN DE BEURT
+                          </p>
+                        )}
+                        <MatchCard
+                          wedstrijd={wedstrijd}
+                          bordNaam={bord.naam}
+                          compact
+                          volgnummer={wedstrijd.volgnummer ?? index + 1}
+                          perspectiefNaam={highlightNaam}
+                          onSpelerKlik={(naam) => router.push(mijnPoulePad(naam))}
+                          onOpen={() => openUitslag(wedstrijd)}
+                        />
+                        <TellerRegel
+                          wedstrijd={wedstrijd}
+                          kandidaten={bord.spelers}
+                          toonLabel={false}
+                          onWijzig={(teller) =>
+                            updateWedstrijd(bord.naam, wedstrijd.id, { teller })
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                <ProtectedAction>
+                  {waarschuwingen.length > 0 && (
+                    <ul className="mt-3 space-y-1 text-xs text-zinc-400">
+                      {waarschuwingen.map((item) => (
+                        <li key={`${item.wedstrijdIndex}-${item.speler}-${item.soort}`}>
+                          {item.tekst}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </ProtectedAction>
+              </>
             )}
           </div>
       </div>

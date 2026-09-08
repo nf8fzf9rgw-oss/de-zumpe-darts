@@ -29,6 +29,7 @@ export interface WaarMoetIkSpelenInfo {
   tegenstander: string;
   wedstrijd: Wedstrijd;
   status: BordLiveStatusWeergave;
+  rol: "spelen" | "tellen";
 }
 
 const STATUS_WEERGAVE: Record<BordLiveStatus, BordLiveStatusWeergave> = {
@@ -40,13 +41,13 @@ const STATUS_WEERGAVE: Record<BordLiveStatus, BordLiveStatusWeergave> = {
   },
   gereed: {
     key: "gereed",
-    label: "GEREED",
+    label: "Afgerond",
     icoon: "🟢",
     badgeClass: "bg-zinc-800 text-zinc-200",
   },
   wacht: {
     key: "wacht",
-    label: "WACHT",
+    label: "Wachten",
     icoon: "⚪",
     badgeClass: "bg-zinc-800 text-zinc-400",
   },
@@ -81,6 +82,14 @@ export function huidigeWedstrijdOpBord(bord: Bord): Wedstrijd | null {
   if (volgende) return volgende;
   const gespeeld = bord.wedstrijden.filter((wedstrijd) => wedstrijd.gespeeld);
   return gespeeld[gespeeld.length - 1] ?? null;
+}
+
+export function volgendeWedstrijdOpBord(bord: Bord): Wedstrijd | null {
+  const huidige = huidigeWedstrijdOpBord(bord);
+  if (!huidige || huidige.gespeeld) return null;
+  const index = bord.wedstrijden.findIndex((wedstrijd) => wedstrijd.id === huidige.id);
+  if (index < 0) return null;
+  return bord.wedstrijden.slice(index + 1).find((wedstrijd) => !wedstrijd.gespeeld) ?? null;
 }
 
 export function liveBordKaarten(borden: Bord[]): LiveBordKaart[] {
@@ -123,19 +132,26 @@ export function waarMoetIkSpelen(
       .filter(
         (wedstrijd) =>
           namenZijnGelijk(wedstrijd.speler1, naam) ||
-          namenZijnGelijk(wedstrijd.speler2, naam)
+          namenZijnGelijk(wedstrijd.speler2, naam) ||
+          (wedstrijd.teller != null && namenZijnGelijk(wedstrijd.teller, naam))
       )
       .map((wedstrijd) => ({ bord, wedstrijd }))
   );
 
   if (relevant.length === 0) return null;
 
-  const bezig = relevant.find((item) => wedstrijdIsBezig(item.wedstrijd));
-  const volgende = relevant.find((item) => !item.wedstrijd.gespeeld);
-  const laatste = [...relevant]
-    .reverse()
-    .find((item) => item.wedstrijd.gespeeld);
-  const gekozen = bezig ?? volgende ?? laatste;
+  const speelt = (wedstrijd: Wedstrijd) =>
+    namenZijnGelijk(wedstrijd.speler1, naam) ||
+    namenZijnGelijk(wedstrijd.speler2, naam);
+  const telt = (wedstrijd: Wedstrijd) =>
+    Boolean(wedstrijd.teller && namenZijnGelijk(wedstrijd.teller, naam));
+
+  const gekozen =
+    relevant.find((item) => wedstrijdIsBezig(item.wedstrijd) && speelt(item.wedstrijd)) ??
+    relevant.find((item) => wedstrijdIsBezig(item.wedstrijd) && telt(item.wedstrijd)) ??
+    relevant.find((item) => !item.wedstrijd.gespeeld && speelt(item.wedstrijd)) ??
+    relevant.find((item) => !item.wedstrijd.gespeeld && telt(item.wedstrijd)) ??
+    [...relevant].reverse().find((item) => item.wedstrijd.gespeeld);
   if (!gekozen) return null;
 
   return {
@@ -144,6 +160,7 @@ export function waarMoetIkSpelen(
     tegenstander: tegenstanderVan(gekozen.wedstrijd, naam),
     wedstrijd: gekozen.wedstrijd,
     status: bordLiveWeergave(wedstrijdLiveStatus(gekozen.wedstrijd)),
+    rol: speelt(gekozen.wedstrijd) ? "spelen" : "tellen",
   };
 }
 

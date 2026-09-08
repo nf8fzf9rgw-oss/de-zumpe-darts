@@ -82,6 +82,11 @@ export default function MobileScoreEntry({
             <p className="text-sm font-bold text-white">
               {formatWedstrijd(wedstrijd)}
             </p>
+            {wedstrijd.teller && (
+              <p className="text-xs text-zinc-400">
+                🧑‍⚖️ Teller: {wedstrijd.teller}
+              </p>
+            )}
           </div>
           <button
             type="button"

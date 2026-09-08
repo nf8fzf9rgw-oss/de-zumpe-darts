@@ -2,6 +2,7 @@ import {
   berekenBordStatus,
   maakWedstrijd,
 } from "@/lib/competition";
+import { planWedstrijden } from "@/lib/wedstrijd-planning";
 import type { Bord, BordFase, Wedstrijd } from "@/types/competition";
 
 export const BYE_NAAM = "Bye";
@@ -93,7 +94,10 @@ function maakRondeBord(
   fase: BordFase,
   spelers: string[]
 ): Bord {
-  const wedstrijden = koppelSpelersPaarsgewijs(spelers);
+  const wedstrijden = planWedstrijden(
+    koppelSpelersPaarsgewijs(spelers),
+    spelers
+  );
   const bord: Bord = {
     naam,
     spelers,

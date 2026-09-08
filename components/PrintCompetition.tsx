@@ -62,6 +62,7 @@ export default function PrintCompetition({
                 <tr>
                   <th className="print-th-check" scope="col">Gespeeld</th>
                   <th scope="col">Wedstrijd</th>
+                  <th scope="col">Teller</th>
                   <th className="print-th-score" scope="col">Score</th>
                 </tr>
               </thead>
@@ -72,6 +73,7 @@ export default function PrintCompetition({
                       <span className="print-checkbox" aria-hidden>[ ]</span>
                     </td>
                     <td>{formatWedstrijd(wedstrijd)}</td>
+                    <td>{wedstrijd.teller ?? "—"}</td>
                     <td className="print-td-score">
                       <span className="print-score-blank" aria-hidden>_____</span>
                     </td>
