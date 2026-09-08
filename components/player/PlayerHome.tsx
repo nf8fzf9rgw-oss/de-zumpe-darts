@@ -172,7 +172,7 @@ export default function PlayerHome() {
             href="/competitie"
             className="text-xs font-semibold text-red-400 hover:text-red-300"
           >
-            Alle borden →
+            Alle wedstrijden →
           </Link>
         </div>
         {komende.length === 0 ? (

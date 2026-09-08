@@ -153,7 +153,7 @@ export default function InstellingenPage() {
           className="min-h-[88px] rounded-2xl border border-zinc-800 bg-zinc-950 p-5 transition hover:border-red-800"
         >
           <span className="text-2xl">🎯</span>
-          <p className="mt-2 font-bold text-white">Competitie</p>
+          <p className="mt-2 font-bold text-white">Wedstrijden</p>
           <p className="text-sm text-zinc-400">Alle borden</p>
         </Link>
         <Link

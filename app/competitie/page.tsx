@@ -1,18 +1,24 @@
-import CompetitionSummary from "@/components/CompetitionSummary";
 import QuickActions from "@/components/QuickActions";
+import WedstrijdSchema from "@/components/WedstrijdSchema";
+import DartboardAccent from "@/components/ui/DartboardAccent";
 
 export default function CompetitiePage() {
   return (
     <div className="space-y-4 md:space-y-6 lg:space-y-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-white lg:text-3xl">Competitie</h2>
-          <p className="mt-2 text-sm text-zinc-400 lg:text-base">
-            Bekijk alle borden en voer uitslagen in. Bestuur gebruikt Quick Actions
-            voor genereren en printen.
-          </p>
+        <div className="flex items-start gap-3">
+          <DartboardAccent size="md" />
+          <div>
+            <h2 className="text-xl font-bold text-white lg:text-3xl">
+              Wedstrijden
+            </h2>
+            <p className="mt-1 text-sm text-zinc-400 lg:text-base">
+              Centraal overzicht van alle borden, spelers en wedstrijden van de
+              vrijdagavondcompetitie.
+            </p>
+          </div>
         </div>
-        <div className="hidden lg:block lg:min-w-[280px]">
+        <div className="hidden lg:block">
           <QuickActions layout="vertical" />
         </div>
       </div>
@@ -21,7 +27,7 @@ export default function CompetitiePage() {
         <QuickActions />
       </div>
 
-      <CompetitionSummary variant="full" />
+      <WedstrijdSchema />
     </div>
   );
 }

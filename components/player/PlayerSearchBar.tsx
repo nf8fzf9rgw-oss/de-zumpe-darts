@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import PlayerCard from "@/components/player/PlayerCard";
 import MatchCard from "@/components/player/MatchCard";
 import MobileScoreEntry from "@/components/player/MobileScoreEntry";
@@ -14,6 +15,7 @@ import {
   vindWedstrijdenVoorSpeler,
 } from "@/lib/player-utils";
 import type { SpelerWedstrijdInfo } from "@/lib/player-utils";
+import { mijnPoulePad } from "@/lib/wedstrijd-overzicht";
 
 export default function PlayerSearchBar() {
   const { leden, gasten, borden, updateWedstrijd } = useSpeelavond();
@@ -106,6 +108,13 @@ export default function PlayerSearchBar() {
             highlight
           />
 
+          <Link
+            href={mijnPoulePad(geselecteerd)}
+            className="flex min-h-11 items-center justify-center rounded-xl bg-red-700 text-sm font-bold text-white hover:bg-red-600"
+          >
+            Open in Mijn Poule →
+          </Link>
+
           {wedstrijden.length > 0 ? (
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
@@ -118,11 +127,8 @@ export default function PlayerSearchBar() {
                   wedstrijd={wedstrijd}
                   bordNaam={bordNaam}
                   compact
-                  onOpen={
-                    !wedstrijd.gespeeld
-                      ? () => setOpenWedstrijd({ bordNaam, wedstrijd })
-                      : undefined
-                  }
+                  perspectiefNaam={geselecteerd}
+                  onOpen={() => setOpenWedstrijd({ bordNaam, wedstrijd })}
                 />
               ))}
             </div>
