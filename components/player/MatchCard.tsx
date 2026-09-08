@@ -31,13 +31,11 @@ export default function MatchCard({
   const uitslag = wedstrijdUitslagTekst(wedstrijd);
   const prestaties = wedstrijdPrestatieRegels(wedstrijd);
   const randClass =
-    status.key === "gewonnen" || status.key === "gespeeld"
-      ? "border-green-900/60 bg-green-950/15"
-      : status.key === "verloren"
-        ? "border-red-900/50 bg-red-950/15"
-        : status.key === "bezig"
-          ? "border-red-600/70 bg-red-950/25 scoreboard-stripe"
-          : "border-zinc-800 bg-zinc-900 hover:border-red-800/50";
+    status.key === "gewonnen"
+      ? "border-red-600/70 bg-red-950/20"
+      : status.key === "bezig"
+        ? "border-red-600/70 bg-red-950/25 scoreboard-stripe"
+        : "border-zinc-800 bg-zinc-900 hover:border-red-800/50";
 
   const renderNaam = (naam: string, groot = false) => {
     const isPerspectief =
@@ -103,7 +101,7 @@ export default function MatchCard({
       {uitslag && compact && (
         <p
           className={`mt-2 text-sm font-bold ${
-            status.key === "verloren" ? "text-red-300" : "text-green-400"
+            status.key === "gewonnen" ? "text-red-400" : "text-zinc-300"
           }`}
         >
           {uitslag}
@@ -115,7 +113,7 @@ export default function MatchCard({
           {!wedstrijd.bye && (
             <p
               className={`stat-number mt-2 text-xl font-bold lg:text-2xl ${
-                status.key === "verloren" ? "text-red-300" : "text-white"
+                status.key === "gewonnen" ? "text-red-400" : "text-white"
               }`}
             >
               {wedstrijd.score1} — {wedstrijd.score2}

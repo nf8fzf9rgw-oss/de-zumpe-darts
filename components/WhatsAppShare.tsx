@@ -63,27 +63,27 @@ export default function WhatsAppShare() {
         <button
           type="button"
           onClick={deelRanglijst}
-          className="min-h-11 flex-1 rounded-xl bg-green-700 px-4 py-3 text-sm font-semibold text-white hover:bg-green-600"
+          className="min-h-11 flex-1 rounded-lg bg-red-600 px-4 py-3 text-sm font-semibold text-white hover:bg-red-500"
         >
           Ranglijst delen
         </button>
         <button
           type="button"
           onClick={deelSpelerVanDeAvond}
-          className="min-h-11 flex-1 rounded-xl bg-amber-700 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-600"
+          className="min-h-11 flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-700"
         >
           Speler van de avond
         </button>
         <button
           type="button"
           onClick={deelUitslag}
-          className="min-h-11 flex-1 rounded-xl bg-zinc-700 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-600"
+          className="min-h-11 flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-700"
         >
           Uitslag delen
         </button>
       </div>
       {feedback && (
-        <p className="mt-3 text-sm text-green-400" role="status">
+        <p className="mt-3 text-sm text-zinc-200" role="status">
           {feedback}
         </p>
       )}

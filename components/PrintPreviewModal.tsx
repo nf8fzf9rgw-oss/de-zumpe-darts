@@ -74,7 +74,7 @@ export default function PrintPreviewModal() {
           <button
             type="button"
             onClick={printSchema}
-            className="min-h-11 rounded-xl bg-blue-700 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-600"
+            className="min-h-11 rounded-lg bg-red-600 px-4 py-3 text-sm font-semibold text-white hover:bg-red-500"
           >
             Printen / PDF
           </button>

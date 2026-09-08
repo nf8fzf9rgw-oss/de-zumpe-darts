@@ -16,8 +16,8 @@ interface CompetitionBoardProps {
 
 const STATUS_LABELS: Record<BordStatus, { label: string; kleur: string }> = {
   wachtend: { label: "Wachtend", kleur: "bg-zinc-700" },
-  actief: { label: "Actief", kleur: "bg-amber-600" },
-  voltooid: { label: "Voltooid", kleur: "bg-green-700" },
+  actief: { label: "Actief", kleur: "bg-red-600" },
+  voltooid: { label: "Voltooid", kleur: "bg-zinc-600" },
 };
 
 function useIsMobile(breakpoint = 1024) {

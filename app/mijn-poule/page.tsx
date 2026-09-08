@@ -207,8 +207,8 @@ function MijnPouleInhoud() {
       )}
 
       {actieveNaam && !pouleBord && (
-        <div className="rounded-2xl border border-amber-900/50 bg-amber-950/20 p-6 text-center">
-          <p className="font-semibold text-amber-200">
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-center">
+          <p className="font-semibold text-white">
             {actieveNaam} is nog niet ingedeeld op een bord.
           </p>
           <p className="mt-1 text-sm text-zinc-400">

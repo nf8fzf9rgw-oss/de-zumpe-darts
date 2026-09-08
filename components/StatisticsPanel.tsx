@@ -43,7 +43,15 @@ export default function StatisticsPanel() {
             className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 shadow-xl md:rounded-2xl md:p-6 lg:hover:border-red-800"
           >
             <div className="mb-4 text-3xl">{kaart.icon}</div>
-            <p className="text-2xl font-bold text-white md:text-3xl">{waarde}</p>
+            <p
+              className={`text-2xl font-bold md:text-3xl ${
+                kaart.key === "meeste180s" || kaart.key === "meesteOverwinningen"
+                  ? "text-red-500"
+                  : "text-white"
+              }`}
+            >
+              {waarde}
+            </p>
             <p className="mt-2 text-sm text-zinc-400">{kaart.label}</p>
           </div>
         );

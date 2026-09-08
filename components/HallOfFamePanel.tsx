@@ -44,7 +44,11 @@ export default function HallOfFamePanel() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
                 {record.icon} {record.titel}
               </p>
-              <p className="stat-number mt-3 text-4xl font-bold text-red-500">
+              <p
+                className={`stat-number mt-3 text-4xl font-bold ${
+                  heeftWaarde ? "text-red-500" : "text-zinc-600"
+                }`}
+              >
                 {heeftWaarde ? data.waarde : "—"}
               </p>
               {heeftWaarde ? (

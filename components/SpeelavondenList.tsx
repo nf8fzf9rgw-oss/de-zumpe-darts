@@ -51,7 +51,7 @@ export default function SpeelavondenList() {
                   <span>🏆 {stats.aantalWedstrijden} wedstrijden</span>
                 </div>
                 {stats.spelerVanDeAvond && (
-                  <p className="mt-2 text-sm font-semibold text-amber-400">
+                  <p className="mt-2 text-sm font-semibold text-red-400">
                     ⭐ Speler van de avond: {stats.spelerVanDeAvond}
                   </p>
                 )}
@@ -70,7 +70,7 @@ export default function SpeelavondenList() {
                 <button
                   type="button"
                   onClick={() => printAvondUitHistorie(avond.datum)}
-                  className="min-h-11 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-600"
+                  className="min-h-11 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-700"
                 >
                   Printen
                 </button>

@@ -13,7 +13,7 @@ interface ToastItem {
 }
 
 const TYPE_STYLES: Record<ToastType, string> = {
-  success: "border-green-700 bg-green-950 text-green-200",
+  success: "border-zinc-700 bg-zinc-900 text-white",
   error: "border-red-700 bg-red-950 text-red-200",
   info: "border-zinc-700 bg-zinc-900 text-zinc-200",
 };

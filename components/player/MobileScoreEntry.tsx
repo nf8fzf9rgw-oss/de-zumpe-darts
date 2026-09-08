@@ -261,7 +261,7 @@ export default function MobileScoreEntry({
             <span className="font-semibold text-white">Wedstrijd gespeeld</span>
           </label>
           {gespeeld && score1 === score2 && (
-            <p className="mt-2 text-center text-xs text-amber-400">
+            <p className="mt-2 text-center text-xs text-zinc-400">
               Gelijkspel — geen winnaar, wel bonuspunten mogelijk
             </p>
           )}

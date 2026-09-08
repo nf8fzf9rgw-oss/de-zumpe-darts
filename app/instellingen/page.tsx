@@ -343,7 +343,7 @@ export default function InstellingenPage() {
               <button
                 type="button"
                 onClick={opslaan}
-                className="min-h-11 w-full rounded-xl bg-orange-700 px-4 py-3 font-semibold text-white hover:bg-orange-600"
+                className="min-h-11 w-full rounded-lg bg-red-600 px-4 py-3 font-semibold text-white hover:bg-red-500"
               >
                 Speelavond opslaan
               </button>

@@ -21,7 +21,12 @@ export default function SpelerStatsGrid({ profiel }: SpelerStatsGridProps) {
         waarde={`${profiel.winpercentage}%`}
         size="sm"
       />
-      <StatBlock label="180's" waarde={profiel.aantal180s} size="sm" />
+      <StatBlock
+        label="180's"
+        waarde={profiel.aantal180s}
+        accent={profiel.aantal180s > 0}
+        size="sm"
+      />
       <StatBlock
         label="Hoogste finish"
         waarde={profiel.hoogsteFinish > 0 ? profiel.hoogsteFinish : "—"}

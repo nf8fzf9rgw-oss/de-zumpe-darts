@@ -19,10 +19,10 @@ export default function DartboardAccent({
       className={`${SIZES[size]} shrink-0 ${className}`}
       aria-hidden="true"
     >
-      <circle cx="24" cy="24" r="22" fill="#0a0a0a" stroke="#b91c1c" strokeWidth="2" />
+      <circle cx="24" cy="24" r="22" fill="#0a0a0a" stroke="#ef4444" strokeWidth="2" />
       <circle cx="24" cy="24" r="16" fill="none" stroke="#27272a" strokeWidth="1.5" />
-      <circle cx="24" cy="24" r="10" fill="none" stroke="#b91c1c" strokeWidth="1" opacity="0.6" />
-      <circle cx="24" cy="24" r="4" fill="#b91c1c" />
+      <circle cx="24" cy="24" r="10" fill="none" stroke="#ef4444" strokeWidth="1" opacity="0.6" />
+      <circle cx="24" cy="24" r="4" fill="#ef4444" />
       {[0, 45, 90, 135].map((deg) => (
         <line
           key={deg}

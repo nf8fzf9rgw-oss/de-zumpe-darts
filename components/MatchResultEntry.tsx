@@ -46,7 +46,7 @@ export default function MatchResultEntry({
     <div
       className={`rounded-xl border transition ${
         wedstrijd.gespeeld
-          ? "border-green-800/60 bg-green-950/30"
+          ? "border-red-800/50 bg-red-950/20"
           : "border-zinc-800 bg-zinc-900"
       } ${compact ? "p-3" : "p-4"}`}
     >
@@ -164,12 +164,12 @@ export default function MatchResultEntry({
       </div>
 
       {wedstrijd.gespeeld && wedstrijd.gelijkspel && (
-        <p className="mt-2 text-xs font-semibold text-amber-400">
+        <p className="mt-2 text-xs font-semibold text-zinc-400">
           Gelijkspel — geen winnaar
         </p>
       )}
       {wedstrijd.gespeeld && wedstrijd.winnaar && (
-        <p className="mt-2 text-xs font-semibold text-green-400">
+        <p className="mt-2 text-xs font-semibold text-red-400">
           Winnaar: {wedstrijd.winnaar}
         </p>
       )}

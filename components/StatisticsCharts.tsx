@@ -63,7 +63,7 @@ export default function StatisticsCharts() {
       <StaafGrafiek
         titel="Spelersontwikkeling"
         data={grafieken.spelersOntwikkeling}
-        kleur="bg-red-800"
+        kleur="bg-zinc-600"
       />
       <StaafGrafiek
         titel="Wedstrijden per avond"

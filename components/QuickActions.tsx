@@ -25,7 +25,7 @@ function QuickActionsButtons({
     {
       label: "Genereer Competitie",
       onClick: genereerCompetitieAvond,
-      className: "bg-green-700 hover:bg-green-600 text-white",
+      className: "bg-red-600 hover:bg-red-500 text-white",
     },
     {
       label: "Winnaars-/verliezersronde",
@@ -34,7 +34,7 @@ function QuickActionsButtons({
       className:
         borden.length === 0
           ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
-          : "bg-violet-800 hover:bg-violet-700 text-white",
+          : "border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-white",
     },
     ...(canUndo
       ? [
@@ -48,7 +48,7 @@ function QuickActionsButtons({
     {
       label: "Opslaan",
       onClick: opslaan,
-      className: "bg-orange-700 hover:bg-orange-600 text-white",
+      className: "border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-white",
     },
     {
       label: "Print preview",
@@ -81,7 +81,7 @@ function QuickActionsButtons({
             type="button"
             onClick={knop.onClick}
             disabled={"disabled" in knop && knop.disabled}
-            className={`min-h-11 rounded-xl px-3 py-2 text-xs font-bold shadow-lg transition sm:px-4 sm:py-2.5 sm:text-sm ${knop.className}`}
+            className={`min-h-11 rounded-lg px-3 py-2 text-xs font-bold transition sm:px-4 sm:py-2.5 sm:text-sm ${knop.className}`}
           >
             {knop.label}
           </button>
@@ -98,7 +98,7 @@ function QuickActionsButtons({
           type="button"
           onClick={knop.onClick}
           disabled={"disabled" in knop && knop.disabled}
-          className={`min-h-11 w-full rounded-xl px-4 py-3 text-left text-sm font-bold shadow-lg transition lg:px-5 lg:py-3.5 lg:text-base ${knop.className}`}
+          className={`min-h-11 w-full rounded-lg px-4 py-3 text-left text-sm font-bold transition lg:px-5 lg:py-3.5 lg:text-base ${knop.className}`}
         >
           {knop.label}
         </button>

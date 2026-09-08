@@ -91,21 +91,21 @@ export function wedstrijdWeergaveStatus(
           key: "gewonnen",
           label: "Gewonnen",
           icoon: "✅",
-          badgeClass: "bg-green-900/50 text-green-300",
+          badgeClass: "bg-red-900/50 text-red-200",
         };
       }
       return {
         key: "verloren",
         label: "Verloren",
         icoon: "❌",
-        badgeClass: "bg-red-950/60 text-red-300",
+        badgeClass: "bg-zinc-800 text-zinc-400",
       };
     }
     return {
       key: "gespeeld",
       label: "Afgerond",
       icoon: "🟢",
-      badgeClass: "bg-green-900/50 text-green-300",
+      badgeClass: "bg-zinc-800 text-zinc-300",
     };
   }
 
@@ -122,7 +122,7 @@ export function wedstrijdWeergaveStatus(
     key: "nog_te_spelen",
     label: "Nog te spelen",
     icoon: "🟡",
-    badgeClass: "bg-amber-900/40 text-amber-300",
+    badgeClass: "bg-zinc-800 text-zinc-300",
   };
 }
 

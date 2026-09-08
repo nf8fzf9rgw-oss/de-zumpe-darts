@@ -156,43 +156,43 @@ export default function StandingsTable({
                 Aanwezig
               </th>
               <th
-                className="px-3 py-3 text-right font-bold text-emerald-400"
+                className="px-3 py-3 text-right font-bold text-zinc-300"
                 title={KOLOM_TITELS.poulepunten}
               >
                 Poulept
               </th>
               <th
-                className="px-3 py-3 text-right font-bold text-sky-400"
+                className="px-3 py-3 text-right font-bold text-zinc-400"
                 title={KOLOM_TITELS.winnaarsrondeLegsGewonnen}
               >
                 Legs W+
               </th>
               <th
-                className="px-3 py-3 text-right font-bold text-sky-400/70"
+                className="px-3 py-3 text-right font-bold text-zinc-500"
                 title={KOLOM_TITELS.winnaarsrondeLegsVerloren}
               >
                 Legs W−
               </th>
               <th
-                className="px-3 py-3 text-right font-bold text-violet-400"
+                className="px-3 py-3 text-right font-bold text-zinc-400"
                 title={KOLOM_TITELS.verliezersrondeLegsGewonnen}
               >
                 Legs V+
               </th>
               <th
-                className="px-3 py-3 text-right font-bold text-violet-400/70"
+                className="px-3 py-3 text-right font-bold text-zinc-500"
                 title={KOLOM_TITELS.verliezersrondeLegsVerloren}
               >
                 Legs V−
               </th>
               <th
-                className="px-3 py-3 text-right font-bold text-orange-400"
+                className="px-3 py-3 text-right font-bold text-red-400"
                 title={KOLOM_TITELS.hoogsteFinish}
               >
                 Hoogste uitgooi
               </th>
               <th
-                className="px-3 py-3 text-right font-bold text-amber-400"
+                className="px-3 py-3 text-right font-bold text-red-400"
                 title={KOLOM_TITELS.aantal180s}
               >
                 180&apos;s
@@ -254,25 +254,25 @@ export default function StandingsTable({
                 <td className="px-3 py-3 text-right tabular-nums text-zinc-300">
                   {rij.aanwezig}
                 </td>
-                <td className="px-3 py-3 text-right tabular-nums text-emerald-400">
+                <td className="px-3 py-3 text-right tabular-nums text-zinc-200">
                   {formatPunten(rij.poulepunten)}
                 </td>
-                <td className="px-3 py-3 text-right tabular-nums text-sky-300">
+                <td className="px-3 py-3 text-right tabular-nums text-zinc-300">
                   {rij.winnaarsrondeLegsGewonnen}
                 </td>
-                <td className="px-3 py-3 text-right tabular-nums text-sky-300/70">
+                <td className="px-3 py-3 text-right tabular-nums text-zinc-500">
                   {rij.winnaarsrondeLegsVerloren}
                 </td>
-                <td className="px-3 py-3 text-right tabular-nums text-violet-300">
+                <td className="px-3 py-3 text-right tabular-nums text-zinc-300">
                   {rij.verliezersrondeLegsGewonnen}
                 </td>
-                <td className="px-3 py-3 text-right tabular-nums text-violet-300/70">
+                <td className="px-3 py-3 text-right tabular-nums text-zinc-500">
                   {rij.verliezersrondeLegsVerloren}
                 </td>
-                <td className="px-3 py-3 text-right tabular-nums text-orange-400">
+                <td className="px-3 py-3 text-right tabular-nums text-red-400">
                   {rij.hoogsteFinish > 0 ? rij.hoogsteFinish : "—"}
                 </td>
-                <td className="px-3 py-3 text-right tabular-nums text-amber-400">
+                <td className="px-3 py-3 text-right tabular-nums text-red-400">
                   {rij.aantal180s}
                 </td>
                 <td className="px-3 py-3 text-right font-bold tabular-nums text-red-400">
@@ -302,23 +302,23 @@ export default function StandingsTable({
               <td className="px-3 py-3 text-right tabular-nums text-zinc-300">
                 {totalen.aanwezig}
               </td>
-              <td className="px-3 py-3 text-right tabular-nums text-emerald-400">
+              <td className="px-3 py-3 text-right tabular-nums text-zinc-200">
                 {formatPunten(totalen.poulepunten)}
               </td>
-              <td className="px-3 py-3 text-right tabular-nums text-sky-300">
+              <td className="px-3 py-3 text-right tabular-nums text-zinc-300">
                 {totalen.winnaarsrondeLegsGewonnen}
               </td>
-              <td className="px-3 py-3 text-right tabular-nums text-sky-300/70">
+              <td className="px-3 py-3 text-right tabular-nums text-zinc-500">
                 {totalen.winnaarsrondeLegsVerloren}
               </td>
-              <td className="px-3 py-3 text-right tabular-nums text-violet-300">
+              <td className="px-3 py-3 text-right tabular-nums text-zinc-300">
                 {totalen.verliezersrondeLegsGewonnen}
               </td>
-              <td className="px-3 py-3 text-right tabular-nums text-violet-300/70">
+              <td className="px-3 py-3 text-right tabular-nums text-zinc-500">
                 {totalen.verliezersrondeLegsVerloren}
               </td>
               <td className="px-3 py-3" />
-              <td className="px-3 py-3 text-right tabular-nums text-amber-400">
+              <td className="px-3 py-3 text-right tabular-nums text-red-400">
                 {totalen.aantal180s}
               </td>
               <td className="px-3 py-3 text-right tabular-nums text-red-400">
