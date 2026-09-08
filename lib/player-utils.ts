@@ -47,7 +47,11 @@ export function pouleBordVoorSpeler(
   spelerNaam: string
 ): Bord | null {
   const gevonden = vindBordenVoorSpeler(borden, spelerNaam);
-  return gevonden.find((bord) => !bord.fase || bord.fase === "poule") ?? gevonden[0] ?? null;
+  return (
+    gevonden.find((bord) => !bord.fase || bord.fase === "poule") ??
+    gevonden[0] ??
+    null
+  );
 }
 
 export function vindWedstrijdenVoorSpeler(
